@@ -29,7 +29,9 @@ export default class typeDetect {
 			return details;
 		}
 
-		details.type = this.getType(data);
+		let possPrefix = this.getPrefix(data);
+
+		details.type = this.getType(data, possPrefix);
 
 		if (details.type === 'datetime' || details.type === 'date' || details.type === 'time') {
 			details.format = this.getFormat(data, details.type);
@@ -39,7 +41,7 @@ export default class typeDetect {
 			}
 		}
 		else if (details.type === 'number') {
-			details.prefix = this.getPrefix(data);
+			details.prefix = possPrefix;
 			details.postfix = this.getPostfix(data);
 			details.dp = this.getDP(data);
 		}
@@ -47,15 +49,19 @@ export default class typeDetect {
 		return details;
 	}
 
-	public getType(data): string {
+	public getType(data, prefix): string {
 		let types = []
 		
 		for (let el of data) {
 			let type = typeof el;
 			let tempEl = el;
+
+			if(prefix.length > 0 && el.indexOf(prefix) === 0) {
+				tempEl = el.replace(prefix, '');
+			}
 			
-			if(type === "string" && el.indexOf(this.thousandsSeparator) !== -1) {
-				tempEl = el.split(this.thousandsSeparator).join('');
+			if(type === "string" && tempEl.indexOf(this.thousandsSeparator) !== -1) {
+				tempEl = tempEl.split(this.thousandsSeparator).join('');
 			}
 			
 			if(type === 'string' && (!isNaN(+el) || !isNaN(+tempEl))) {
@@ -82,7 +88,24 @@ export default class typeDetect {
 	}
 
 	public getPrefix(data): string {
-		return '';
+		let prefix = data[0];
+		
+		for (let el of data) {
+			if(typeof el !== "string") {
+				return ''; 
+			}
+
+			for(let i = 0; i < prefix.length; i++) {
+				if(el.indexOf(prefix[i]) === i) {
+					continue;
+				}
+				else {
+					prefix = prefix.slice(0, i);
+				}
+			}
+		}
+		
+		return prefix;
 	}
 
 	public getPostfix(data): string {

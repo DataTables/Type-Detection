@@ -131,18 +131,18 @@ checkDetails(
     }
 )
 
-// // Currency Numbers
-// console.log("CHECK  Currency Numbers...")
-// checkDetails(
-//     detector.typeDetect(['$1.99','$2.50','$3.00']),
-//     {
-//         type: 'number',
-//         format: null,
-//         prefix: '$',
-//         postfix: '',
-//         dp: 2
-//     }
-// )
+// Currency Numbers
+console.log("CHECK  Currency Numbers...")
+checkDetails(
+    detector.typeDetect(['$1.99','$2.50','$3.00']),
+    {
+        type: 'number',
+        format: null,
+        prefix: '$',
+        postfix: '',
+        dp: 2
+    }
+)
 
 // // Dates
 // console.log("CHECK  Dates...")
