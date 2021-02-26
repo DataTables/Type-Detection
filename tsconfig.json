@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "ES3",
+        "module": "ES6",
+        "lib": ["es2017", "es2016", "dom"],
+        "allowUnreachableCode": true,
+        "allowSyntheticDefaultImports": true,
+        "pretty": true,
+        "declaration": true
+    },
+    "exclude": [
+        "./node_modules/**/*"
+    ],
+    "files": [
+        "src/cloudtables-type-detect.ts"
+    ]
+}
