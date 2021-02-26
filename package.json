@@ -9,10 +9,12 @@
   },
   "scripts": {
     "test": "node ./test/test.js",
+    "speedTest": "node ./test/speedtest.js",
     "build": "npm install && tsc ./src/*.ts --outDir ./dist/",
     "buildNoInstall": "tsc ./src/*.ts --outDir ./dist/",
     "buildTest": "npm run build && npm run test",
-    "quickCheck": "npm run buildNoInstall && npm run test"
+    "quickCheck": "npm run buildNoInstall && npm run test",
+    "quickSpeedCheck": "npm run buildNoInstall && npm run speedTest"
   },
   "repository": {
     "type": "git",

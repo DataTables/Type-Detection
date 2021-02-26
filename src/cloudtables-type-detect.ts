@@ -108,11 +108,20 @@ export default class typeDetect {
 
 	public getPrefix(data): string {
 		let prefix = data[0]; // Initialise prefix to be the entire first value
-		
+		let first = true;
+
 		for (let el of data) {
+			if(first) {
+				first = false;
+				continue;
+			}
 			// There can't be a prefix if the type isn't a string
 			if(typeof el !== "string") {
 				return ''; 
+			}
+
+			if(el.indexOf(prefix) === 0) {
+				continue;
 			}
 
 			// Gradually increase the prefix to check that it matches
@@ -143,8 +152,13 @@ export default class typeDetect {
 		// Reverse the string, a postfix is a prefix working from the other end of the string
 		// So, can use the same algorithm as above in `getPrefix()` to do this
 		let postfix = data[0].split('').reverse().join('');
-		
+		let first = true;
+
 		for (let el of data) {
+			if(first) {
+				first = false;
+				continue;
+			}
 			// There can't be a postfix if the type isn't a string
 			if(typeof el !== "string") {
 				return ''; 
@@ -152,6 +166,10 @@ export default class typeDetect {
 
 			// Reverse the element to match the reversed postfix
 			el = el.split('').reverse().join('');
+
+			if(el.indexOf(postfix) === 0) {
+				continue;
+			}
 
 			// Gradually increase the postfix to check that it matches
 			for(let i = 0; i < postfix.length; i++) {

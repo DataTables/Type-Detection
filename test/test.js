@@ -4,6 +4,7 @@ var failed = 0;
 var total = 0;
 
 var checkDetails = function(actual, expected) {
+    console.log(Date.now())
     total = total + 5;
     if(actual.type === expected.type) {
         console.log("      TYPE: \033[0;32mPASS\033[0m");
@@ -287,4 +288,4 @@ checkDetails(
     }
 )
 
-console.log("Failed", failed, "of", total, "tests. See above for details")
+console.log("Failed", failed, "of", total, "tests. See above for details");
