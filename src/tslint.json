@@ -7,6 +7,10 @@
         "prefer-const": false,
         "semicolon": true,
         "class-name": false,
+        "max-line-length": [
+            true,
+            120
+        ],
         "quotemark": [
             true,
             "single"
