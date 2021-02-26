@@ -145,6 +145,19 @@ checkDetails(
 )
 
 // Currency Numbers
+console.log("CHECK  Currency Numbers with repeated character in prefix...")
+checkDetails(
+    detector.typeDetect(['ALL1.99','ALL2.50','ALL3.00']),
+    {
+        type: 'number',
+        format: null,
+        prefix: 'ALL',
+        postfix: '',
+        dp: 2
+    }
+)
+
+// Numbers with postfixed unit
 console.log("CHECK  Numbers with postfixed unit...")
 checkDetails(
     detector.typeDetect(['1.99 beans','2.50 beans','3.00 beans']),
@@ -153,6 +166,19 @@ checkDetails(
         format: null,
         prefix: '',
         postfix: ' beans',
+        dp: 2
+    }
+)
+
+// Numbers with postfixed unit where the unit has repeated characters
+console.log("CHECK  Numbers with postfixed unit...")
+checkDetails(
+    detector.typeDetect(['1.99 butterflies','2.50 butterflies','3.00 butterflies']),
+    {
+        type: 'number',
+        format: null,
+        prefix: '',
+        postfix: ' butterflies',
         dp: 2
     }
 )

@@ -101,11 +101,11 @@ export default class typeDetect {
 			}
 
 			for(let i = 0; i < prefix.length; i++) {
-				if(el.indexOf(prefix[i]) === i) {
+				if(el.indexOf(prefix.slice(0, i)) === 0) {
 					continue;
 				}
 				else {
-					prefix = prefix.slice(0, i);
+					prefix = prefix.slice(0, i-1);
 				}
 			}
 		}
@@ -128,11 +128,11 @@ export default class typeDetect {
 			el = el.split('').reverse().join('');
 
 			for(let i = 0; i < postfix.length; i++) {
-				if(el.indexOf(postfix[i]) === i) {
+				if(el.indexOf(postfix.slice(0, i)) === 0) {
 					continue;
 				}
 				else {
-					postfix = postfix.slice(0, i);
+					postfix = postfix.slice(0, i-1);
 				}
 			}
 		}
