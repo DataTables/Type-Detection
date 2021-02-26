@@ -8,7 +8,15 @@ interface IDetails {
 
 export default class typeDetect {
 
-	public typeDetect(data: string[] | number[]) {
+	private decimalCharacter;
+	private thousandsSeparator;
+
+	constructor (decimalCharacter='.', thousandsSeparator=',') {
+		this.decimalCharacter = decimalCharacter;
+		this.thousandsSeparator = thousandsSeparator;
+	}
+
+	public typeDetect(data) {
 		let details: IDetails = {
 			type: null,
 			format: null,
@@ -16,6 +24,10 @@ export default class typeDetect {
 			postfix: null,
 			dp: null
 		};
+
+		if(data.length === 0) {
+			return details;
+		}
 
 		details.type = this.getType(data);
 
@@ -35,23 +47,50 @@ export default class typeDetect {
 		return details;
 	}
 
-	public getType(data: string[] | number[]): string {
+	public getType(data): string {
+		let types = []
+		
+		for (let el of data) {
+			let type = typeof el;
+
+			if (types.indexOf(type) === -1) {
+				types.push(type);
+			}
+		}
+
+		if (types.length > 1) {
+			return 'mixed';
+		}
+		else if (types.length === 1 && types[0] === 'number') {
+			return 'number';
+		}
+
 		return 'string';
 	}
 
-	public getFormat(data: string[] | number[], type: string): string {
+	public getFormat(data, type: string): string {
 		return null;
 	}
 
-	public getPrefix(data: string[] | number[]): string {
+	public getPrefix(data): string {
 		return '';
 	}
 
-	public getPostfix(data: string[] | number[]): string {
+	public getPostfix(data): string {
 		return '';
 	}
 
-	public getDP(data: string[] | number[]): number {
-		return 0;
+	public getDP(data): number {
+		let highestDP = 0;
+
+		for (let el of data) {
+			let split = el.toString().split(this.decimalCharacter);
+
+			if(split.length > 1 && split[1].length > highestDP) {
+				highestDP = split[1].length;
+			}
+		}
+
+		return highestDP;
 	}
 }
