@@ -8,9 +8,11 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node test.js",
+    "test": "node ./test/test.js",
     "build": "npm install && tsc ./src/*.ts --outDir ./dist/",
-    "buildTest": "npm run build && npm run test"
+    "buildNoInstall": "tsc ./src/*.ts --outDir ./dist/",
+    "buildTest": "npm run build && npm run test",
+    "quickCheck": "npm run buildNoInstall && npm run test"
   },
   "repository": {
     "type": "git",
