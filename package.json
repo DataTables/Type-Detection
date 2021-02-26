@@ -1,0 +1,35 @@
+{
+  "name": "cloudtables-type-detect",
+  "version": "0.0.1",
+  "description": "Type detection for cloudtables",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node test.js",
+    "build": "npm install && tsc ./src/*.ts --outDir ./dist/",
+    "buildTest": "npm run build && npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DataTables/cloudtables-type-detect.git"
+  },
+  "author": "SpryMedia ltd",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DataTables/cloudtables-type-detect/issues"
+  },
+  "homepage": "https://github.com/DataTables/cloudtables-type-detect/",
+  "dependencies": {
+    "rollup": "^1.18.0",
+    "tslint-eslint-rules": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.3.31",
+    "@types/node": "^12.0.10",
+    "tslint": "^5.20.1",
+    "typescript": "^3.9.7"
+  }
+}
