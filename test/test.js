@@ -105,6 +105,32 @@ checkDetails(
     }
 )
 
+// Thousands Separated Numbers
+console.log("CHECK  Thousands Separated Numbers...")
+checkDetails(
+    detector.typeDetect(["11,100", "2", "3,670"]),
+    {
+        type: 'number',
+        format: null,
+        prefix: '',
+        postfix: '',
+        dp: 0
+    }
+)
+
+// Thousands Separated Numbers with Decimal places
+console.log("CHECK  Thousands Separated Numbers with Decimal places...")
+checkDetails(
+    detector.typeDetect(["1,111.1", "2", "1,456,300.67"]),
+    {
+        type: 'number',
+        format: null,
+        prefix: '',
+        postfix: '',
+        dp: 2
+    }
+)
+
 // // Currency Numbers
 // console.log("CHECK  Currency Numbers...")
 // checkDetails(

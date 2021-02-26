@@ -52,10 +52,16 @@ export default class typeDetect {
 		
 		for (let el of data) {
 			let type = typeof el;
-
-			if(type === 'string' && !isNaN(+el)) {
+			let tempEl = el;
+			
+			if(type === "string" && el.indexOf(this.thousandsSeparator) !== -1) {
+				tempEl = el.split(this.thousandsSeparator).join('');
+			}
+			
+			if(type === 'string' && (!isNaN(+el) || !isNaN(+tempEl))) {
 				type = 'number';
 			}
+			
 			if (types.indexOf(type) === -1) {
 				types.push(type);
 			}
