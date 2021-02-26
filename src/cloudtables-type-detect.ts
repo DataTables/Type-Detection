@@ -124,6 +124,10 @@ export default class typeDetect {
 				// Otherwise it isn't the same across all of the elements so slice it down to what has passed so far and check again
 				else {
 					prefix = prefix.slice(0, i-1);
+
+					if (prefix.length === 0) {
+						return '';
+					}
 				}
 			}
 		}
@@ -161,6 +165,9 @@ export default class typeDetect {
 				// Otherwise it isn't the same across all of the elements so slice it down to what has passed so far and check again
 				else {
 					postfix = postfix.slice(0, i-1);
+					if (postfix.length === 0) {
+						return '';
+					}
 				}
 			}
 		}
