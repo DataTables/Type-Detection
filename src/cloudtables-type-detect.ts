@@ -118,11 +118,8 @@ export default class typeDetect {
 			// Gradually increase the prefix to check that it matches
 			for(let i = 0; i < prefix.length; i++) {
 				// If this portion of prefix is at the beginning of the string then carry on
-				if(el.indexOf(prefix.slice(0, i)) === 0) {
-					continue;
-				}
 				// Otherwise it isn't the same across all of the elements so slice it down to what has passed so far and check again
-				else {
+				if(el.indexOf(prefix.slice(0, i)) !== 0) {
 					prefix = prefix.slice(0, i-1);
 
 					if (prefix.length === 0) {
@@ -159,11 +156,8 @@ export default class typeDetect {
 			// Gradually increase the postfix to check that it matches
 			for(let i = 0; i < postfix.length; i++) {
 				// If this portion of postfix is at the beginning of the string then carry on
-				if(el.indexOf(postfix.slice(0, i)) === 0) {
-					continue;
-				}
 				// Otherwise it isn't the same across all of the elements so slice it down to what has passed so far and check again
-				else {
+				if(el.indexOf(postfix.slice(0, i)) !== 0){
 					postfix = postfix.slice(0, i-1);
 					if (postfix.length === 0) {
 						return '';
