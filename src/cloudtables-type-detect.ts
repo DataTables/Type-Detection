@@ -53,6 +53,9 @@ export default class typeDetect {
 		for (let el of data) {
 			let type = typeof el;
 
+			if(type === 'string' && !isNaN(+el)) {
+				type = 'number';
+			}
 			if (types.indexOf(type) === -1) {
 				types.push(type);
 			}

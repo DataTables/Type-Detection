@@ -92,6 +92,19 @@ checkDetails(
     }
 )
 
+// Decimal Numbers in String Form
+console.log("CHECK  Decimal Numbers in String Form...")
+checkDetails(
+    detector.typeDetect(["11.1", "2", "3.67"]),
+    {
+        type: 'number',
+        format: null,
+        prefix: '',
+        postfix: '',
+        dp: 2
+    }
+)
+
 // // Currency Numbers
 // console.log("CHECK  Currency Numbers...")
 // checkDetails(
