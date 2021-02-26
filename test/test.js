@@ -144,6 +144,19 @@ checkDetails(
     }
 )
 
+// Currency Numbers
+console.log("CHECK  Numbers with postfixed unit...")
+checkDetails(
+    detector.typeDetect(['1.99 beans','2.50 beans','3.00 beans']),
+    {
+        type: 'number',
+        format: null,
+        prefix: '',
+        postfix: ' beans',
+        dp: 2
+    }
+)
+
 // // Dates
 // console.log("CHECK  Dates...")
 // checkDetails(

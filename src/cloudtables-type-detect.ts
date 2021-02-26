@@ -30,8 +30,9 @@ export default class typeDetect {
 		}
 
 		let possPrefix = this.getPrefix(data);
+		let possPostfix = this.getPostfix(data);
 
-		details.type = this.getType(data, possPrefix);
+		details.type = this.getType(data, possPrefix, possPostfix);
 
 		if (details.type === 'datetime' || details.type === 'date' || details.type === 'time') {
 			details.format = this.getFormat(data, details.type);
@@ -42,14 +43,14 @@ export default class typeDetect {
 		}
 		else if (details.type === 'number') {
 			details.prefix = possPrefix;
-			details.postfix = this.getPostfix(data);
-			details.dp = this.getDP(data);
+			details.postfix = possPostfix;
+			details.dp = this.getDP(data, possPrefix, possPostfix);
 		}
 
 		return details;
 	}
 
-	public getType(data, prefix): string {
+	public getType(data, prefix, postfix): string {
 		let types = []
 		
 		for (let el of data) {
@@ -57,7 +58,11 @@ export default class typeDetect {
 			let tempEl = el;
 
 			if(prefix.length > 0 && el.indexOf(prefix) === 0) {
-				tempEl = el.replace(prefix, '');
+				tempEl = tempEl.replace(prefix, '');
+			}
+
+			if(postfix.length > 0 && el.indexOf(postfix) === el.length - postfix.length) {
+				tempEl = tempEl.replace(new RegExp(postfix + '$'), '');
 			}
 			
 			if(type === "string" && tempEl.indexOf(this.thousandsSeparator) !== -1) {
@@ -109,14 +114,37 @@ export default class typeDetect {
 	}
 
 	public getPostfix(data): string {
-		return '';
+		if (typeof data[0] !== "string") {
+			return '';
+		}
+
+		let postfix = data[0].split('').reverse().join('');
+		
+		for (let el of data) {
+			if(typeof el !== "string") {
+				return ''; 
+			}
+
+			el = el.split('').reverse().join('');
+
+			for(let i = 0; i < postfix.length; i++) {
+				if(el.indexOf(postfix[i]) === i) {
+					continue;
+				}
+				else {
+					postfix = postfix.slice(0, i);
+				}
+			}
+		}
+		
+		return postfix.split('').reverse().join('');
 	}
 
-	public getDP(data): number {
+	public getDP(data, prefix, postfix): number {
 		let highestDP = 0;
 
 		for (let el of data) {
-			let split = el.toString().split(this.decimalCharacter);
+			let split = el.toString().replace(prefix, '').replace(new RegExp(postfix + '$'), '').split(this.decimalCharacter);
 
 			if(split.length > 1 && split[1].length > highestDP) {
 				highestDP = split[1].length;
