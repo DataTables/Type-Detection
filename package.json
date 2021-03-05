@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/DataTables/cloudtables-type-detect/",
   "dependencies": {
+    "moment": "^2.29.1",
     "rollup": "^1.18.0",
     "tslint-eslint-rules": "^5.4.0"
   },

@@ -54,246 +54,38 @@ var checkDetails = function(actual, expected) {
 }
 
 var detector = new typeDetect["default"]();
-// Simple Numbers
-console.log("CHECK  Simple Numbers...")
-checkDetails(
-    detector.typeDetect([1,2,3]),
-    {
-        type: 'number',
-        format: null,
-        prefix: '',
-        postfix: '',
-        dp: 0
-    }
-)
-
-// Decimal Numbers
-console.log("CHECK  Decimal Numbers...")
-checkDetails(
-    detector.typeDetect([1.1,2.5,3.6]),
-    {
-        type: 'number',
-        format: null,
-        prefix: '',
-        postfix: '',
-        dp: 1
-    }
-)
-
-// Mixed Length Decimal Numbers
-console.log("CHECK  Mixed Length Decimal Numbers...")
-checkDetails(
-    detector.typeDetect([11.1, 2, 3.67]),
-    {
-        type: 'number',
-        format: null,
-        prefix: '',
-        postfix: '',
-        dp: 2
-    }
-)
-
-// Decimal Numbers in String Form
-console.log("CHECK  Decimal Numbers in String Form...")
-checkDetails(
-    detector.typeDetect(["11.1", "2", "3.67"]),
-    {
-        type: 'number',
-        format: null,
-        prefix: '',
-        postfix: '',
-        dp: 2
-    }
-)
-
-// Thousands Separated Numbers
-console.log("CHECK  Thousands Separated Numbers...")
-checkDetails(
-    detector.typeDetect(["11,100", "2", "3,670"]),
-    {
-        type: 'number',
-        format: null,
-        prefix: '',
-        postfix: '',
-        dp: 0
-    }
-)
-
-// Thousands Separated Numbers with Decimal places
-console.log("CHECK  Thousands Separated Numbers with Decimal places...")
-checkDetails(
-    detector.typeDetect(["1,111.1", "2", "1,456,300.67"]),
-    {
-        type: 'number',
-        format: null,
-        prefix: '',
-        postfix: '',
-        dp: 2
-    }
-)
-
-// Currency Numbers
-console.log("CHECK  Currency Numbers...")
-checkDetails(
-    detector.typeDetect(['$1.99','$2.50','$3.00']),
-    {
-        type: 'number',
-        format: null,
-        prefix: '$',
-        postfix: '',
-        dp: 2
-    }
-)
-
-// Currency Numbers
-console.log("CHECK  Currency Numbers with repeated character in prefix...")
-checkDetails(
-    detector.typeDetect(['ALL1.99','ALL2.50','ALL3.00']),
-    {
-        type: 'number',
-        format: null,
-        prefix: 'ALL',
-        postfix: '',
-        dp: 2
-    }
-)
-
-// Numbers with postfixed unit with identical trailing 0s
-console.log("CHECK  Numbers with prefix same first number...")
-checkDetails(
-    detector.typeDetect(['ALL 1.90','ALL 1.50','ALL 1.00']),
-    {
-        type: 'number',
-        format: null,
-        prefix: 'ALL ',
-        postfix: '',
-        dp: 2
-    }
-)
-
-// Numbers with postfixed unit
-console.log("CHECK  Numbers with postfixed unit...")
-checkDetails(
-    detector.typeDetect(['1.99 beans','2.50 beans','3.00 beans']),
-    {
-        type: 'number',
-        format: null,
-        prefix: '',
-        postfix: ' beans',
-        dp: 2
-    }
-)
-
-// Numbers with postfixed unit where the unit has repeated characters
-console.log("CHECK  Numbers with postfixed unit with repeated characters...")
-checkDetails(
-    detector.typeDetect(['1.99 butterflies','2.50 butterflies','3.00 butterflies']),
-    {
-        type: 'number',
-        format: null,
-        prefix: '',
-        postfix: ' butterflies',
-        dp: 2
-    }
-)
-
-// Numbers with postfixed unit with identical trailing 0s
-console.log("CHECK  Numbers with postfixed unit and trailing 0s...")
-checkDetails(
-    detector.typeDetect(['1.90 butterflies','2.50 butterflies','3.00 butterflies']),
-    {
-        type: 'number',
-        format: null,
-        prefix: '',
-        postfix: ' butterflies',
-        dp: 2
-    }
-)
-
-// // Dates
-// console.log("CHECK  Dates...")
+// // Simple Numbers
+// console.log("CHECK  Simple Numbers...")
 // checkDetails(
-//     detector.typeDetect(['2021-03-11','2020-12-25','2021-01-01']),
+//     detector.typeDetect([1,2,3]),
 //     {
-//         type: 'date',
-//         format: 'YYYY-MM-DD',
-//         prefix: null,
-//         postfix: null,
-//         dp: null
+//         type: 'number',
+//         format: null,
+//         prefix: '',
+//         postfix: '',
+//         dp: 0
 //     }
 // )
 
-// // Times
-// console.log("CHECK  Times...")
+// // Decimal Numbers
+// console.log("CHECK  Decimal Numbers...")
 // checkDetails(
-//     detector.typeDetect(['17:30','9:45','1:12']),
+//     detector.typeDetect([1.1,2.5,3.6]),
 //     {
-//         type: 'date',
-//         format: 'YYYY-MM-DD HH:mm',
-//         prefix: null,
-//         postfix: null,
-//         dp: null
+//         type: 'number',
+//         format: null,
+//         prefix: '',
+//         postfix: '',
+//         dp: 1
 //     }
 // )
 
-// // DateTimes
-// console.log("CHECK  DateTimes...")
+// // Mixed Length Decimal Numbers
+// console.log("CHECK  Mixed Length Decimal Numbers...")
 // checkDetails(
-//     detector.typeDetect(['2021-03-11 17:30','2020-12-25 9:45','2021-01-01 1:12']),
+//     detector.typeDetect([11.1, 2, 3.67]),
 //     {
-//         type: 'datetime',
-//         format: 'YYYY-MM-DD HH:mm',
-//         prefix: null,
-//         postfix: null,
-//         dp: null
-//     }
-// )
-
-// Strings
-console.log("CHECK  Strings...")
-checkDetails(
-    detector.typeDetect(['Test','Archie','Hugo']),
-    {
-        type: 'string',
-        format: null,
-        prefix: null,
-        postfix: null,
-        dp: null
-    }
-)
-
-// HTML
-console.log("CHECK  HTML...")
-checkDetails(
-    detector.typeDetect(['<a href="//example.com>Example</a>','Archie','<span>Hugo</span>']),
-    {
-        type: 'html',
-        format: null,
-        prefix: null,
-        postfix: null,
-        dp: null
-    }
-)
-
-// Mixed
-console.log("CHECK  Mixed...")
-checkDetails(
-    detector.typeDetect(['Test', 123, '$1']),
-    {
-        type: 'mixed',
-        format: null,
-        prefix: null,
-        postfix: null,
-        dp: null
-    }
-)
-
-// // Excel
-// console.log("CHECK  Excel...")
-// checkDetails(
-//     detector.typeDetect([{ value: '1', excel: '0.00' },{ value: '1.45', excel: '0.00' },{ value: '10', excel: '0.00' }]),
-//     {
-//         type: 'excel',
+//         type: 'number',
 //         format: null,
 //         prefix: '',
 //         postfix: '',
@@ -301,17 +93,251 @@ checkDetails(
 //     }
 // )
 
-// Empty
-console.log("CHECK  Empty...")
+// // Decimal Numbers in String Form
+// console.log("CHECK  Decimal Numbers in String Form...")
+// checkDetails(
+//     detector.typeDetect(["11.1", "2", "3.67"]),
+//     {
+//         type: 'number',
+//         format: null,
+//         prefix: '',
+//         postfix: '',
+//         dp: 2
+//     }
+// )
+
+// // Thousands Separated Numbers
+// console.log("CHECK  Thousands Separated Numbers...")
+// checkDetails(
+//     detector.typeDetect(["11,100", "2", "3,670"]),
+//     {
+//         type: 'number',
+//         format: null,
+//         prefix: '',
+//         postfix: '',
+//         dp: 0
+//     }
+// )
+
+// // Thousands Separated Numbers with Decimal places
+// console.log("CHECK  Thousands Separated Numbers with Decimal places...")
+// checkDetails(
+//     detector.typeDetect(["1,111.1", "2", "1,456,300.67"]),
+//     {
+//         type: 'number',
+//         format: null,
+//         prefix: '',
+//         postfix: '',
+//         dp: 2
+//     }
+// )
+
+// // Currency Numbers
+// console.log("CHECK  Currency Numbers...")
+// checkDetails(
+//     detector.typeDetect(['$1.99','$2.50','$3.00']),
+//     {
+//         type: 'number',
+//         format: null,
+//         prefix: '$',
+//         postfix: '',
+//         dp: 2
+//     }
+// )
+
+// // Currency Numbers
+// console.log("CHECK  Currency Numbers with repeated character in prefix...")
+// checkDetails(
+//     detector.typeDetect(['ALL1.99','ALL2.50','ALL3.00']),
+//     {
+//         type: 'number',
+//         format: null,
+//         prefix: 'ALL',
+//         postfix: '',
+//         dp: 2
+//     }
+// )
+
+// // Numbers with postfixed unit with identical trailing 0s
+// console.log("CHECK  Numbers with prefix same first number...")
+// checkDetails(
+//     detector.typeDetect(['ALL 1.90','ALL 1.50','ALL 1.00']),
+//     {
+//         type: 'number',
+//         format: null,
+//         prefix: 'ALL ',
+//         postfix: '',
+//         dp: 2
+//     }
+// )
+
+// // Numbers with postfixed unit
+// console.log("CHECK  Numbers with postfixed unit...")
+// checkDetails(
+//     detector.typeDetect(['1.99 beans','2.50 beans','3.00 beans']),
+//     {
+//         type: 'number',
+//         format: null,
+//         prefix: '',
+//         postfix: ' beans',
+//         dp: 2
+//     }
+// )
+
+// // Numbers with postfixed unit where the unit has repeated characters
+// console.log("CHECK  Numbers with postfixed unit with repeated characters...")
+// checkDetails(
+//     detector.typeDetect(['1.99 butterflies','2.50 butterflies','3.00 butterflies']),
+//     {
+//         type: 'number',
+//         format: null,
+//         prefix: '',
+//         postfix: ' butterflies',
+//         dp: 2
+//     }
+// )
+
+// // Numbers with postfixed unit with identical trailing 0s
+// console.log("CHECK  Numbers with postfixed unit and trailing 0s...")
+// checkDetails(
+//     detector.typeDetect(['1.90 butterflies','2.50 butterflies','3.00 butterflies']),
+//     {
+//         type: 'number',
+//         format: null,
+//         prefix: '',
+//         postfix: ' butterflies',
+//         dp: 2
+//     }
+// )
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates...")
 checkDetails(
-    detector.typeDetect([]),
+    detector.typeDetect(['2021-03-11','2020-12-25','2021-01-01']),
     {
-        type: null,
-        format: null,
+        type: 'date',
+        format: 'YYYY-MM-DD',
         prefix: null,
         postfix: null,
         dp: null
     }
 )
+
+// Dates YYYY-MM-D
+console.log("CHECK  Dates...")
+checkDetails(
+    detector.typeDetect(['2021-03-1','2020-12-25','2021-01-11']),
+    {
+        type: 'date',
+        format: 'YYYY-MM-D',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-D but not in the first element
+console.log("CHECK  Dates...")
+checkDetails(
+    detector.typeDetect(['2020-12-25', '2021-03-1', '2021-01-11']),
+    {
+        type: 'date',
+        format: 'YYYY-MM-D',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// // // Times
+// // console.log("CHECK  Times...")
+// // checkDetails(
+// //     detector.typeDetect(['17:30','9:45','1:12']),
+// //     {
+// //         type: 'date',
+// //         format: 'YYYY-MM-DD HH:mm',
+// //         prefix: null,
+// //         postfix: null,
+// //         dp: null
+// //     }
+// // )
+
+// // // DateTimes
+// // console.log("CHECK  DateTimes...")
+// // checkDetails(
+// //     detector.typeDetect(['2021-03-11 17:30','2020-12-25 9:45','2021-01-01 1:12']),
+// //     {
+// //         type: 'datetime',
+// //         format: 'YYYY-MM-DD HH:mm',
+// //         prefix: null,
+// //         postfix: null,
+// //         dp: null
+// //     }
+// // )
+
+// // Strings
+// console.log("CHECK  Strings...")
+// checkDetails(
+//     detector.typeDetect(['Test','Archie','Hugo']),
+//     {
+//         type: 'string',
+//         format: null,
+//         prefix: null,
+//         postfix: null,
+//         dp: null
+//     }
+// )
+
+// // HTML
+// console.log("CHECK  HTML...")
+// checkDetails(
+//     detector.typeDetect(['<a href="//example.com>Example</a>','Archie','<span>Hugo</span>']),
+//     {
+//         type: 'html',
+//         format: null,
+//         prefix: null,
+//         postfix: null,
+//         dp: null
+//     }
+// )
+
+// // Mixed
+// console.log("CHECK  Mixed...")
+// checkDetails(
+//     detector.typeDetect(['Test', 123, '$1']),
+//     {
+//         type: 'mixed',
+//         format: null,
+//         prefix: null,
+//         postfix: null,
+//         dp: null
+//     }
+// )
+
+// // // Excel
+// // console.log("CHECK  Excel...")
+// // checkDetails(
+// //     detector.typeDetect([{ value: '1', excel: '0.00' },{ value: '1.45', excel: '0.00' },{ value: '10', excel: '0.00' }]),
+// //     {
+// //         type: 'excel',
+// //         format: null,
+// //         prefix: '',
+// //         postfix: '',
+// //         dp: 2
+// //     }
+// // )
+
+// // Empty
+// console.log("CHECK  Empty...")
+// checkDetails(
+//     detector.typeDetect([]),
+//     {
+//         type: null,
+//         format: null,
+//         prefix: null,
+//         postfix: null,
+//         dp: null
+//     }
+// )
 
 console.log("Failed", failed, "of", total, "tests. See above for details");

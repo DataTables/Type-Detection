@@ -1,3 +1,6 @@
+import * as fs from 'fs';
+import * as moment from '../node_modules/moment/moment';
+
 interface IDetails {
 	type: null | string;
 	format: null | string;
@@ -10,10 +13,12 @@ export default class typeDetect {
 
 	private decimalCharacter;
 	private thousandsSeparator;
+	private momentFormats;
 
 	constructor (decimalCharacter='.', thousandsSeparator=',') {
 		this.decimalCharacter = decimalCharacter;
 		this.thousandsSeparator = thousandsSeparator;
+		this.momentFormats = JSON.parse(fs.readFileSync('resources/momentFormats.json').toString());
 	}
 
 	public typeDetect(data) {
@@ -36,8 +41,11 @@ export default class typeDetect {
 		details.type = this.getType(data, possPrefix, possPostfix); // Get the type of the data
 
 		// If the type is a datetime, date or time then the format needs to be set.
-		if (details.type === 'datetime' || details.type === 'date' || details.type === 'time') {
-			details.format = this.getFormat(data, details.type);
+		if (details.type === 'datetime' || details.type.indexOf('date') !== -1 || details.type === 'time') {
+			let splitdate = details.type.split("-")
+			details.format = splitdate.slice(1).join("-");
+			details.type = splitdate[0];
+
 
 			// If a format cannot be determined then default back to a string type
 			if (details.format === null) {
@@ -57,9 +65,11 @@ export default class typeDetect {
 
 	public getType(data, prefix, postfix): string {
 		let types = []
+		let dateSuggestion = null;
 		
 		// A type can only be set if all of the data fits it
-		for (let el of data) {
+		for (let i = 0; i < data.length; i ++) {
+			let el = data[i];
 			let type: string = typeof el; // Get the js type of the element
 			let tempEl = el; // Hold a temporary version of el that can be manipulated
 
@@ -86,6 +96,24 @@ export default class typeDetect {
 			if(type === 'string' && el.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
 				type = 'html';
 			}
+
+			if(type === 'string') {
+				let format = this.getDateFormat(el, dateSuggestion);
+
+				if(dateSuggestion !== null && format !== dateSuggestion) {
+					console.log("Check previous elements", format);
+					for(var j = 0; j < i; j++){
+						if(!moment(data[j], format).isValid()) {
+							return 'mixed';
+						}
+					}
+				}
+
+				if(format !== null) {
+					type = "date-" + format;
+					dateSuggestion = format;
+				}
+			}
 			
 			// If this type has not been identified yet then add it to the array
 			if (types.indexOf(type) === -1) {
@@ -104,12 +132,102 @@ export default class typeDetect {
 		else if (types[0] === 'number') {
 			return 'number';
 		}
+		else if(types[0].indexOf("date") === 0) {
+			return types[0];
+		}
 
 		// If no other types are found then default to string
 		return 'string';
 	}
 
+	public getDateFormat(el: string, suggestion: string): string {
+		var time = "time";
+		var separator = "_";
+		if(el.indexOf("-") !== -1) {
+			separator = "-";
+		}
+		else if(el.indexOf("/") !== -1) {
+			separator = "/";
+		}
+
+		let split = el.split(separator);
+
+		let year = "shortYear";
+		let small = [];
+		let order = "dmy";
+		for(let i = 0; i < split.length; i++) {
+			let spl = split[i];
+			if(spl.indexOf('0') === -1 && +spl < 10) {
+				small.push(i);
+			}
+			if(!isNaN(+spl)) {
+				if(spl.length === 4) {
+					year = "longYear";
+					if(i === 0) {
+						order = "ymd";
+					}
+				}
+			}
+		}
+
+		console.log(small)
+		let month = "stdMonth";
+		let day = "longDay";
+		if(small.length > 0) {
+			if(order === "ymd") {
+				if(small.indexOf(1) !== -1){
+					month = "shortMonth";
+				}
+				if(small.indexOf(2) !== -1) {
+					day = "shortDay";
+				}
+			}
+		}
+
+		let potentials = [];
+		if(el.indexOf(":") !== -1) {
+
+		}
+		else {
+			time = "noTime";
+
+			
+			if(separator === "_") {
+				var comma = "noComma";
+				
+				if(el.indexOf(",") !== -1){
+					comma = "comma";
+				}
+	
+				console.log(time, separator, comma, month, year, day)
+				potentials = this.momentFormats[time][separator][comma][month][year][day][order];
+			}
+			else {
+				console.log(time, separator, month, year, day)
+				potentials = this.momentFormats[time][separator][month][year][day][order];
+			}
+		}
+
+		console.log(potentials)
+		console.log(suggestion)
+		if(
+			suggestion !== null &&
+			((day === "longDay" && suggestion.indexOf("DD") !== -1) && (month === "stdMonth" && suggestion.indexOf("MM") !== -1)) &&
+			moment(el, suggestion).isValid()
+		) {
+			return suggestion;
+		}
+		for(let pot of potentials) {
+			if(moment(el, pot).isValid()) {
+				return pot;
+			}
+		}
+
+		return null;
+	}
+
 	public getFormat(data, type: string): string {
+		console.log(this.momentFormats.length)
 		return null;
 	}
 
