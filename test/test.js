@@ -12,7 +12,7 @@ var checkDetails = function(actual, expected) {
     else{
         failed++;
         console.log("      TYPE: \033[0;31mFAIL\033[0m");
-        console.log("Expected:'"+ (expected.type === null ? "null" : expected.type)+ "'+ Got:'"+ (actual.type === null ? "null" : actual.type) + "'")
+        console.log("           Expected:'"+ (expected.type === null ? "null" : expected.type)+ "'+ Got:'"+ (actual.type === null ? "null" : actual.type) + "'")
     }
 
     if(actual.format === expected.format) {
@@ -21,7 +21,7 @@ var checkDetails = function(actual, expected) {
     else{
         failed++;
         console.log("    FORMAT: \033[0;31mFAIL\033[0m");
-        console.log("Expected:'"+ (expected.format === null ? "null" : expected.format)+ "'+ Got:'"+ (actual.format === null ? "null" : actual.format) + "'");
+        console.log("           Expected:'"+ (expected.format === null ? "null" : expected.format)+ "'+ Got:'"+ (actual.format === null ? "null" : actual.format) + "'");
     }
 
     if(actual.prefix === expected.prefix) {
@@ -30,7 +30,7 @@ var checkDetails = function(actual, expected) {
     else{
         failed++;
         console.log("    PREFIX: \033[0;31mFAIL\033[0m");
-        console.log("Expected:'"+ (expected.prefix === null ? "null" : expected.prefix)+ "'+ Got:'"+ (actual.prefix === null ? "null" : actual.prefix) + "'");
+        console.log("           Expected:'"+ (expected.prefix === null ? "null" : expected.prefix)+ "'+ Got:'"+ (actual.prefix === null ? "null" : actual.prefix) + "'");
     }
 
     if(actual.postfix === expected.postfix) {
@@ -39,7 +39,7 @@ var checkDetails = function(actual, expected) {
     else{
         failed++;
         console.log("   POSTFIX: \033[0;31mFAIL\033[0m");
-        console.log("Expected:'"+ (expected.postfix === null ? "null" : expected.postfix)+ "'+ Got:'"+ (actual.postfix === null ? "null" : actual.postfix) + "'");
+        console.log("           Expected:'"+ (expected.postfix === null ? "null" : expected.postfix)+ "'+ Got:'"+ (actual.postfix === null ? "null" : actual.postfix) + "'");
     }
 
     if(actual.dp === expected.dp) {
@@ -48,7 +48,7 @@ var checkDetails = function(actual, expected) {
     else{
         failed++;
         console.log("        DP: \033[0;31mFAIL\033[0m");
-        console.log("Expected:'"+ (expected.dp === null ? "null" : expected.dp)+ "'+ Got:'"+ (actual.dp === null ? "null" : actual.dp) + "'");
+        console.log("           Expected:'"+ (expected.dp === null ? "null" : expected.dp)+ "'+ Got:'"+ (actual.dp === null ? "null" : actual.dp) + "'");
     }
     console.log("\n")
 }
@@ -158,6 +158,19 @@ checkDetails(
     }
 )
 
+// Numbers with postfixed unit with identical trailing 0s
+console.log("CHECK  Numbers with prefix same first number...")
+checkDetails(
+    detector.typeDetect(['ALL 1.90','ALL 1.50','ALL 1.00']),
+    {
+        type: 'number',
+        format: null,
+        prefix: 'ALL ',
+        postfix: '',
+        dp: 2
+    }
+)
+
 // Numbers with postfixed unit
 console.log("CHECK  Numbers with postfixed unit...")
 checkDetails(
@@ -172,9 +185,22 @@ checkDetails(
 )
 
 // Numbers with postfixed unit where the unit has repeated characters
-console.log("CHECK  Numbers with postfixed unit...")
+console.log("CHECK  Numbers with postfixed unit with repeated characters...")
 checkDetails(
     detector.typeDetect(['1.99 butterflies','2.50 butterflies','3.00 butterflies']),
+    {
+        type: 'number',
+        format: null,
+        prefix: '',
+        postfix: ' butterflies',
+        dp: 2
+    }
+)
+
+// Numbers with postfixed unit with identical trailing 0s
+console.log("CHECK  Numbers with postfixed unit and trailing 0s...")
+checkDetails(
+    detector.typeDetect(['1.90 butterflies','2.50 butterflies','3.00 butterflies']),
     {
         type: 'number',
         format: null,

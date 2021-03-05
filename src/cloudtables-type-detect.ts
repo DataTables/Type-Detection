@@ -139,7 +139,8 @@ export default class typeDetect {
 		}
 		
 		// Anything left at this point is present at the start of every value and _may_ be considered a prefix, but this will depend on the type
-		return prefix;
+		let matches = prefix.match(/^[^0-9]+/g);
+		return matches !== null ? matches[0] : '';
 	}
 
 	public getPostfix(data): string {
@@ -185,7 +186,8 @@ export default class typeDetect {
 		}
 		
 		// Anything left at this point is present at the end of every value, once it is reversed and _may_ be considered a postfix, but this will depend on the type
-		return postfix.split('').reverse().join('');
+		let matches = postfix.split('').reverse().join('').match(/[^0-9]+$/g);
+		return matches !== null ? matches[matches.length-1] : '';
 	}
 
 	public getDP(data, postfix): number {
