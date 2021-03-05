@@ -249,44 +249,44 @@ checkDetails(
 //     }
 // )
 
-// // Strings
-// console.log("CHECK  Strings...")
-// checkDetails(
-//     detector.typeDetect(['Test','Archie','Hugo']),
-//     {
-//         type: 'string',
-//         format: null,
-//         prefix: null,
-//         postfix: null,
-//         dp: null
-//     }
-// )
+// Strings
+console.log("CHECK  Strings...")
+checkDetails(
+    detector.typeDetect(['Test','Archie','Hugo']),
+    {
+        type: 'string',
+        format: null,
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
 
-// // HTML
-// console.log("CHECK  HTML...")
-// checkDetails(
-//     detector.typeDetect(['<a href="//example.com>Example</a>','Archie','<span>Hugo</span>']),
-//     {
-//         type: 'html',
-//         format: null,
-//         prefix: null,
-//         postfix: null,
-//         dp: null
-//     }
-// )
+// HTML
+console.log("CHECK  HTML...")
+checkDetails(
+    detector.typeDetect(['<a href="//example.com>Example</a>','Archie','<span>Hugo</span>']),
+    {
+        type: 'html',
+        format: null,
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
 
-// // Mixed
-// console.log("CHECK  Mixed...")
-// checkDetails(
-//     detector.typeDetect(['Test', 123, '$1']),
-//     {
-//         type: 'mixed',
-//         format: null,
-//         prefix: null,
-//         postfix: null,
-//         dp: null
-//     }
-// )
+// Mixed
+console.log("CHECK  Mixed...")
+checkDetails(
+    detector.typeDetect(['Test', 123, '$1']),
+    {
+        type: 'mixed',
+        format: null,
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
 
 // // Excel
 // console.log("CHECK  Excel...")

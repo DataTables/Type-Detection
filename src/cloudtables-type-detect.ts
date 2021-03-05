@@ -60,7 +60,7 @@ export default class typeDetect {
 		
 		// A type can only be set if all of the data fits it
 		for (let el of data) {
-			let type = typeof el; // Get the js type of the element
+			let type: string = typeof el; // Get the js type of the element
 			let tempEl = el; // Hold a temporary version of el that can be manipulated
 
 			// If the prefix exists, replace it within the temporary el
@@ -82,6 +82,10 @@ export default class typeDetect {
 			if(type === 'string' && (!isNaN(+el) || !isNaN(+tempEl))) {
 				type = 'number';
 			}
+
+			if(type === 'string' && el.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
+				type = 'html';
+			}
 			
 			// If this type has not been identified yet then add it to the array
 			if (types.indexOf(type) === -1) {
@@ -90,7 +94,10 @@ export default class typeDetect {
 		}
 
 		// If more than one type has been identified then it must be mixed
-		if (types.length > 1) {
+		if(types.length === 2 && types.indexOf("string") !== -1 && types.indexOf("html") !== -1) {
+			return 'html';
+		}
+		else if (types.length > 1) {
 			return 'mixed';
 		}
 		// Otherwise if only numbers have been found then that is the type
