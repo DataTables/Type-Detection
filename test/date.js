@@ -94,12 +94,25 @@ checkDetails(
 )
 
 // Dates YYYY-MM-D but not in the first element
-console.log("CHECK  Dates small day not first...")
+console.log("CHECK  Dates year last...")
 checkDetails(
     detector.typeDetect(['12-25-2020', '03-1-2021', '01-11-1999']),
     {
         type: 'date',
         format: 'MM-D-YYYY',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-D but not in the first element
+console.log("CHECK  Dates small day and small month not first...")
+checkDetails(
+    detector.typeDetect(['12-25-2020', '3-01-2021', '1-11-1999']),
+    {
+        type: 'date',
+        format: 'M-DD-YYYY',
         prefix: null,
         postfix: null,
         dp: null
@@ -131,3 +144,18 @@ checkDetails(
         dp: null
     }
 )
+
+// Dates YYYY-MM-D but not in the first element
+console.log("CHECK  Small Year...")
+checkDetails(
+    detector.typeDetect(['12-25-20', '03-01-21', '04-01-99']),
+    {
+        type: 'date',
+        format: 'MM-DD-YY',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+console.log("Failed", failed, "of", total, "tests. See above for details");

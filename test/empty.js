@@ -67,3 +67,5 @@ checkDetails(
         dp: null
     }
 )
+
+console.log("Failed", failed, "of", total, "tests. See above for details");
