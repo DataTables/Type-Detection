@@ -14,11 +14,68 @@ export default class typeDetect {
 	private decimalCharacter;
 	private thousandsSeparator;
 	private momentFormats;
+	private months;
+	private abbrMonths;
+	private days;
+	private abbrDays;
+	private postFixes;
 
 	constructor (decimalCharacter='.', thousandsSeparator=',') {
 		this.decimalCharacter = decimalCharacter;
 		this.thousandsSeparator = thousandsSeparator;
 		this.momentFormats = JSON.parse(fs.readFileSync('resources/momentFormats.json').toString());
+		this.months = [
+			"january",
+			"february",
+			"march",
+			"april",
+			"may",
+			"june",
+			"july",
+			"august",
+			"september",
+			"october",
+			"november",
+			"december"
+		];
+		this.abbrMonths = [
+			"jan",
+			"feb",
+			"mar",
+			"apr",
+			"may",
+			"jun",
+			"jul",
+			"aug",
+			"sep",
+			"oct",
+			"nov",
+			"dec"
+		];
+		this.days = [
+			"monday",
+			"tuesday",
+			"wednesday",
+			"thursday",
+			"friday",
+			"saturday",
+			"sunday",
+		];
+		this.abbrDays = [
+			"mon",
+			"tue",
+			"wed",
+			"thu",
+			"fri",
+			"sat",
+			"sun",
+		];
+		this.postFixes = [
+			"st",
+			"nd",
+			"rd",
+			"th"
+		]
 	}
 
 	public typeDetect(data) {
@@ -70,7 +127,7 @@ export default class typeDetect {
 		
 		// A type can only be set if all of the data fits it
 		for (let i = 0; i < data.length; i ++) {
-			let el = data[i];
+			let el = data[i].toLowerCase();
 			let type: string = typeof el; // Get the js type of the element
 			let tempEl = el; // Hold a temporary version of el that can be manipulated
 
@@ -186,6 +243,9 @@ export default class typeDetect {
 		let order = "dmy";
 		for(let i = 0; i < split.length; i++) {
 			let spl = split[i];
+			if(spl.indexOf(",") !== -1) {
+				spl.replace(",", "");
+			}
 			
 			// If there is a 0 then it must be at least a double character
 			if(spl.indexOf('0') === -1 && +spl < 10) {
@@ -257,24 +317,88 @@ export default class typeDetect {
 			
 		}
 		
+		if(separator === "_") {
+			var comma = "noComma";
+			
+			if(el.indexOf(",") !== -1){
+				comma = "comma";
+				for(let i = 0; i < this.months.length; i++) {
+					let longMonth = this.months[i];
+					let abbrMonth = this.abbrMonths[i];
+
+					console.log(el, longMonth)
+					if(el.indexOf(longMonth) !== -1) {
+						month = "longMonth";
+						break;
+					}
+					else if(el.indexOf(abbrMonth) !== -1) {
+						month = "abbrMonth";
+						break;
+					}
+				}
+			}
+
+			for(let post of this.postFixes) {
+				if(el.indexOf(post) !== -1) {
+					day = "postDay";
+				}
+			}
+		}
+
 		let potentials;
 		var time = "time";
 		// If there is a colon then a time is present
 		if(el.indexOf(":") !== -1) {
-
+			let seconds = "noSeconds";
+			let minutes = "shortMinute";
+			let hours = "shortHour";
+			if(el.indexOf(":") !== el.lastIndexOf(":")) {
+				let split = el.split(" ")
+				split = split[split.length - 1].split(":");
+				if(split[2].indexOf("0") !== -1) {
+					seconds = "longSeconds";
+				}
+				else {
+					seconds = "shortSeconds";
+				}
+				if(split[1].indexOf("0") !== -1) {
+					minutes = "longMinute";
+				}
+				if(split[0].indexOf("0") !== -1) {
+					hours = "longHour"
+				}
+			}
+			else {
+				if(split[1].indexOf("0") !== -1) {
+					minutes = "longMinute";
+				}
+				if(split[0].indexOf("0") !== -1) {
+					hours = "longHour"
+				}
+			}
+			if(hours === "shortHour") {
+				let ampm = "noAmPm";
+				console.log(time, hours, ampm, minutes, seconds, separator, comma, month, year, day, order)
+				potentials = {
+					format: this.momentFormats[time][hours][ampm][minutes][seconds][separator][comma][month][year][day][order],
+					order
+				}
+			}
+			else{
+				console.log(time, hours, minutes, seconds, separator, comma, month, year, day, order)
+				potentials = {
+					format: this.momentFormats[time][hours][minutes][seconds][separator][comma][month][year][day][order],
+					order
+				}
+			}
 		}
 		// Otherwise no time
 		else {
 			time = "noTime";
 
 			// If there is a space then need to check for commas
-			if(separator === "_") {
-				var comma = "noComma";
-				
-				if(el.indexOf(",") !== -1){
-					comma = "comma";
-				}
-	
+			if(separator === "_") {	
+				console.log(time, separator, comma, month, year, day, order)
 				potentials = {
 					format: this.momentFormats[time][separator][comma][month][year][day][order],
 					order
@@ -300,6 +424,7 @@ export default class typeDetect {
 			return suggestion;
 		}
 
+		console.log(potentials)
 		// Otherwise the remaining potential options need to be checked against this element until one that fits is found
 		for(let pot of potentials.format) {
 			if(moment(el, pot).isValid()) {

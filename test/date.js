@@ -184,5 +184,57 @@ checkDetails(
     }
 )
 
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with 'Do'...")
+checkDetails(
+    detector.typeDetect(['1st 10 2020','17th 10 1999','2nd 1 2025']),
+    {
+        type: 'date',
+        format: 'Do M YYYY',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with Do comma and MMMM...")
+checkDetails(
+    detector.typeDetect(['1st October, 2020','17th October, 1999','2nd January, 2025']),
+    {
+        type: 'date',
+        format: 'Do MMMM, YYYY',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with Do comma and MMMM...")
+checkDetails(
+    detector.typeDetect(['1st Oct, 2020','17th Oct, 1999','2nd Jan, 2025']),
+    {
+        type: 'date',
+        format: 'Do MMM, YYYY',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with Do comma and MMMM...")
+checkDetails(
+    detector.typeDetect(['1st Oct, 2020 17:12:47','17th Oct, 1999 12:56:07','2nd Jan, 2025 09:02:00']),
+    {
+        type: 'date',
+        format: 'Do MMM, YYYY HH:mm:ss',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
 
 console.log("Failed", failed, "of", total, "tests. See above for details");
