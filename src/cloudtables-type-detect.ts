@@ -94,21 +94,27 @@ export default class typeDetect {
 				type = 'number';
 			}
 
+			// Check if there are any html tags
 			if(type === 'string' && el.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
 				type = 'html';
 			}
 
+			// Last chance to find a type is a date format
 			if(type === 'string') {
+				// Get a format for the datapoint
 				let format = this.getDateFormat(el, dateSuggestion, definiteOrder);
 
+				// getDateFormat can tell if the data is mixed based on the suggested format and if there is a definite order
 				if(format === "mixed") {
 					return format;
 				}
 
+				// If the order is not the default then it has to be this for the remaining data points
 				if(format.order !== "dmy") {
 					definiteOrder = format.order;
 				}
 
+				// If there is a suggested format and it doesn't match this format then check all of the previous data points against this new format as it could work for them
 				if(dateSuggestion !== null && format.format !== dateSuggestion.format) {
 					for(var j = 0; j < i; j++){
 						if(!moment(data[j], format.format).isValid()) {
@@ -117,15 +123,20 @@ export default class typeDetect {
 					}
 				}
 
+				// If a format has been found for this data point
 				if(format !== null) {
+					// if there is a suggested format
 					if(dateSuggestion !== null) {
+						// if the suggested format is shorter than this then it has probably identified a short representation and so it should be used
 						if(dateSuggestion.format.length < format.format.length){
 							format.format = dateSuggestion.format;
 						}
+						// Otherwise it must use the new format so remove the old one from potential types
 						else {
 							types.splice(types.indexOf("date-" + dateSuggestion), 1);
 						}
 					}
+					// Set the type for this format and the suggestion for the next
 					type = "date-" + format.format;
 					dateSuggestion = format;
 				}
@@ -157,7 +168,7 @@ export default class typeDetect {
 	}
 
 	public getDateFormat(el: string, suggestion, definiteOrder) {
-		var time = "time";
+		// Only one separator can be used, default is "_"
 		var separator = "_";
 		if(el.indexOf("-") !== -1) {
 			separator = "-";
@@ -165,46 +176,60 @@ export default class typeDetect {
 		else if(el.indexOf("/") !== -1) {
 			separator = "/";
 		}
-
+		
+		// Split on the separator to get the different parts
 		let split = el.split(separator !== "_" ? separator : " ");
-		let year = "shortYear";
+		
+		// can idenftify the order and the length of the year in this loop
 		let small = [];
+		let year = "shortYear";
 		let order = "dmy";
 		for(let i = 0; i < split.length; i++) {
 			let spl = split[i];
+			
+			// If there is a 0 then it must be at least a double character
 			if(spl.indexOf('0') === -1 && +spl < 10) {
 				small.push(i);
 			}
+			
+			// If the split is a number
 			if(!isNaN(+spl)) {
+				// If it's length is 4 then it must be a long year, this can also determine the order
 				if(spl.length === 4) {
 					year = "longYear";
 					if(i === 0) {
 						order = "ymd";
 					}
 				}
-				else if(+spl > 31) {
-					if(i === 0) {
-						order = "ymd";
-					}
+				// Otherwise if the value is greater than 31 and it appears first then it must be a short year and the order can be determined
+				else if(+spl > 31 && i === 0) {
+					order = "ymd";
 				}
+				// Otherwise if the second element is greater than twelve then it can't be the month so must be the day
 				else if(+spl > 12 && i===1) {
 					order = "mdy";
 				}
 			}
 		}
-
+		
+		// if ymd or mdy are identified then it is definitely known.
+		// If one of these has been found before
 		if(definiteOrder !== null) {
+			// And the current order isn't the default or the definite then it must be mixed
 			if(order !== "dmy" && order !== definiteOrder) {
 				return "mixed";
 			}
+			// Otherwise it might just be defaulting because it can't work anything out so use the definite
 			else {
 				order = definiteOrder;
 			}
 		}
-
+		
 		let month = "stdMonth";
 		let day = "longDay";
+		// If there is at least one part that is not a double character format for month or day
 		if(small.length > 0) {
+			// Determine which is short given the order that is in use
 			if(order === "ymd") {
 				if(small.indexOf(1) !== -1){
 					month = "shortMonth";
@@ -229,17 +254,20 @@ export default class typeDetect {
 					day = "shortDay";
 				}
 			}
-
+			
 		}
-
+		
 		let potentials;
+		var time = "time";
+		// If there is a colon then a time is present
 		if(el.indexOf(":") !== -1) {
 
 		}
+		// Otherwise no time
 		else {
 			time = "noTime";
 
-			
+			// If there is a space then need to check for commas
 			if(separator === "_") {
 				var comma = "noComma";
 				
@@ -252,6 +280,7 @@ export default class typeDetect {
 					order
 				}
 			}
+			// There are no commas in the other separators
 			else {
 				potentials = {
 					format: this.momentFormats[time][separator][month][year][day][order],
@@ -260,13 +289,18 @@ export default class typeDetect {
 			}
 		}
 
+		// If there is a suggested format,
+		// Check that it matches the length of day, month and year
+		// And is a valid moment conversion then the suggestion can still be used.
 		if(
 			suggestion !== null &&
-			((day === "longDay" && suggestion.format.indexOf("DD") !== -1) && (month === "stdMonth" && suggestion.format.indexOf("MM") !== -1)) &&
+			((day === "longDay" && suggestion.format.indexOf("DD") !== -1) && (month === "stdMonth" && suggestion.format.indexOf("MM") !== -1) && (year === "longYear" && suggestion.format.indexOf("YYYY") !== -1)) &&
 			moment(el, suggestion.format).isValid()
 		) {
 			return suggestion;
 		}
+
+		// Otherwise the remaining potential options need to be checked against this element until one that fits is found
 		for(let pot of potentials.format) {
 			if(moment(el, pot).isValid()) {
 				return {
@@ -276,6 +310,7 @@ export default class typeDetect {
 			}
 		}
 
+		// If at this point there is a definite order but no format has been found then the type must be mixed
 		return definiteOrder !== null ? "mixed" : null;
 	}
 
