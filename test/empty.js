@@ -55,58 +55,15 @@ var checkDetails = function(actual, expected) {
 
 var detector = new typeDetect["default"]();
 
-// // // DateTimes
-// // console.log("CHECK  DateTimes...")
-// // checkDetails(
-// //     detector.typeDetect(['2021-03-11 17:30','2020-12-25 9:45','2021-01-01 1:12']),
-// //     {
-// //         type: 'datetime',
-// //         format: 'YYYY-MM-DD HH:mm',
-// //         prefix: null,
-// //         postfix: null,
-// //         dp: null
-// //     }
-// // )
-
-
-
-// // Mixed
-// console.log("CHECK  Mixed...")
-// checkDetails(
-//     detector.typeDetect(['Test', 123, '$1']),
-//     {
-//         type: 'mixed',
-//         format: null,
-//         prefix: null,
-//         postfix: null,
-//         dp: null
-//     }
-// )
-
-// // // Excel
-// // console.log("CHECK  Excel...")
-// // checkDetails(
-// //     detector.typeDetect([{ value: '1', excel: '0.00' },{ value: '1.45', excel: '0.00' },{ value: '10', excel: '0.00' }]),
-// //     {
-// //         type: 'excel',
-// //         format: null,
-// //         prefix: '',
-// //         postfix: '',
-// //         dp: 2
-// //     }
-// // )
-
-// // Empty
-// console.log("CHECK  Empty...")
-// checkDetails(
-//     detector.typeDetect([]),
-//     {
-//         type: null,
-//         format: null,
-//         prefix: null,
-//         postfix: null,
-//         dp: null
-//     }
-// )
-
-console.log("Failed", failed, "of", total, "tests. See above for details");
+// Empty
+console.log("CHECK  Empty...")
+checkDetails(
+    detector.typeDetect([]),
+    {
+        type: null,
+        format: null,
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)

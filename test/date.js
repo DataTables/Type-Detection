@@ -54,59 +54,80 @@ var checkDetails = function(actual, expected) {
 }
 
 var detector = new typeDetect["default"]();
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates standard...")
+checkDetails(
+    detector.typeDetect(['2021-03-11','2020-12-25','2021-01-01']),
+    {
+        type: 'date',
+        format: 'YYYY-MM-DD',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
 
-// // // DateTimes
-// // console.log("CHECK  DateTimes...")
-// // checkDetails(
-// //     detector.typeDetect(['2021-03-11 17:30','2020-12-25 9:45','2021-01-01 1:12']),
-// //     {
-// //         type: 'datetime',
-// //         format: 'YYYY-MM-DD HH:mm',
-// //         prefix: null,
-// //         postfix: null,
-// //         dp: null
-// //     }
-// // )
+// Dates YYYY-MM-D
+console.log("CHECK  Dates small day...")
+checkDetails(
+    detector.typeDetect(['2021-03-1','2020-12-25','2021-01-11']),
+    {
+        type: 'date',
+        format: 'YYYY-MM-D',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
 
+// Dates YYYY-MM-D but not in the first element
+console.log("CHECK  Dates small day not first...")
+checkDetails(
+    detector.typeDetect(['2020-12-25', '2021-03-1', '2021-01-11']),
+    {
+        type: 'date',
+        format: 'YYYY-MM-D',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
 
+// Dates YYYY-MM-D but not in the first element
+console.log("CHECK  Dates small day not first...")
+checkDetails(
+    detector.typeDetect(['12-25-2020', '03-1-2021', '01-11-1999']),
+    {
+        type: 'date',
+        format: 'MM-D-YYYY',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
 
-// // Mixed
-// console.log("CHECK  Mixed...")
-// checkDetails(
-//     detector.typeDetect(['Test', 123, '$1']),
-//     {
-//         type: 'mixed',
-//         format: null,
-//         prefix: null,
-//         postfix: null,
-//         dp: null
-//     }
-// )
+// Dates YYYY-MM-D but not in the first element
+console.log("CHECK  Dates small day and small month not first...")
+checkDetails(
+    detector.typeDetect(['12-25-2020', '3-1-2021', '1-11-1999']),
+    {
+        type: 'date',
+        format: 'M-D-YYYY',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
 
-// // // Excel
-// // console.log("CHECK  Excel...")
-// // checkDetails(
-// //     detector.typeDetect([{ value: '1', excel: '0.00' },{ value: '1.45', excel: '0.00' },{ value: '10', excel: '0.00' }]),
-// //     {
-// //         type: 'excel',
-// //         format: null,
-// //         prefix: '',
-// //         postfix: '',
-// //         dp: 2
-// //     }
-// // )
-
-// // Empty
-// console.log("CHECK  Empty...")
-// checkDetails(
-//     detector.typeDetect([]),
-//     {
-//         type: null,
-//         format: null,
-//         prefix: null,
-//         postfix: null,
-//         dp: null
-//     }
-// )
-
-console.log("Failed", failed, "of", total, "tests. See above for details");
+// Dates YYYY-MM-D but not in the first element
+console.log("CHECK  Mixed Dates...")
+checkDetails(
+    detector.typeDetect(['12-25-2020', '03-01-2021', '25-01-1999']),
+    {
+        type: 'mixed',
+        format: null,
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)

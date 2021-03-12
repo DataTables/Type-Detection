@@ -8,12 +8,18 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node ./test/test.js",
+    "test": "node ./test/numbers.js && node ./test/date.js && node ./test/time.js && node ./test/html.js && node ./test/strings.js && node ./test/empty.js",
     "speedTest": "node ./test/speedtest.js",
     "build": "npm install && tsc ./src/*.ts --outDir ./dist/",
     "buildNoInstall": "tsc ./src/*.ts --outDir ./dist/",
     "buildTest": "npm run build && npm run test",
     "quickCheck": "npm run buildNoInstall && npm run test",
+    "quickNumbers": "npm run buildNoInstall && node ./test/numbers.js",
+    "quickDate": "npm run buildNoInstall && node ./test/date.js",
+    "quickTime": "npm run buildNoInstall && node ./test/time.js",
+    "quickHtml": "npm run buildNoInstall && node ./test/html.js",
+    "quickStrings": "npm run buildNoInstall && node ./test/strings.js",
+    "quickEmpty": "npm run buildNoInstall && node ./test/empty.js",
     "quickSpeedCheck": "npm run buildNoInstall && npm run speedTest"
   },
   "repository": {
