@@ -166,8 +166,7 @@ export default class typeDetect {
 			separator = "/";
 		}
 
-		let split = el.split(separator);
-
+		let split = el.split(separator !== "_" ? separator : " ");
 		let year = "shortYear";
 		let small = [];
 		let order = "dmy";

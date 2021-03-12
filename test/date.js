@@ -158,4 +158,31 @@ checkDetails(
     }
 )
 
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates standard '/' separator...")
+checkDetails(
+    detector.typeDetect(['2021/03/11','2020/12/25','2021/01/01']),
+    {
+        type: 'date',
+        format: 'YYYY/MM/DD',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates standard ' ' separator...")
+checkDetails(
+    detector.typeDetect(['2021 03 11','2020 12 25','2021 01 01']),
+    {
+        type: 'date',
+        format: 'YYYY MM DD',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+
 console.log("Failed", failed, "of", total, "tests. See above for details");
