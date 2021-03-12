@@ -66,6 +66,7 @@ export default class typeDetect {
 	public getType(data, prefix, postfix): string {
 		let types = []
 		let dateSuggestion = null;
+		let definiteOrder = null;
 		
 		// A type can only be set if all of the data fits it
 		for (let i = 0; i < data.length; i ++) {
@@ -98,19 +99,34 @@ export default class typeDetect {
 			}
 
 			if(type === 'string') {
-				let format = this.getDateFormat(el, dateSuggestion);
+				let format = this.getDateFormat(el, dateSuggestion, definiteOrder);
 
-				if(dateSuggestion !== null && format !== dateSuggestion) {
-					console.log("Check previous elements", format);
+				if(format === "mixed") {
+					return format;
+				}
+
+				if(format.order !== "dmy") {
+					definiteOrder = format.order;
+				}
+
+				if(dateSuggestion !== null && format.format !== dateSuggestion.format) {
 					for(var j = 0; j < i; j++){
-						if(!moment(data[j], format).isValid()) {
+						if(!moment(data[j], format.format).isValid()) {
 							return 'mixed';
 						}
 					}
 				}
 
 				if(format !== null) {
-					type = "date-" + format;
+					if(dateSuggestion !== null) {
+						if(dateSuggestion.format.length < format.format.length){
+							format.format = dateSuggestion.format;
+						}
+						else {
+							types.splice(types.indexOf("date-" + dateSuggestion), 1);
+						}
+					}
+					type = "date-" + format.format;
 					dateSuggestion = format;
 				}
 			}
@@ -140,7 +156,7 @@ export default class typeDetect {
 		return 'string';
 	}
 
-	public getDateFormat(el: string, suggestion: string): string {
+	public getDateFormat(el: string, suggestion, definiteOrder) {
 		var time = "time";
 		var separator = "_";
 		if(el.indexOf("-") !== -1) {
@@ -167,10 +183,26 @@ export default class typeDetect {
 						order = "ymd";
 					}
 				}
+				else if(+spl > 31) {
+					if(i === 0) {
+						order = "ymd";
+					}
+				}
+				else if(+spl > 12 && i===1) {
+					order = "mdy";
+				}
 			}
 		}
 
-		console.log(small)
+		if(definiteOrder !== null) {
+			if(order !== "dmy" && order !== definiteOrder) {
+				return "mixed";
+			}
+			else {
+				order = definiteOrder;
+			}
+		}
+
 		let month = "stdMonth";
 		let day = "longDay";
 		if(small.length > 0) {
@@ -182,9 +214,26 @@ export default class typeDetect {
 					day = "shortDay";
 				}
 			}
+			else if(order === "mdy") {
+				if(small.indexOf(0) !== -1) {
+					month = "shortMonth";
+				}
+				if(small.indexOf(1) !== -1) {
+					day = "shortDay";
+				}
+			}
+			else {
+				if(small.indexOf(1) !== -1) {
+					month = "shortMonth";
+				}
+				if(small.indexOf(0) !== -1) {
+					day = "shortDay";
+				}
+			}
+
 		}
 
-		let potentials = [];
+		let potentials;
 		if(el.indexOf(":") !== -1) {
 
 		}
@@ -199,35 +248,39 @@ export default class typeDetect {
 					comma = "comma";
 				}
 	
-				console.log(time, separator, comma, month, year, day)
-				potentials = this.momentFormats[time][separator][comma][month][year][day][order];
+				potentials = {
+					format: this.momentFormats[time][separator][comma][month][year][day][order],
+					order
+				}
 			}
 			else {
-				console.log(time, separator, month, year, day)
-				potentials = this.momentFormats[time][separator][month][year][day][order];
+				potentials = {
+					format: this.momentFormats[time][separator][month][year][day][order],
+					order
+				}
 			}
 		}
 
-		console.log(potentials)
-		console.log(suggestion)
 		if(
 			suggestion !== null &&
-			((day === "longDay" && suggestion.indexOf("DD") !== -1) && (month === "stdMonth" && suggestion.indexOf("MM") !== -1)) &&
-			moment(el, suggestion).isValid()
+			((day === "longDay" && suggestion.format.indexOf("DD") !== -1) && (month === "stdMonth" && suggestion.format.indexOf("MM") !== -1)) &&
+			moment(el, suggestion.format).isValid()
 		) {
 			return suggestion;
 		}
-		for(let pot of potentials) {
+		for(let pot of potentials.format) {
 			if(moment(el, pot).isValid()) {
-				return pot;
+				return {
+					format: pot,
+					order
+				}
 			}
 		}
 
-		return null;
+		return definiteOrder !== null ? "mixed" : null;
 	}
 
 	public getFormat(data, type: string): string {
-		console.log(this.momentFormats.length)
 		return null;
 	}
 
