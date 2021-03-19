@@ -499,6 +499,106 @@
 			}
 		}
 	},
+	"onlyTime": {
+		"longHour": {
+			"longMinute": {
+				"longSeconds": [
+					"HH:mm:ss"
+				],
+				"shortSeconds": [
+					"HH:mm:s"
+				],
+				"noSeconds": [
+					"HH:mm"
+				]
+			},
+			"shortMinute": {
+				"longSeconds": [
+					"HH:m:ss"
+				],
+				"shortSeconds": [
+					"HH:m:s"
+				],
+				"noSeconds": [
+					"HH:m"
+				]
+			}
+		},
+		"shortHour": {
+			"ampm": {
+				"longMinute": {
+					"longSeconds": [
+						"H:mm:ss a"
+					],
+					"shortSeconds": [
+						"H:mm:s a"
+					],
+					"noSeconds": [
+						"H:mm a"
+					]
+				},
+				"shortMinute": {
+					"longSeconds": [
+						"H:m:ss a"
+					],
+					"shortSeconds": [
+						"H:m:s a"
+					],
+					"noSeconds": [
+						"H:m a"
+					]
+				}
+			},
+			"AMPM": {
+				"longMinute": {
+					"longSeconds": [
+						"H:mm:ss A"
+					],
+					"shortSeconds": [
+						"H:mm:s A"
+					],
+					"noSeconds": [
+						"H:mm A"
+					]
+				},
+				"shortMinute": {
+					"longSeconds": [
+						"H:m:ss A"
+					],
+					"shortSeconds": [
+						"H:m:s A"
+					],
+					"noSeconds": [
+						"H:m A"
+					]
+				}
+			},
+			"noAmPm": {
+				"longMinute": {
+					"longSeconds": [
+						"H:mm:ss"
+					],
+					"shortSeconds": [
+						"H:mm:s"
+					],
+					"noSeconds": [
+						"H:mm"
+					]
+				},
+				"shortMinute": {
+					"longSeconds": [
+						"H:m:ss"
+					],
+					"shortSeconds": [
+						"H:m:s"
+					],
+					"noSeconds": [
+						"H:m"
+					]
+				}
+			}
+		}
+	},
 	"time": {
 		"longHour": {
 			"longMinute": {

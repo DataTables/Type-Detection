@@ -417,6 +417,58 @@ finalFormats = {
             }
         }
     },
+    onlyTime: {
+        longHour:{
+            longMinute:{
+                longSeconds: [],
+                shortSeconds: [],
+                noSeconds: []
+            },
+            shortMinute:{
+                longSeconds: [],
+                shortSeconds: [],
+                noSeconds: []
+            }   
+        },
+        shortHour:{
+            ampm: {
+                longMinute:{
+                    longSeconds: [],
+                    shortSeconds: [],
+                    noSeconds: []
+                },
+                shortMinute:{
+                    longSeconds: [],
+                    shortSeconds: [],
+                    noSeconds: []
+                }   
+            },
+            AMPM: {
+                longMinute:{
+                    longSeconds: [],
+                    shortSeconds: [],
+                    noSeconds: []
+                },
+                shortMinute:{
+                    longSeconds: [],
+                    shortSeconds: [],
+                    noSeconds: []
+                } 
+            },
+            noAmPm: {
+                longMinute:{
+                    longSeconds: [],
+                    shortSeconds: [],
+                    noSeconds: []
+                },
+                shortMinute:{
+                    longSeconds: [],
+                    shortSeconds: [],
+                    noSeconds: []
+                } 
+            }
+        }
+    },
     time: {
         longHour:{
             longMinute:{
@@ -8501,7 +8553,7 @@ for(var a = 0; a < formats.length; a++) {
                 comma = "comma";
             }
 
-            console.log(time, hour, minute, seconds, separator, comma, month, year, day, order)
+            console.log(time, hour, ampm, minute, seconds, separator, comma, month, year, day, order)
             if(hour === "longHour") {
                 finalFormats[time][hour][minute][seconds][separator][comma][month][year][day][order].push(formats[a]);
             }
@@ -8543,4 +8595,40 @@ for(var a = 0; a < formats.length; a++) {
     }
 }
 
+time = "onlyTime";
+for(var a = 0; a < times.length; a++) {
+    var ampm = "noAmPm"
+    if(times[a].indexOf("A") !== -1){
+        ampm = "AMPM";
+    }
+    else if(times[a].indexOf("a") !== -1){
+        ampm = "ampm"
+    }
+
+    var hour = "shortHour";
+    if(times[a].indexOf("HH") !== -1) {
+        hour = "longHour";
+    }
+
+    var minute = "shortMinute";
+    if(times[a].indexOf("mm") !== -1) {
+        minute = "longMinute";
+    }
+
+    var seconds = "noSeconds";
+    if(times[a].indexOf("ss") !== -1){
+        seconds = "longSeconds";
+    }
+    else if (times[a].indexOf("s") !== -1) {
+        seconds = "shortSeconds";
+    }
+
+    console.log(time, hour, ampm, minute, seconds)
+    if(hour === "longHour") {
+        finalFormats[time][hour][minute][seconds].push(times[a]);
+    }
+    else {
+        finalFormats[time][hour][ampm][minute][seconds].push(times[a]);
+    }
+}
 fs.writeFileSync('resources/momentFormats.json', JSON.stringify(finalFormats, null, '\t'));

@@ -54,18 +54,44 @@ var checkDetails = function(actual, expected) {
 }
 
 var detector = new typeDetect["default"]();
-
-// Times
-console.log("CHECK  Times...")
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with Do comma and MMM and long time...")
 checkDetails(
-    detector.typeDetect(['17:30','9:45','1:12']),
+    detector.typeDetect(['17:12:47','12:56:07','09:02:00']),
     {
-        type: 'time',
-        format: 'HH:mm',
+        type: 'date',
+        format: 'HH:mm:ss',
         prefix: null,
         postfix: null,
         dp: null
     }
 )
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with Do comma and MMM and ampm...")
+checkDetails(
+    detector.typeDetect(['11:12:47 am','10:56:07 pm','9:02:00 am']),
+    {
+        type: 'date',
+        format: 'H:mm:ss a',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with Do comma and MMMM and AMPM...")
+checkDetails(
+    detector.typeDetect(['11:12:47 AM','10:56:07 PM','9:02:00 AM']),
+    {
+        type: 'date',
+        format: 'H:mm:ss A',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
 
 console.log("Failed", failed, "of", total, "tests. See above for details");

@@ -19,11 +19,13 @@ export default class typeDetect {
 	private days;
 	private abbrDays;
 	private postFixes;
+	private previouslyDiscarded;
 
 	constructor (decimalCharacter='.', thousandsSeparator=',') {
 		this.decimalCharacter = decimalCharacter;
 		this.thousandsSeparator = thousandsSeparator;
 		this.momentFormats = JSON.parse(fs.readFileSync('resources/momentFormats.json').toString());
+		this.previouslyDiscarded = [];
 		this.months = [
 			"january",
 			"february",
@@ -124,6 +126,7 @@ export default class typeDetect {
 		let types = []
 		let dateSuggestion = null;
 		let definiteOrder = null;
+		this.previouslyDiscarded = [];
 		
 		// A type can only be set if all of the data fits it
 		for (let i = 0; i < data.length; i ++) {
@@ -191,6 +194,7 @@ export default class typeDetect {
 						// Otherwise it must use the new format so remove the old one from potential types
 						else {
 							types.splice(types.indexOf("date-" + dateSuggestion), 1);
+							this.previouslyDiscarded.push(dateSuggestion);
 						}
 					}
 					// Set the type for this format and the suggestion for the next
@@ -225,6 +229,7 @@ export default class typeDetect {
 	}
 
 	public getDateFormat(el: string, suggestion, definiteOrder) {
+
 		let lowerEl = el.toLowerCase()
 		// Only one separator can be used, default is "_"
 		var separator = "_";
@@ -237,120 +242,126 @@ export default class typeDetect {
 		
 		// Split on the separator to get the different parts
 		let split = el.split(separator !== "_" ? separator : " ");
-		
-		// can idenftify the order and the length of the year in this loop
+
+		let time = "time";
+		let month = "stdMonth";
+		let day = "longDay";
 		let small = [];
 		let year = "shortYear";
 		let order = "dmy";
-		for(let i = 0; i < split.length; i++) {
-			let spl = split[i];
-			if(spl.indexOf(",") !== -1) {
-				spl.replace(",", "");
-			}
-			
-			// If there is a 0 then it must be at least a double character
-			if(spl.indexOf('0') === -1 && +spl < 10) {
-				small.push(i);
-			}
-			
-			// If the split is a number
-			if(!isNaN(+spl)) {
-				// If it's length is 4 then it must be a long year, this can also determine the order
-				if(spl.length === 4) {
-					year = "longYear";
-					if(i === 0) {
+		if(split[0].indexOf(":") !== -1) {
+			time = "onlyTime";
+		}
+		else {
+			// can idenftify the order and the length of the year in this loop
+			for(let i = 0; i < split.length; i++) {
+				let spl = split[i];
+				if(spl.indexOf(",") !== -1) {
+					spl.replace(",", "");
+				}
+				
+				// If there is a 0 then it must be at least a double character
+				if(spl.indexOf('0') === -1 && +spl < 10) {
+					small.push(i);
+				}
+				
+				// If the split is a number
+				if(!isNaN(+spl)) {
+					// If it's length is 4 then it must be a long year, this can also determine the order
+					if(spl.length === 4) {
+						year = "longYear";
+						if(i === 0) {
+							order = "ymd";
+						}
+					}
+					// Otherwise if the value is greater than 31 and it appears first then it must be a short year and the order can be determined
+					else if(+spl > 31 && i === 0) {
 						order = "ymd";
 					}
-				}
-				// Otherwise if the value is greater than 31 and it appears first then it must be a short year and the order can be determined
-				else if(+spl > 31 && i === 0) {
-					order = "ymd";
-				}
-				// Otherwise if the second element is greater than twelve then it can't be the month so must be the day
-				else if(+spl > 12 && i===1) {
-					order = "mdy";
-				}
-			}
-		}
-		
-		// if ymd or mdy are identified then it is definitely known.
-		// If one of these has been found before
-		if(definiteOrder !== null) {
-			// And the current order isn't the default or the definite then it must be mixed
-			if(order !== "dmy" && order !== definiteOrder) {
-				return "mixed";
-			}
-			// Otherwise it might just be defaulting because it can't work anything out so use the definite
-			else {
-				order = definiteOrder;
-			}
-		}
-		
-		let month = "stdMonth";
-		let day = "longDay";
-		// If there is at least one part that is not a double character format for month or day
-		if(small.length > 0) {
-			// Determine which is short given the order that is in use
-			if(order === "ymd") {
-				if(small.indexOf(1) !== -1){
-					month = "shortMonth";
-				}
-				if(small.indexOf(2) !== -1) {
-					day = "shortDay";
-				}
-			}
-			else if(order === "mdy") {
-				if(small.indexOf(0) !== -1) {
-					month = "shortMonth";
-				}
-				if(small.indexOf(1) !== -1) {
-					day = "shortDay";
-				}
-			}
-			else {
-				if(small.indexOf(1) !== -1) {
-					month = "shortMonth";
-				}
-				if(small.indexOf(0) !== -1) {
-					day = "shortDay";
-				}
-			}
-			
-		}
-
-		// If the separator is a space, need to check for commas 
-		var comma = "noComma";
-		if(separator === "_") {
-			
-			if(el.indexOf(",") !== -1){
-				comma = "comma";
-
-				// And if there is a comma then there could be a long or abbreviated month
-				for(let i = 0; i < this.months.length; i++) {
-					let longMonth = this.months[i];
-					let abbrMonth = this.abbrMonths[i];
-
-					if(lowerEl.indexOf(longMonth) !== -1) {
-						month = "longMonth";
-						break;
-					}
-					else if(lowerEl.indexOf(abbrMonth) !== -1) {
-						month = "abbrMonth";
-						break;
+					// Otherwise if the second element is greater than twelve then it can't be the month so must be the day
+					else if(+spl > 12 && i===1) {
+						order = "mdy";
 					}
 				}
 			}
-
-			// Spaces can also have Do dates (st/nd/rd/th)
-			for(let post of this.postFixes) {
-				if(el.indexOf(post) !== -1) {
-					day = "postDay";
+			
+			// if ymd or mdy are identified then it is definitely known.
+			// If one of these has been found before
+			if(definiteOrder !== null) {
+				// And the current order isn't the default or the definite then it must be mixed
+				if(order !== "dmy" && order !== definiteOrder) {
+					return "mixed";
+				}
+				// Otherwise it might just be defaulting because it can't work anything out so use the definite
+				else {
+					order = definiteOrder;
+				}
+			}
+			
+			
+			// If there is at least one part that is not a double character format for month or day
+			if(small.length > 0) {
+				// Determine which is short given the order that is in use
+				if(order === "ymd") {
+					if(small.indexOf(1) !== -1){
+						month = "shortMonth";
+					}
+					if(small.indexOf(2) !== -1) {
+						day = "shortDay";
+					}
+				}
+				else if(order === "mdy") {
+					if(small.indexOf(0) !== -1) {
+						month = "shortMonth";
+					}
+					if(small.indexOf(1) !== -1) {
+						day = "shortDay";
+					}
+				}
+				else {
+					if(small.indexOf(1) !== -1) {
+						month = "shortMonth";
+					}
+					if(small.indexOf(0) !== -1) {
+						day = "shortDay";
+					}
+				}
+				
+			}
+	
+			// If the separator is a space, need to check for commas 
+			var comma = "noComma";
+			if(separator === "_") {
+				
+				if(el.indexOf(",") !== -1){
+					comma = "comma";
+	
+					// And if there is a comma then there could be a long or abbreviated month
+					for(let i = 0; i < this.months.length; i++) {
+						let longMonth = this.months[i];
+						let abbrMonth = this.abbrMonths[i];
+	
+						if(lowerEl.indexOf(longMonth) !== -1) {
+							month = "longMonth";
+							break;
+						}
+						else if(lowerEl.indexOf(abbrMonth) !== -1) {
+							month = "abbrMonth";
+							break;
+						}
+					}
+				}
+	
+				// Spaces can also have Do dates (st/nd/rd/th)
+				for(let post of this.postFixes) {
+					if(el.indexOf(post) !== -1) {
+						day = "postDay";
+					}
 				}
 			}
 		}
 
 		let potentials;
-		var time = "time";
 		let seconds = "";
 		let minutes = "";
 		let hours = "";
@@ -377,48 +388,64 @@ export default class typeDetect {
 			// If there are two different indexes for colon then there must be seconds present
 			if(el.indexOf(":") !== el.lastIndexOf(":")) {
 				// If there is a 0 at the start them must be ss, default to ss if greater than 10
-				if(splitTime[2].indexOf("0") === 0 || +splitTime[2] > 10) {
+				if(splitTime[2].indexOf("0") === 0 || +splitTime[2] > 9) {
 					seconds = "longSeconds";
 				}
 				else {
 					seconds = "shortSeconds";
 				}
 				// If there is a 0 at the start them must be mm, default to mm if greater than 10
-				if(splitTime[1].indexOf("0") === 0 || +splitTime[1] > 10) {
+				if(splitTime[1].indexOf("0") === 0 || +splitTime[1] > 9) {
 					minutes = "longMinute";
 				}
 
 				// If there is an ampm then can't be HH
 				// If there is a 0 at the start them must be HH, default to HH if greater than 10
-				if(ampm === "noAmPm" && (splitTime[0].indexOf("0") === 0 || +splitTime[0] > 10)) {
+				if(ampm === "noAmPm" && (splitTime[0].indexOf("0") === 0 || +splitTime[0] > 9)) {
 					hours = "longHour"
 				}
 			}
 			// Otherwise just hours and minutes
 			else {
 				// If there is a 0 at the start them must be mm, default to mm if greater than 10
-				if(splitTime[1].indexOf("0") === 0 || +splitTime[1] > 10) {
+				if(splitTime[1].indexOf("0") === 0 || +splitTime[1] > 9) {
 					minutes = "longMinute";
 				}
 
 				// If there is an ampm then can't be HH
 				// If there is a 0 at the start them must be HH, default to HH if greater than 10
-				if(ampm === "noAmPm" && (splitTime[0].indexOf("0") === 0 || +splitTime[0] > 10)) {
+				if(ampm === "noAmPm" && (splitTime[0].indexOf("0") === 0 || +splitTime[0] > 9)) {
 					hours = "longHour"
 				}
 			}
 
 			// If there is a short hour need to check for ampm
-			if(hours === "shortHour") {
-				potentials = {
-					format: this.momentFormats[time][hours][ampm][minutes][seconds][separator][comma][month][year][day][order],
-					order
+			if(time !== "onlyTime") {
+				if(hours === "shortHour") {
+					potentials = {
+						format: this.momentFormats[time][hours][ampm][minutes][seconds][separator][comma][month][year][day][order],
+						order
+					}
+				}
+				else{
+					potentials = {
+						format: this.momentFormats[time][hours][minutes][seconds][separator][comma][month][year][day][order],
+						order
+					}
 				}
 			}
-			else{
-				potentials = {
-					format: this.momentFormats[time][hours][minutes][seconds][separator][comma][month][year][day][order],
-					order
+			else {
+				if(hours === "shortHour") {
+					potentials = {
+						format: this.momentFormats[time][hours][ampm][minutes][seconds],
+						order
+					}
+				}
+				else{
+					potentials = {
+						format: this.momentFormats[time][hours][minutes][seconds],
+						order
+					}
 				}
 			}
 		}
@@ -461,12 +488,20 @@ export default class typeDetect {
 
 		// Otherwise the remaining potential options need to be checked against this element until one that fits is found
 		for(let pot of potentials.format) {
-			if(moment(el, pot).isValid()) {
+			if(this.previouslyDiscarded.indexOf(pot) === -1 && moment(el, pot).isValid()) {
+				this.previouslyDiscarded.push(pot)
 				return {
 					format: pot,
 					order
 				}
 			}
+			else {
+				this.previouslyDiscarded.push(pot)
+			}
+		}
+
+		if(moment(el, suggestion.format).isValid()) {
+			return suggestion;
 		}
 
 		// If at this point there is a definite order but no format has been found then the type must be mixed
