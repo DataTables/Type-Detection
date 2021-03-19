@@ -127,7 +127,7 @@ export default class typeDetect {
 		
 		// A type can only be set if all of the data fits it
 		for (let i = 0; i < data.length; i ++) {
-			let el = data[i].toLowerCase();
+			let el = data[i];
 			let type: string = typeof el; // Get the js type of the element
 			let tempEl = el; // Hold a temporary version of el that can be manipulated
 
@@ -225,6 +225,7 @@ export default class typeDetect {
 	}
 
 	public getDateFormat(el: string, suggestion, definiteOrder) {
+		let lowerEl = el.toLowerCase()
 		// Only one separator can be used, default is "_"
 		var separator = "_";
 		if(el.indexOf("-") !== -1) {
@@ -326,12 +327,11 @@ export default class typeDetect {
 					let longMonth = this.months[i];
 					let abbrMonth = this.abbrMonths[i];
 
-					console.log(el, longMonth)
-					if(el.indexOf(longMonth) !== -1) {
+					if(lowerEl.indexOf(longMonth) !== -1) {
 						month = "longMonth";
 						break;
 					}
-					else if(el.indexOf(abbrMonth) !== -1) {
+					else if(lowerEl.indexOf(abbrMonth) !== -1) {
 						month = "abbrMonth";
 						break;
 					}
@@ -347,45 +347,52 @@ export default class typeDetect {
 
 		let potentials;
 		var time = "time";
+		let seconds = "";
+		let minutes = "";
+		let hours = "";
 		// If there is a colon then a time is present
 		if(el.indexOf(":") !== -1) {
-			let seconds = "noSeconds";
-			let minutes = "shortMinute";
-			let hours = "shortHour";
+			let ampm = "noAmPm";
+			if(el.indexOf("am") !== -1 || el.indexOf("pm") !== -1) {
+				ampm = "ampm";
+			}
+			else if (el.indexOf("AM") !== -1 || el.indexOf("PM") !== -1) {
+				ampm = "AMPM";
+			}
+			console.log(el, ampm)
+			seconds = "noSeconds";
+			minutes = "shortMinute";
+			hours = "shortHour";
+			let splitTime = split[split.length - (ampm === "noAmPm" ? 1 : 2)].split(":");
 			if(el.indexOf(":") !== el.lastIndexOf(":")) {
-				let split = el.split(" ")
-				split = split[split.length - 1].split(":");
-				if(split[2].indexOf("0") !== -1) {
+				if(splitTime[2].indexOf("0") === 0 || +splitTime[2] > 10) {
 					seconds = "longSeconds";
 				}
 				else {
 					seconds = "shortSeconds";
 				}
-				if(split[1].indexOf("0") !== -1) {
+				if(splitTime[1].indexOf("0") === 0 || +splitTime[1] > 10) {
 					minutes = "longMinute";
 				}
-				if(split[0].indexOf("0") !== -1) {
+				if(ampm === "noAmPm" && (splitTime[0].indexOf("0") === 0 || +splitTime[0] > 10)) {
 					hours = "longHour"
 				}
 			}
 			else {
-				if(split[1].indexOf("0") !== -1) {
+				if(splitTime[1].indexOf("0") === 0 || +splitTime[1] > 10) {
 					minutes = "longMinute";
 				}
-				if(split[0].indexOf("0") !== -1) {
+				if(ampm === "noAmPm" && (splitTime[0].indexOf("0") === 0 || +splitTime[0] > 10)) {
 					hours = "longHour"
 				}
 			}
 			if(hours === "shortHour") {
-				let ampm = "noAmPm";
-				console.log(time, hours, ampm, minutes, seconds, separator, comma, month, year, day, order)
 				potentials = {
 					format: this.momentFormats[time][hours][ampm][minutes][seconds][separator][comma][month][year][day][order],
 					order
 				}
 			}
 			else{
-				console.log(time, hours, minutes, seconds, separator, comma, month, year, day, order)
 				potentials = {
 					format: this.momentFormats[time][hours][minutes][seconds][separator][comma][month][year][day][order],
 					order
@@ -398,7 +405,6 @@ export default class typeDetect {
 
 			// If there is a space then need to check for commas
 			if(separator === "_") {	
-				console.log(time, separator, comma, month, year, day, order)
 				potentials = {
 					format: this.momentFormats[time][separator][comma][month][year][day][order],
 					order
@@ -418,13 +424,18 @@ export default class typeDetect {
 		// And is a valid moment conversion then the suggestion can still be used.
 		if(
 			suggestion !== null &&
-			((day === "longDay" && suggestion.format.indexOf("DD") !== -1) && (month === "stdMonth" && suggestion.format.indexOf("MM") !== -1) && (year === "longYear" && suggestion.format.indexOf("YYYY") !== -1)) &&
+			(
+				(day === "longDay" && suggestion.format.indexOf("DD") !== -1) && (month === "stdMonth" && suggestion.format.indexOf("MM") !== -1) && (year === "longYear" && suggestion.format.indexOf("YYYY") !== -1)
+			) &&
+			(
+				time === "noTime" ||
+				(hours === "longHour" && suggestion.format.indexOf("HH") !== -1) && (minutes === "longMinute" && suggestion.format.indexOf("mm") !== -1) && (seconds === "longSeconds" && suggestion.format.indexOf("ss") !== -1)
+			) &&
 			moment(el, suggestion.format).isValid()
 		) {
 			return suggestion;
 		}
 
-		console.log(potentials)
 		// Otherwise the remaining potential options need to be checked against this element until one that fits is found
 		for(let pot of potentials.format) {
 			if(moment(el, pot).isValid()) {

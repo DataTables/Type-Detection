@@ -211,7 +211,7 @@ checkDetails(
 )
 
 // Dates YYYY-MM-DD
-console.log("CHECK  Dates with Do comma and MMMM...")
+console.log("CHECK  Dates with Do comma and MMM...")
 checkDetails(
     detector.typeDetect(['1st Oct, 2020','17th Oct, 1999','2nd Jan, 2025']),
     {
@@ -224,12 +224,38 @@ checkDetails(
 )
 
 // Dates YYYY-MM-DD
-console.log("CHECK  Dates with Do comma and MMMM...")
+console.log("CHECK  Dates with Do comma and MMM and long time...")
 checkDetails(
     detector.typeDetect(['1st Oct, 2020 17:12:47','17th Oct, 1999 12:56:07','2nd Jan, 2025 09:02:00']),
     {
         type: 'date',
         format: 'Do MMM, YYYY HH:mm:ss',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with Do comma and MMM and ampm...")
+checkDetails(
+    detector.typeDetect(['1st Oct, 2020 11:12:47 am','17th Oct, 1999 10:56:07 pm','2nd Jan, 2025 9:02:00 am']),
+    {
+        type: 'date',
+        format: 'Do MMM, YYYY H:mm:ss a',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with Do comma and MMMM and AMPM...")
+checkDetails(
+    detector.typeDetect(['1st Oct, 2020 11:12:47 AM','17th Oct, 1999 10:56:07 PM','2nd Jan, 2025 9:02:00 AM']),
+    {
+        type: 'date',
+        format: 'Do MMM, YYYY H:mm:ss A',
         prefix: null,
         postfix: null,
         dp: null
