@@ -317,12 +317,15 @@ export default class typeDetect {
 			}
 			
 		}
-		
+
+		// If the separator is a space, need to check for commas 
+		var comma = "noComma";
 		if(separator === "_") {
-			var comma = "noComma";
 			
 			if(el.indexOf(",") !== -1){
 				comma = "comma";
+
+				// And if there is a comma then there could be a long or abbreviated month
 				for(let i = 0; i < this.months.length; i++) {
 					let longMonth = this.months[i];
 					let abbrMonth = this.abbrMonths[i];
@@ -338,6 +341,7 @@ export default class typeDetect {
 				}
 			}
 
+			// Spaces can also have Do dates (st/nd/rd/th)
 			for(let post of this.postFixes) {
 				if(el.indexOf(post) !== -1) {
 					day = "postDay";
@@ -353,39 +357,58 @@ export default class typeDetect {
 		// If there is a colon then a time is present
 		if(el.indexOf(":") !== -1) {
 			let ampm = "noAmPm";
+
+			// Check for am or pm as a post fix
 			if(el.indexOf("am") !== -1 || el.indexOf("pm") !== -1) {
 				ampm = "ampm";
 			}
 			else if (el.indexOf("AM") !== -1 || el.indexOf("PM") !== -1) {
 				ampm = "AMPM";
 			}
-			console.log(el, ampm)
+
+			// Default values if we can't prove otherwise
 			seconds = "noSeconds";
 			minutes = "shortMinute";
 			hours = "shortHour";
+
+			// The split location will depend on whether there is an ampm postfixed
 			let splitTime = split[split.length - (ampm === "noAmPm" ? 1 : 2)].split(":");
+
+			// If there are two different indexes for colon then there must be seconds present
 			if(el.indexOf(":") !== el.lastIndexOf(":")) {
+				// If there is a 0 at the start them must be ss, default to ss if greater than 10
 				if(splitTime[2].indexOf("0") === 0 || +splitTime[2] > 10) {
 					seconds = "longSeconds";
 				}
 				else {
 					seconds = "shortSeconds";
 				}
+				// If there is a 0 at the start them must be mm, default to mm if greater than 10
 				if(splitTime[1].indexOf("0") === 0 || +splitTime[1] > 10) {
 					minutes = "longMinute";
 				}
+
+				// If there is an ampm then can't be HH
+				// If there is a 0 at the start them must be HH, default to HH if greater than 10
 				if(ampm === "noAmPm" && (splitTime[0].indexOf("0") === 0 || +splitTime[0] > 10)) {
 					hours = "longHour"
 				}
 			}
+			// Otherwise just hours and minutes
 			else {
+				// If there is a 0 at the start them must be mm, default to mm if greater than 10
 				if(splitTime[1].indexOf("0") === 0 || +splitTime[1] > 10) {
 					minutes = "longMinute";
 				}
+
+				// If there is an ampm then can't be HH
+				// If there is a 0 at the start them must be HH, default to HH if greater than 10
 				if(ampm === "noAmPm" && (splitTime[0].indexOf("0") === 0 || +splitTime[0] > 10)) {
 					hours = "longHour"
 				}
 			}
+
+			// If there is a short hour need to check for ampm
 			if(hours === "shortHour") {
 				potentials = {
 					format: this.momentFormats[time][hours][ampm][minutes][seconds][separator][comma][month][year][day][order],
