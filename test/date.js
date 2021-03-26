@@ -1,4 +1,4 @@
-var typeDetect = require('../dist/cloudtables-type-detect');
+var typeDetect = require('../dist/cloudtables-type-detect2');
 
 var failed = 0;
 var total = 0;
@@ -242,7 +242,7 @@ checkDetails(
     detector.typeDetect(['1st Oct, 2020 11:12:47 am','17th Oct, 1999 10:56:07 pm','2nd Jan, 2025 9:02:00 am']),
     {
         type: 'date',
-        format: 'Do MMM, YYYY H:mm:ss a',
+        format: 'Do MMM, YYYY h:mm:ss a',
         prefix: null,
         postfix: null,
         dp: null
@@ -255,7 +255,7 @@ checkDetails(
     detector.typeDetect(['1st Oct, 2020 11:12:47 AM','17th Oct, 1999 10:56:07 PM','2nd Jan, 2025 9:02:00 AM']),
     {
         type: 'date',
-        format: 'Do MMM, YYYY H:mm:ss A',
+        format: 'Do MMM, YYYY h:mm:ss A',
         prefix: null,
         postfix: null,
         dp: null
