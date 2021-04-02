@@ -43,19 +43,19 @@ export default class typeDetect {
 		this.thousandsSeparator = thousandsSeparator;
 		this.previouslyDiscarded = [];
 		this.months = {
-			en: /^((j|J)anuary|(f|F)ebruary|(m|M)arch|(a|A)pril|(m|M)ay|(j|J)une|(j|J)uly|(a|A)ugust|(s|S)eptember|(o|O)ctober|(n|N)ovember|(d|D)ecember)$/g
+			en: /^(january|february|march|april|may|june|july|august|september|october|november|december)$/gi
 		};
 		this.abbrMonths = {
-			en: /^((j|J)an|(f|F)eb|(m|M)ar|(a|A)pr|(m|M)ay|(j|J)un|(j|J)ul|(a|A)ug|(s|S)ep|(o|O)ct|(n|N)ov|(d|D)ec)$/g
+			en: /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)$/gi
 		};
 		this.days = {
-			en: /^((m|M)onday|(t|T)uesday|(w|W)ednesday|(t|T)hursday|(f|F)riday|(s|S)aturday|(s|S)unday)$/g
+			en: /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/gi
 		};
 		this.abbrDays = {
-			en: /^((m|M)on|(t|T)ue|(w|W)ed|(t|T)hu|(f|F)ri|(s|S)at|(s|S)un)$/g
+			en: /^(mon|tue|wed|thu|fri|sat|sun)$/gi
 		};
 		this.postFixes = {
-			en: /^[0-9]+(st|nd|rd|th)$/g
+			en: /^[0-9]+(st|nd|rd|th)$/gi
 		};
 	}
 
@@ -283,82 +283,56 @@ export default class typeDetect {
 
 			let spl = format.split[i];
 
+			// If the value of this part is an empty string then it is a straightforward set
 			if (spl.length === 0) {
 				format.format[i] = {value: '', definite: true, firm: true};
 				continue;
 			}
+
+			// Some tokens are numbers
 			if (!isNaN(+spl)) {
+				// If the current separator is a colon then it must be immediately followed by an hour, minute or second token
+				// This has to be in that order
 				if (format.separators[i] === ':') {
-					if (spl.indexOf('0') === 0) {
-						if (format.tokensUsed.indexOf('HH') === -1 && format.tokensUsed.indexOf('H') === -1 && format.tokensUsed.indexOf('hh') === -1 && format.tokensUsed.indexOf('h') === -1) {
-							format = this.setDateFormat(format, i, 'HH', true, false);
-						}
-						else if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
-							format = this.setDateFormat(format, i, 'mm', true, true);
-						}
-						else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('s') === -1) {
-							format = this.setDateFormat(format, i, 'ss', true, true);
-						}
+					if (format.tokensUsed.indexOf('HH') === -1 && format.tokensUsed.indexOf('H') === -1 && format.tokensUsed.indexOf('hh') === -1 && format.tokensUsed.indexOf('h') === -1) {
+						format = this.determineTokenFormat(format, i, 'HH', 'H');
 					}
-					else {
-						if (format.tokensUsed.indexOf('HH') === -1 && format.tokensUsed.indexOf('H') === -1 && format.tokensUsed.indexOf('hh') === -1 && format.tokensUsed.indexOf('h') === -1) {
-							format = this.setDateFormat(format, i, 'H', true, false);
-						}
-						else if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
-							format = this.setDateFormat(format, i, 'm', true, false);
-						}
-						else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('s') === -1) {
-							format = this.setDateFormat(format, i, 's', true, false);
-						}
+					else if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
+						format = this.determineTokenFormat(format, i, 'mm', 'm');
+					}
+					else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('s') === -1) {
+						format = this.determineTokenFormat(format, i, 'ss', 's');
 					}
 				}
+				// If the last separator was a colon then it is the end of the time so can only be a minute or second token
 				else if (i > 0 && format.separators[i - 1] === ':') {
-					if (spl.indexOf('0') === 0) {
-						if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
-							format = this.setDateFormat(format, i, 'mm', true, true);
-						}
-						else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('s') === -1) {
-							format = this.setDateFormat(format, i, 'ss', true, true);
-						}
+					if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
+						format = this.determineTokenFormat(format, i, 'mm', 'm');
 					}
-					else {
-						if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
-							format = this.setDateFormat(format, i, 'm', true, false);
-						}
-						else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('ss') === -1) {
-							format = this.setDateFormat(format, i, 's', true, false);
-						}
+					else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('s') === -1) {
+						format = this.determineTokenFormat(format, i, 'ss', 's');
 					}
 				}
+				// If it's not a colon then can attempt to detect year
 				else {
+					// Only year can be 4 characters long and a number
 					if (format.tokensUsed.indexOf('YYYY') === -1 && spl.length === 4) {
-						format = this.setDateFormat(format, i, 'YYYY', true, true, 'hasYear', true);
+						format = this.setDateFormat(format, i, 'YYYY', true, true, 'hasYear');
 						continue;
 					}
+					// Alternatively could be 2 digits if greater than 31
 					else if (format.tokensUsed.indexOf('YY') === -1 && +spl > 31) {
-						format = this.setDateFormat(format, i, 'YY', true, false, 'hasYear', true);
+						format = this.setDateFormat(format, i, 'YY', true, false, 'hasYear');
 					}
 				}
 			}
+			// Some tokens are strings
 			else {
-				if (format.tokensUsed.indexOf('Do') === -1 && spl.match(this.postFixes.en)) {
-					format = this.setDateFormat(format, i, 'Do', true, true, 'hasDay', true);
-				}
-				else if (format.tokensUsed.indexOf('MMMM') === -1 && spl.match(this.months.en)) {
-					format = this.setDateFormat(format, i, 'MMMM', true, spl === 'may' ? false : true, 'hasMonth', true);
-				}
-				else if (format.tokensUsed.indexOf('MMM') === -1 && spl.match(this.abbrMonths.en)) {
-					format = this.setDateFormat(format, i, 'MMM', true, spl === 'may' ? false : true, 'hasMonth', true);
-				}
-				else if (format.tokensUsed.indexOf('dddd') === -1 && spl.match(this.days.en)) {
-					format = this.setDateFormat(format, i, 'dddd', true, true);
-				}
-				else if (format.tokensUsed.indexOf('ddd') === -1 && spl.match(this.days.en)) {
-					format = this.setDateFormat(format, i, 'ddd', true, true);
-				}
-				else if (format.tokensUsed.indexOf('A') === -1 && (spl === 'AM' || spl === 'PM')) {
+				// Check for capitalised AM/PM
+				if (format.tokensUsed.indexOf('A') === -1 && (spl === 'AM' || spl === 'PM')) {
 					format = this.setDateFormat(format, i, 'A', true, true);
 
+					// If this is found then need to make sure that any hours found are 12 hour
 					for (let j = 0; j < i; j++) {
 						if (format.format[j].value === 'H' && format.format[j].firm === false) {
 							format = this.setDateFormat(format, j, 'h', true, true);
@@ -370,9 +344,11 @@ export default class typeDetect {
 						}
 					}
 				}
+				// Check for lower-case am/pm
 				else if (format.tokensUsed.indexOf('a') === -1 && (spl === 'am' || spl === 'pm')) {
 					format = this.setDateFormat(format, i, 'a', true, true);
 
+					// If this is found then need to make sure that any hours found are 12 hour
 					for (let j = 0; j < i; j++) {
 						if (format.format[j].value === 'H' && format.format[j].firm === false) {
 							format = this.setDateFormat(format, j, 'h', true, true);
@@ -383,38 +359,51 @@ export default class typeDetect {
 							break;
 						}
 					}
+				}
+				// Check for other string tokens
+				else {
+					format = (format.tokensUsed.indexOf('Do') === -1 && spl.match(this.postFixes.en)) ?
+						this.setDateFormat(format, i, 'Do', true, true, 'hasDay') :
+						(format.tokensUsed.indexOf('MMMM') === -1 && spl.match(this.months.en)) ?
+							this.setDateFormat(format, i, 'MMMM', true, spl === 'may' ? false : true, 'hasMonth') :
+							(format.tokensUsed.indexOf('MMM') === -1 && spl.match(this.abbrMonths.en)) ?
+								this.setDateFormat(format, i, 'MMM', true, spl === 'may' ? false : true, 'hasMonth') :
+								(format.tokensUsed.indexOf('dddd') === -1 && spl.match(this.days.en)) ?
+									this.setDateFormat(format, i, 'dddd', true, true) :
+									(format.tokensUsed.indexOf('ddd') === -1 && spl.match(this.abbrDays.en)) ?
+										this.setDateFormat(format, i, 'ddd', true, true) :
+										format;
 				}
 			}
 		}
 
-		let missing = 0;
 		let empties = [];
 
+		// Find the unknown parts
 		for (let i = 0; i < format.format.length; i++) {
 			if (format.format[i].definite === false) {
-				missing++;
 				empties.push(i);
 			}
 		}
 
-		if (!format.hasDay && !format.hasMonth && !format.hasYear && missing === 3) {
+		// If there is no day, month or year then need to attempt to identify the month
+		// Year will have been established above if it is greater than 31
+		// Day values could be either month or year so couldn't say for sure
+		if (!format.hasDay && !format.hasMonth && !format.hasYear) {
 			let possMonth = [];
-			let not = [];
 
+			// If a value is less than 12 then it could be a month
 			for (let empty of empties) {
-				if (!isNaN(+format.split[empty])) {
-					if (+format.split[empty] <= 12) {
-						possMonth.push(empty);
-					}
-					else {
-						not.push(empty);
-					}
+				if (!isNaN(+format.split[empty]) && +format.split[empty] <= 12) {
+					possMonth.push(empty);
 				}
 			}
+
 			if (possMonth.length === 1) {
+				// Can now declare this a month if the others are over
 				format = format.split[possMonth[0]].indexOf('0') === 0 ?
-					this.setDateFormat(format, possMonth[0], 'MM', true, false, 'hasMonth', true) :
-					this.setDateFormat(format, possMonth[0], 'M', true, false, 'hasMonth', true);
+					this.setDateFormat(format, possMonth[0], 'MM', true, false, 'hasMonth') :
+					this.setDateFormat(format, possMonth[0], 'M', true, false, 'hasMonth');
 			}
 		}
 
@@ -424,55 +413,71 @@ export default class typeDetect {
 				!isNaN(+format.split[i]) &&
 				(!format.hasDay || !format.hasYear || !format.hasMonth)
 			) {
-				if (format.hasYear && format.hasDay) {
-					format = this.determineTokenFormat(format, i, 'MM', 'M', 'hasMonth');
-				}
-				else if (format.hasDay && format.hasMonth) {
-					format = this.determineTokenFormat(format, i, 'YY', 'Y', 'hasYear');
-				}
-				else if (format.hasMonth && format.hasYear) {
-					format = this.determineTokenFormat(format, i, 'DD', 'D', 'hasDay');
-				}
-				else if (format.hasYear || format.hasDay) {
-					format = this.determineTokenFormat(format, i, 'MM', 'M', 'hasMonth');
-				}
-				else if (format.hasMonth) {
-					format = this.determineTokenFormat(format, i, 'DD', 'D', 'hasDay');
-				}
-				else {
-					format = this.determineTokenFormat(format, i, 'MM', 'M', 'hasMonth');
-				}
+				format = (format.hasYear && format.hasDay) ? // Year and Day - must be month
+					this.determineTokenFormat(format, i, 'MM', 'M', 'hasMonth') :
+					(format.hasDay && format.hasMonth) ? // Day and Month - must be year
+						this.determineTokenFormat(format, i, 'YY', 'Y', 'hasYear') :
+						(format.hasMonth && format.hasYear) ? // Month and Year - must be day
+							this.determineTokenFormat(format, i, 'DD', 'D', 'hasDay') :
+							(format.hasYear || format.hasDay) ? // Year or Day - must be month. Wouldn't make sense otherwise
+								this.determineTokenFormat(format, i, 'MM', 'M', 'hasMonth') :
+								(format.hasMonth) ? // Month then assume day next
+									this.determineTokenFormat(format, i, 'DD', 'D', 'hasDay') :
+									this.determineTokenFormat(format, i, 'MM', 'M', 'hasMonth'); // Last resort assume Month
 			}
 		}
 
+		// Construct momentFormat from parts and separator
 		for (let i = 0; i < format.split.length - 1; i++) {
 			format.momentFormat += format.format[i].value;
 			format.momentFormat += format.separators[i];
 		}
 
+		// Faster to do this here than add a check every loop
 		format.momentFormat += format.format[format.split.length - 1].value;
 
+		// If there is a format and it is valid then return it
 		if (format.momentFormat.length > 0 && moment(el, format.momentFormat).isValid()) {
-
 			return format;
 		}
+		// Otherwise assume mixed
 		else {
 			return 'mixed';
 		}
 	}
 
-	public determineTokenFormat(format, idx, a, b, has) {
+	/**
+	 * Determine whether to use a double or single token if there is a leading 0
+	 * @param format The format object currently being constructed
+	 * @param idx The part number
+	 * @param a The first option if double token
+	 * @param b The second option if single token
+	 * @param has Any flag to be set
+	 * @returns the updated format
+	 */
+	public determineTokenFormat(format, idx, a, b, has = '') {
 		return format.split[idx].indexOf('0') === 0 ?
-			this.setDateFormat(format, idx, a, true, true, has, true) :
-			this.setDateFormat(format, idx, b, true, false, has, true);
+			this.setDateFormat(format, idx, a, true, true, has) :
+			this.setDateFormat(format, idx, b, true, false, has);
 	}
 
-	public setDateFormat(format, idx, value, definite, firm, has = '', hasValue = false) {
+	/**
+	 * Set's all of the relevant values when a new token is determined
+	 * @param format The format object currently being constructed
+	 * @param idx The part number
+	 * @param value The token to be set
+	 * @param definite Whether this is definitely the token's type
+	 * @param firm Whether this is the exact token
+	 * @param has Any flag to be set
+	 * @returns the updated format
+	 */
+	public setDateFormat(format, idx, value, definite, firm, has = '') {
 		format.format[idx] = {value, definite, firm};
 		format.tokensUsed.push(value);
 
-		if (hasValue) {
-			format[has] = hasValue;
+		// Set the flag if it has been defined
+		if (has.length > 0) {
+			format[has] = true;
 		}
 
 		return format;
