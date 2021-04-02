@@ -1,4 +1,4 @@
-var typeDetect = require('../dist/cloudtables-type-detect2');
+var typeDetect = require('../dist/cloudtables-type-detect');
 
 var failed = 0;
 var total = 0;

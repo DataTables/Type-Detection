@@ -26,58 +26,21 @@ export default class typeDetect {
 		this.thousandsSeparator = thousandsSeparator;
 		this.momentFormats = JSON.parse(fs.readFileSync('resources/momentFormats.json').toString());
 		this.previouslyDiscarded = [];
-		this.months = [
-			"january",
-			"february",
-			"march",
-			"april",
-			"may",
-			"june",
-			"july",
-			"august",
-			"september",
-			"october",
-			"november",
-			"december"
-		];
-		this.abbrMonths = [
-			"jan",
-			"feb",
-			"mar",
-			"apr",
-			"may",
-			"jun",
-			"jul",
-			"aug",
-			"sep",
-			"oct",
-			"nov",
-			"dec"
-		];
-		this.days = [
-			"monday",
-			"tuesday",
-			"wednesday",
-			"thursday",
-			"friday",
-			"saturday",
-			"sunday",
-		];
-		this.abbrDays = [
-			"mon",
-			"tue",
-			"wed",
-			"thu",
-			"fri",
-			"sat",
-			"sun",
-		];
-		this.postFixes = [
-			"st",
-			"nd",
-			"rd",
-			"th"
-		]
+		this.months = {
+			en: /^((j|J)anuary|(f|F)ebruary|(m|M)arch|(a|A)pril|(m|M)ay|(j|J)une|(j|J)uly|(a|A)ugust|(s|S)eptember|(o|O)ctober|(n|N)ovember|(d|D)ecember)$/g
+		}
+		this.abbrMonths = {
+			en: /^((j|J)an|(f|F)eb|(m|M)ar|(a|A)pr|(m|M)ay|(j|J)un|(j|J)ul|(a|A)ug|(s|S)ep|(o|O)ct|(n|N)ov|(d|D)ec)$/g
+		}
+		this.days = {
+			en: /^((m|M)onday|(t|T)uesday|(w|W)ednesday|(t|T)hursday|(f|F)riday|(s|S)aturday|(s|S)unday)$/g
+		} 
+		this.abbrDays = {
+			en: /^((m|M)on|(t|T)ue|(w|W)ed|(t|T)hu|(f|F)ri|(s|S)at|(s|S)un)$/g
+		} 
+		this.postFixes = {
+			en: /^[0-9]+(st|nd|rd|th)$/g
+		}
 	}
 
 	public typeDetect(data) {
@@ -134,6 +97,10 @@ export default class typeDetect {
 			let type: string = typeof el; // Get the js type of the element
 			let tempEl = el; // Hold a temporary version of el that can be manipulated
 
+			if(el === null || el === undefined || el.length === 0) {
+				continue;
+			}
+
 			// If the prefix exists, replace it within the temporary el
 			if(prefix.length > 0 && el.indexOf(prefix) === 0) {
 				tempEl = tempEl.replace(prefix, '');
@@ -165,42 +132,39 @@ export default class typeDetect {
 				let format = this.getDateFormat(el, dateSuggestion, definiteOrder);
 
 				// getDateFormat can tell if the data is mixed based on the suggested format and if there is a definite order
-				if(format === "mixed") {
+				if(dateSuggestion !== null && format === "mixed") {
 					return format;
 				}
-
-				// If the order is not the default then it has to be this for the remaining data points
-				if(format.order !== "dmy") {
-					definiteOrder = format.order;
-				}
-
-				// If there is a suggested format and it doesn't match this format then check all of the previous data points against this new format as it could work for them
-				if(dateSuggestion !== null && format.format !== dateSuggestion.format) {
-					for(var j = 0; j < i; j++){
-						if(!moment(data[j], format.format).isValid()) {
-							return 'mixed';
+				else if(format !== "mixed") {
+					// If there is a suggested format and it doesn't match this format then check all of the previous data points against this new format as it could work for them
+					if(dateSuggestion !== null && format.momentFormat !== dateSuggestion.momentFormat) {
+						for(var j = 0; j < i; j++){
+							if(!moment(data[j], format.momentFormat).isValid()) {
+								return 'mixed';
+							}
 						}
+					}
+	
+					// If a format has been found for this data point
+					if(format !== null) {
+						// if there is a suggested format
+						if(dateSuggestion !== null) {
+							// if the suggested format is shorter than this then it has probably identified a short representation and so it should be used
+							if(dateSuggestion.format.length < format.format.length){
+								format.format = dateSuggestion.format;
+							}
+							// Otherwise it must use the new format so remove the old one from potential types
+							else {
+								types.splice(types.indexOf("date-" + dateSuggestion), 1);
+								this.previouslyDiscarded.push(dateSuggestion);
+							}
+						}
+						// Set the type for this format and the suggestion for the next
+						type = "date-" + format.momentFormat;
+						dateSuggestion = format;
 					}
 				}
 
-				// If a format has been found for this data point
-				if(format !== null) {
-					// if there is a suggested format
-					if(dateSuggestion !== null) {
-						// if the suggested format is shorter than this then it has probably identified a short representation and so it should be used
-						if(dateSuggestion.format.length < format.format.length){
-							format.format = dateSuggestion.format;
-						}
-						// Otherwise it must use the new format so remove the old one from potential types
-						else {
-							types.splice(types.indexOf("date-" + dateSuggestion), 1);
-							this.previouslyDiscarded.push(dateSuggestion);
-						}
-					}
-					// Set the type for this format and the suggestion for the next
-					type = "date-" + format.format;
-					dateSuggestion = format;
-				}
 			}
 			
 			// If this type has not been identified yet then add it to the array
@@ -228,284 +192,320 @@ export default class typeDetect {
 		return 'string';
 	}
 
-	public getDateFormat(el: string, suggestion, definiteOrder) {
+	public getDateFormat(el: string, suggestion, definiteOrder):any {
+		let format = {
+			format:[],
+			momentFormat: "",
+			separators: [],
+			hasDay: false,
+			hasMonth: false,
+			hasYear: false,
+			tokensUsed: [],
+			split:[],
+			locale:""
+		}
 
-		let lowerEl = el.toLowerCase()
-		// Only one separator can be used, default is "_"
-		var separator = "_";
-		if(el.indexOf("-") !== -1) {
-			separator = "-";
+		let charSplit = el.split("");
+		let separators = ["-", "/", ":", ",", " "]
+		let prev = "";
+		for(let i = 0; i < charSplit.length; i++) {
+			if(separators.indexOf(charSplit[i]) !== -1) {
+				format.split.push(prev);
+				format.format.push({value:"", definite:false, firm:false});
+				format.separators.push(charSplit[i]);
+				prev="";
+			}
+			else {
+				prev+=charSplit[i];
+			}
 		}
-		else if(el.indexOf("/") !== -1) {
-			separator = "/";
-		}
-		
-		// Split on the separator to get the different parts
-		let split = el.split(separator !== "_" ? separator : " ");
+		format.split.push(prev)
+		format.format.push({value:"", definite:false, firm:false});
 
-		let time = "time";
-		let month = "stdMonth";
-		let day = "longDay";
-		let small = [];
-		let year = "shortYear";
-		let order = "dmy";
-		if(split[0].indexOf(":") !== -1) {
-			time = "onlyTime";
+		if(suggestion !== null && format.split.length !== suggestion.split.length) {
+				return "mixed";
 		}
-		else {
-			// can idenftify the order and the length of the year in this loop
-			for(let i = 0; i < split.length; i++) {
-				let spl = split[i];
-				if(spl.indexOf(",") !== -1) {
-					spl.replace(",", "");
+
+		let splSeparatorArr = format.separators;
+		for(let i = 0; i < format.split.length; i++) {
+			if(
+				suggestion !== null &&
+				suggestion.format[i].firm === true
+			){
+				format.format[i] = suggestion.format[i];
+				format.tokensUsed.push(format.format[i].value)
+				if(format.format[i].value === "DD" || format.format[i].value === "D" || format.format[i].value === "Do" ) {
+					format.hasDay = true;
 				}
-				
-				// If there is a 0 then it must be at least a double character
-				if(spl.indexOf('0') === -1 && +spl < 10) {
-					small.push(i);
+				else if(format.format[i].value === "YYYY" || format.format[i].value === "YY" || format.format[i].value === "Y" ) {
+					format.hasYear = true;
 				}
-				
-				// If the split is a number
-				if(!isNaN(+spl)) {
-					// If it's length is 4 then it must be a long year, this can also determine the order
-					if(spl.length === 4) {
-						year = "longYear";
-						if(i === 0) {
-							order = "ymd";
+				else if(format.format[i].value === "MM" || format.format[i].value === "M" || format.format[i].value === "MMM" || format.format[i].value === "MMMM" ) {
+					format.hasMonth = true;
+				}
+				continue;
+			}
+			let spl = format.split[i];
+			if(spl.length === 0) {
+				format.format[i] = {value:"", definite:true, firm: true}
+				continue;
+			}
+			if(!isNaN(+spl)){
+				if(splSeparatorArr[i] === ":"){
+					if(spl.indexOf("0") === 0) {
+						if(format.tokensUsed.indexOf("HH") === -1 && format.tokensUsed.indexOf("H") === -1 && format.tokensUsed.indexOf("hh") === -1 && format.tokensUsed.indexOf("h") === -1) {
+							format.format[i] = {value:"HH", definite:true, firm: true}
+							format.tokensUsed.push("HH");
+						}
+						else if(format.tokensUsed.indexOf("mm") === -1 && format.tokensUsed.indexOf("m") === -1) {
+							format.format[i] = {value:"mm", definite:true, firm: true}
+							format.tokensUsed.push("mm");
+						}
+						else if(format.tokensUsed.indexOf("ss") === -1 && format.tokensUsed.indexOf("s") === -1) {
+							format.format[i] = {value:"ss", definite:true, firm: true}
+							format.tokensUsed.push("ss");
 						}
 					}
-					// Otherwise if the value is greater than 31 and it appears first then it must be a short year and the order can be determined
-					else if(+spl > 31 && i === 0) {
-						order = "ymd";
-					}
-					// Otherwise if the second element is greater than twelve then it can't be the month so must be the day
-					else if(+spl > 12 && i===1) {
-						order = "mdy";
-					}
-				}
-			}
-			
-			// if ymd or mdy are identified then it is definitely known.
-			// If one of these has been found before
-			if(definiteOrder !== null) {
-				// And the current order isn't the default or the definite then it must be mixed
-				if(order !== "dmy" && order !== definiteOrder) {
-					return "mixed";
-				}
-				// Otherwise it might just be defaulting because it can't work anything out so use the definite
-				else {
-					order = definiteOrder;
-				}
-			}
-			
-			
-			// If there is at least one part that is not a double character format for month or day
-			if(small.length > 0) {
-				// Determine which is short given the order that is in use
-				if(order === "ymd") {
-					if(small.indexOf(1) !== -1){
-						month = "shortMonth";
-					}
-					if(small.indexOf(2) !== -1) {
-						day = "shortDay";
+					else {
+						if(format.tokensUsed.indexOf("HH") === -1 && format.tokensUsed.indexOf("H") === -1 && format.tokensUsed.indexOf("hh") === -1 && format.tokensUsed.indexOf("h") === -1) {
+							format.format[i] = {value:"H", definite:true, firm: false}
+							format.tokensUsed.push("H");
+						}
+						else if(format.tokensUsed.indexOf("mm") === -1 && format.tokensUsed.indexOf("m") === -1) {
+							format.format[i] = {value:"m", definite:true, firm: false}
+							format.tokensUsed.push("m");
+						}
+						else if(format.tokensUsed.indexOf("ss") === -1 && format.tokensUsed.indexOf("s") === -1) {
+							format.format[i] = {value:"s", definite:true, firm: false}
+							format.tokensUsed.push("s");
+						}
 					}
 				}
-				else if(order === "mdy") {
-					if(small.indexOf(0) !== -1) {
-						month = "shortMonth";
+				else if(i > 0 && splSeparatorArr[i-1] === ":") {
+					if(spl.indexOf("0") === 0) {
+						if(format.tokensUsed.indexOf("mm") === -1 && format.tokensUsed.indexOf("m") === -1) {
+							format.format[i] = {value:"mm", definite:true, firm: true}
+							format.tokensUsed.push("mm");
+						}
+						else if(format.tokensUsed.indexOf("ss") === -1 && format.tokensUsed.indexOf("s") === -1) {
+							format.format[i] = {value:"ss", definite:true, firm: true}
+							format.tokensUsed.push("ss");
+						}
 					}
-					if(small.indexOf(1) !== -1) {
-						day = "shortDay";
+					else {
+						if(format.tokensUsed.indexOf("mm") === -1 && format.tokensUsed.indexOf("m") === -1) {
+							format.format[i] = {value:"m", definite:true, firm: false}
+							format.tokensUsed.push("m");
+						}
+						else if(format.tokensUsed.indexOf("ss") === -1 && format.tokensUsed.indexOf("ss") === -1) {
+							format.format[i] = {value:"s", definite:true, firm: false}
+							format.tokensUsed.push("s");
+						}
 					}
 				}
 				else {
-					if(small.indexOf(1) !== -1) {
-						month = "shortMonth";
+					if(format.tokensUsed.indexOf("YYYY") === -1 && spl.length === 4) {
+						format.format[i] = {value:"YYYY", definite: true, firm: true}
+						format.tokensUsed.push("YYYY");
+						format.hasYear = true;
+						continue;
 					}
-					if(small.indexOf(0) !== -1) {
-						day = "shortDay";
+					else if(format.tokensUsed.indexOf("YY") === -1 && +spl > 31){
+						format.format[i] = {value:"YY", definite: true, firm: false}
+						format.tokensUsed.push("YY");
+						format.hasYear = true;
 					}
+					// else if(format.tokensUsed.indexOf("D") === -1 && +spl > 12){
+					// 	format.format[i] = {value:"D", definite: true, firm: false}
+					// 	format.tokensUsed.push("D");
+					// 	format.hasDay = true;
+					// }
 				}
-				
 			}
-	
-			// If the separator is a space, need to check for commas 
-			var comma = "noComma";
-			if(separator === "_") {
-				
-				if(el.indexOf(",") !== -1){
-					comma = "comma";
-	
-					// And if there is a comma then there could be a long or abbreviated month
-					for(let i = 0; i < this.months.length; i++) {
-						let longMonth = this.months[i];
-						let abbrMonth = this.abbrMonths[i];
-	
-						if(lowerEl.indexOf(longMonth) !== -1) {
-							month = "longMonth";
+			else {
+				if(format.tokensUsed.indexOf("Do") === -1 && spl.match(this.postFixes.en)) {
+					format.format[i] = {value:"Do", definite: true, firm: true}
+					format.tokensUsed.push("Do");
+					format.hasDay = true;
+				}
+				else if(format.tokensUsed.indexOf("MMMM") === -1 && spl.match(this.months.en)) {
+					format.format[i] = {value:"MMMM", definite: true, firm: spl === "may" ? false : true}
+					format.tokensUsed.push("MMMM");
+					format.hasMonth = true;
+				}
+				else if(format.tokensUsed.indexOf("MMM") === -1 && spl.match(this.abbrMonths.en)) {
+					format.format[i] = {value:"MMM", definite: true, firm: spl === "may" ? false : true}
+					format.tokensUsed.push("MMM");
+					format.hasMonth = true;
+				}
+				else if(format.tokensUsed.indexOf("dddd") === -1 && spl.match(this.days.en)) {
+					format.format[i] = {value:"dddd", definite: true, firm: true}
+					format.tokensUsed.push("dddd");
+				}
+				else if(format.tokensUsed.indexOf("ddd") === -1 && spl.match(this.days.en)) {
+					format.format[i] = {value:"ddd", definite: true, firm: true}
+					format.tokensUsed.push("ddd");
+				}
+				else if(format.tokensUsed.indexOf("A") === -1 && (spl === "AM" || spl === "PM")) {
+					format.format[i] = {value: "A", definite: true, firm: true}
+					format.tokensUsed.push("A");
+					for(let j = 0; j < i; j++) {
+						if(format.format[j].value === "H" && format.format[j].firm === false) {
+							format.format[j] = {value: "h", definite: true, firm: true}
+							format.tokensUsed[format.tokensUsed.indexOf("H")] = "h";
 							break;
 						}
-						else if(lowerEl.indexOf(abbrMonth) !== -1) {
-							month = "abbrMonth";
+						if(format.format[j].value === "HH" && format.format[j].firm === false) {
+							format.format[j] = {value: "hh", definite: true, firm: true}
+							format.tokensUsed[format.tokensUsed.indexOf("HH")] = "hh";
 							break;
 						}
 					}
 				}
-	
-				// Spaces can also have Do dates (st/nd/rd/th)
-				for(let post of this.postFixes) {
-					if(el.indexOf(post) !== -1) {
-						day = "postDay";
+				else if(format.tokensUsed.indexOf("a") === -1 && (spl === "am" || spl === "pm")) {
+					format.format[i] = {value: "a", definite: true, firm: true}
+					for(let j = 0; j < i; j++) {
+						if(format.format[j].value === "H" && format.format[j].firm === false) {
+							format.format[j] = {value: "h", definite: true, firm: true}
+							format.tokensUsed[format.tokensUsed.indexOf("H")] = "h";
+							break;
+						}
+						if(format.format[j].value === "HH" && format.format[j].firm === false) {
+							format.format[j] = {value: "hh", definite: true, firm: true}
+							format.tokensUsed[format.tokensUsed.indexOf("HH")] = "hh";
+							break;
+						}
 					}
 				}
 			}
 		}
 
-		let potentials;
-		let seconds = "";
-		let minutes = "";
-		let hours = "";
-		// If there is a colon then a time is present
-		if(el.indexOf(":") !== -1) {
-			let ampm = "noAmPm";
-
-			// Check for am or pm as a post fix
-			if(el.indexOf("am") !== -1 || el.indexOf("pm") !== -1) {
-				ampm = "ampm";
+		let missing = 0;
+		let empties = [];
+		for(let i = 0; i < format.format.length; i++) {
+			if(format.format[i].definite === false) {
+				missing++;
+				empties.push(i);
 			}
-			else if (el.indexOf("AM") !== -1 || el.indexOf("PM") !== -1) {
-				ampm = "AMPM";
+		}
+
+		if(!format.hasDay && !format.hasMonth && !format.hasYear && missing === 3) {
+			let possMonth = [];
+			let not = [];
+			for(let empty of empties) {
+				if(!isNaN(+format.split[empty])) {
+					if(+format.split[empty] <= 12) {
+						possMonth.push(empty);
+					}
+					else {
+						not.push(empty)
+					}
+				}
 			}
-
-			// Default values if we can't prove otherwise
-			seconds = "noSeconds";
-			minutes = "shortMinute";
-			hours = "shortHour";
-
-			// The split location will depend on whether there is an ampm postfixed
-			let splitTime = split[split.length - (ampm === "noAmPm" ? 1 : 2)].split(":");
-
-			// If there are two different indexes for colon then there must be seconds present
-			if(el.indexOf(":") !== el.lastIndexOf(":")) {
-				// If there is a 0 at the start them must be ss, default to ss if greater than 10
-				if(splitTime[2].indexOf("0") === 0 || +splitTime[2] > 9) {
-					seconds = "longSeconds";
+			if(possMonth.length === 1) {
+				if(format.split[possMonth[0]].indexOf("0") === 0) {
+					format.format[possMonth[0]] = {value:"MM", definite:true, firm:false}
+					format.hasMonth = true;
 				}
 				else {
-					seconds = "shortSeconds";
-				}
-				// If there is a 0 at the start them must be mm, default to mm if greater than 10
-				if(splitTime[1].indexOf("0") === 0 || +splitTime[1] > 9) {
-					minutes = "longMinute";
-				}
-
-				// If there is an ampm then can't be HH
-				// If there is a 0 at the start them must be HH, default to HH if greater than 10
-				if(ampm === "noAmPm" && (splitTime[0].indexOf("0") === 0 || +splitTime[0] > 9)) {
-					hours = "longHour"
+					format.format[possMonth[0]] = {value:"M", definite:true, firm:false}
+					format.hasMonth = true;
 				}
 			}
-			// Otherwise just hours and minutes
-			else {
-				// If there is a 0 at the start them must be mm, default to mm if greater than 10
-				if(splitTime[1].indexOf("0") === 0 || +splitTime[1] > 9) {
-					minutes = "longMinute";
-				}
+		}
 
-				// If there is an ampm then can't be HH
-				// If there is a 0 at the start them must be HH, default to HH if greater than 10
-				if(ampm === "noAmPm" && (splitTime[0].indexOf("0") === 0 || +splitTime[0] > 9)) {
-					hours = "longHour"
-				}
-			}
-
-			// If there is a short hour need to check for ampm
-			if(time !== "onlyTime") {
-				if(hours === "shortHour") {
-					potentials = {
-						format: this.momentFormats[time][hours][ampm][minutes][seconds][separator][comma][month][year][day][order],
-						order
-					}
-				}
-				else{
-					potentials = {
-						format: this.momentFormats[time][hours][minutes][seconds][separator][comma][month][year][day][order],
-						order
-					}
-				}
-			}
-			else {
-				if(hours === "shortHour") {
-					potentials = {
-						format: this.momentFormats[time][hours][ampm][minutes][seconds],
-						order
-					}
-				}
-				else{
-					potentials = {
-						format: this.momentFormats[time][hours][minutes][seconds],
-						order
+		for(let i = 0; i < format.format.length; i++) {
+			if(format.format[i].value.length === 0 && format.format[i].definite === false) {
+				if(!isNaN(+format.split[i])) {
+					if(!format.hasDay || !format.hasYear || !format.hasMonth) {
+						if(format.hasYear && format.hasDay) {
+							if(format.split[i].indexOf("0") === 0) {
+								format.format[i] = {value: "MM", definite: true, firm: true}
+								format.hasMonth = true;
+							}
+							else {
+								format.format[i] = {value: "M", definite: true, firm: false}
+								format.hasMonth = true;
+							}
+						}
+						else if (format.hasDay && format.hasMonth) {
+							if(format.split[i].indexOf("0") === 0) {
+								format.format[i] = {value: "YY", definite: true, firm: true}
+								format.hasYear = true;
+							}
+							else {
+								format.format[i] = {value: "Y", definite: true, firm: false}
+								format.hasYear = true;
+							}
+						}
+						else if(format.hasMonth && format.hasYear) {
+							if(format.split[i].indexOf("0") === 0) {
+								format.format[i] = {value: "DD", definite: true, firm: true}
+								format.hasDay = true;
+							}
+							else {
+								format.format[i] = {value: "D", definite: true, firm: false}
+								format.hasDay = true;
+							}
+						}
+						else if(format.hasYear) {
+							if(format.split[i].indexOf("0") === 0) {
+								format.format[i] = {value: "MM", definite: true, firm: true}
+								format.hasMonth = true;
+							}
+							else {
+								format.format[i] = {value: "M", definite: true, firm: false}
+								format.hasMonth = true;
+							}
+						}
+						else if(format.hasDay) {
+							if(format.split[i].indexOf("0") === 0) {
+								format.format[i] = {value: "MM", definite: true, firm: true}
+								format.hasMonth = true;
+							}
+							else {
+								format.format[i] = {value: "M", definite: true, firm: false}
+								format.hasMonth = true;
+							}
+						}
+						else if(format.hasMonth) {
+							if(format.split[i].indexOf("0") === 0) {
+								format.format[i] = {value: "DD", definite: true, firm: true}
+								format.hasDay = true;
+							}
+							else {
+								format.format[i] = {value: "D", definite: true, firm: false}
+								format.hasDay = true;
+							}
+						}
+						else {
+							if(format.split[i].indexOf("0") === 0) {
+								format.format[i] = {value: "MM", definite: true, firm: true}
+								format.hasMonth = true;
+							}
+							else {
+								format.format[i] = {value: "M", definite: true, firm: false}
+								format.hasMonth = true;
+							}
+						}
 					}
 				}
 			}
 		}
-		// Otherwise no time
+
+		for(let i = 0; i < format.split.length-1; i++) {
+			format.momentFormat += format.format[i].value;
+			format.momentFormat += format.separators[i];
+		}
+		format.momentFormat += format.format[format.split.length-1].value;
+
+		if(format.momentFormat.length > 0 && moment(el, format.momentFormat).isValid()) {
+
+			return format;
+		}
 		else {
-			time = "noTime";
-
-			// If there is a space then need to check for commas
-			if(separator === "_") {	
-				potentials = {
-					format: this.momentFormats[time][separator][comma][month][year][day][order],
-					order
-				}
-			}
-			// There are no commas in the other separators
-			else {
-				potentials = {
-					format: this.momentFormats[time][separator][month][year][day][order],
-					order
-				}
-			}
+			return "mixed";
 		}
-
-		// If there is a suggested format,
-		// Check that it matches the length of day, month and year
-		// And is a valid moment conversion then the suggestion can still be used.
-		if(
-			suggestion !== null &&
-			(
-				(day === "longDay" && suggestion.format.indexOf("DD") !== -1) && (month === "stdMonth" && suggestion.format.indexOf("MM") !== -1) && (year === "longYear" && suggestion.format.indexOf("YYYY") !== -1)
-			) &&
-			(
-				time === "noTime" ||
-				(hours === "longHour" && suggestion.format.indexOf("HH") !== -1) && (minutes === "longMinute" && suggestion.format.indexOf("mm") !== -1) && (seconds === "longSeconds" && suggestion.format.indexOf("ss") !== -1)
-			) &&
-			moment(el, suggestion.format).isValid()
-		) {
-			return suggestion;
-		}
-
-		// Otherwise the remaining potential options need to be checked against this element until one that fits is found
-		for(let pot of potentials.format) {
-			if(this.previouslyDiscarded.indexOf(pot) === -1 && moment(el, pot).isValid()) {
-				this.previouslyDiscarded.push(pot)
-				return {
-					format: pot,
-					order
-				}
-			}
-			else {
-				this.previouslyDiscarded.push(pot)
-			}
-		}
-
-		if(moment(el, suggestion.format).isValid()) {
-			return suggestion;
-		}
-
-		// If at this point there is a definite order but no format has been found then the type must be mixed
-		return definiteOrder !== null ? "mixed" : null;
 	}
 
 	public getFormat(data, type: string): string {

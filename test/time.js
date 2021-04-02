@@ -73,7 +73,7 @@ checkDetails(
     detector.typeDetect(['11:12:47 am','10:56:07 pm','9:02:00 am']),
     {
         type: 'date',
-        format: 'H:mm:ss a',
+        format: 'h:mm:ss a',
         prefix: null,
         postfix: null,
         dp: null
@@ -86,7 +86,7 @@ checkDetails(
     detector.typeDetect(['11:12:47 AM','10:56:07 PM','9:02:00 AM']),
     {
         type: 'date',
-        format: 'H:mm:ss A',
+        format: 'h:mm:ss A',
         prefix: null,
         postfix: null,
         dp: null

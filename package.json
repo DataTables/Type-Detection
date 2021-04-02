@@ -8,7 +8,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node ./test/numbers.js && node ./test/date.js && node ./test/time.js && node ./test/html.js && node ./test/strings.js && node ./test/empty.js",
+    "test": "node ./test/numbers.js && node ./test/date.js && node ./test/time.js && node ./test/html.js && node ./test/string.js && node ./test/empty.js",
+    "quickTest": "npm run buildNoInstall && node ./test/numbers.js && node ./test/date.js && node ./test/time.js && node ./test/html.js && node ./test/string.js && node ./test/empty.js",
     "speedTest": "node ./test/speedtest.js",
     "build": "npm install && tsc ./src/*.ts --outDir ./dist/",
     "buildNoInstall": "tsc ./src/*.ts --outDir ./dist/",
