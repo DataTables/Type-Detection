@@ -4,6 +4,7 @@ import * as moment from '../node_modules/moment/moment';
 interface IDetails {
 	type: null | string;
 	format: null | string;
+	locale: null | string;
 	prefix: null | string;
 	postfix: null | string;
 	dp: null | number;
@@ -43,19 +44,34 @@ export default class typeDetect {
 		this.thousandsSeparator = thousandsSeparator;
 		this.previouslyDiscarded = [];
 		this.months = {
-			en: /^(january|february|march|april|may|june|july|august|september|october|november|december)$/gi
+			deDE: /^(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember)$/gi,
+			en: /^(january|february|march|april|may|june|july|august|september|october|november|december)$/gi,
+			esES: /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)$/gi,
+			frFR: /^(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)$/gi
 		};
 		this.abbrMonths = {
-			en: /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)$/gi
+			deDE: /^(jan|feb|märz|apr|mai|juni|juli|aug|sep|okt|nov|dez)$/gi,
+			en: /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)$/gi,
+			esES: /^(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)$/gi,
+			frFR: /^(janv|févr|mars|avr|mai|juin|juil|août|sept|oct|nov|dec)$/gi
 		};
 		this.days = {
-			en: /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/gi
+			deDE: /^(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)$/gi,
+			en: /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/gi,
+			esES: /^(lunes|martes|miércoles|jueves|viernes|sábado|domingo)$/gi,
+			frFR: /^(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)$/gi
 		};
 		this.abbrDays = {
-			en: /^(mon|tue|wed|thu|fri|sat|sun)$/gi
+			deDE: /^(mo|di|mi|do|fr|sa|so)$/gi,
+			en: /^(mon|tue|wed|thu|fri|sat|sun)$/gi,
+			esES: /^(lun|mar|mié|jue|vie|sáb|dom)$/gi,
+			frFR: /^(lun|mar|mer|jeu|ven|sam|dim)$/gi
 		};
 		this.postFixes = {
-			en: /^[0-9]+(st|nd|rd|th)$/gi
+			deDE: /^[0-9]+(st|nd|rd|th)$/gi,
+			en: /^[0-9]+(st|nd|rd|th)$/gi,
+			esES: /^[0-9]+(st|nd|rd|th)$/gi,
+			frFR: /^[0-9]+(st|nd|rd|th)$/gi
 		};
 	}
 
@@ -63,6 +79,7 @@ export default class typeDetect {
 		let details: IDetails = {
 			dp: null,
 			format: null,
+			locale: null,
 			postfix: null,
 			prefix: null,
 			type: null
@@ -81,9 +98,10 @@ export default class typeDetect {
 
 		// If the type is a datetime, date or time then the format needs to be set.
 		if (details.type === 'datetime' || details.type.indexOf('date') !== -1 || details.type === 'time') {
-			let splitdate = details.type.split('-');
-			details.format = splitdate.slice(1).join('-');
+			let splitdate = details.type.split('_');
+			details.format = splitdate[1];
 			details.type = splitdate[0];
+			details.locale = splitdate[2];
 
 			// If a format cannot be determined then default back to a string type
 			if (details.format === null) {
@@ -178,7 +196,7 @@ export default class typeDetect {
 							}
 						}
 						// Set the type for this format and the suggestion for the next
-						type = 'date-' + format.momentFormat;
+						type = 'date_' + format.momentFormat + '_' + format.locales.join('-');
 						dateSuggestion = format;
 					}
 				}
@@ -217,7 +235,7 @@ export default class typeDetect {
 			hasDay: false,
 			hasMonth: false,
 			hasYear: false,
-			locale: '',
+			locales: [],
 			momentFormat: '',
 			separators: [],
 			split: [],
@@ -362,17 +380,30 @@ export default class typeDetect {
 				}
 				// Check for other string tokens
 				else {
-					format = (format.tokensUsed.indexOf('Do') === -1 && spl.match(this.postFixes.en)) ?
-						this.setDateFormat(format, i, 'Do', true, true, 'hasDay') :
-						(format.tokensUsed.indexOf('MMMM') === -1 && spl.match(this.months.en)) ?
-							this.setDateFormat(format, i, 'MMMM', true, spl === 'may' ? false : true, 'hasMonth') :
-							(format.tokensUsed.indexOf('MMM') === -1 && spl.match(this.abbrMonths.en)) ?
-								this.setDateFormat(format, i, 'MMM', true, spl === 'may' ? false : true, 'hasMonth') :
-								(format.tokensUsed.indexOf('dddd') === -1 && spl.match(this.days.en)) ?
-									this.setDateFormat(format, i, 'dddd', true, true) :
-									(format.tokensUsed.indexOf('ddd') === -1 && spl.match(this.abbrDays.en)) ?
-										this.setDateFormat(format, i, 'ddd', true, true) :
-										format;
+					// Get the possible locales
+					let prevFormat = format;
+					let locales = format.locales.length > 0 ?
+						format.locales :
+						Object.keys(this.abbrDays);
+
+					for (let locale of locales) {
+						format = (format.tokensUsed.indexOf('Do') === -1 && spl.match(this.postFixes[locale])) ?
+							this.setDateFormat(format, i, 'Do', true, true, 'hasDay') :
+							(format.tokensUsed.indexOf('MMMM') === -1 && spl.match(this.months[locale])) ?
+								this.setDateFormat(format, i, 'MMMM', true, spl === 'may' ? false : true, 'hasMonth') :
+								(format.tokensUsed.indexOf('MMM') === -1 && spl.match(this.abbrMonths[locale])) ?
+									this.setDateFormat(format, i, 'MMM', true, spl === 'may' ? false : true, 'hasMonth') :
+									(format.tokensUsed.indexOf('dddd') === -1 && spl.match(this.days[locale])) ?
+										this.setDateFormat(format, i, 'dddd', true, true) :
+										(format.tokensUsed.indexOf('ddd') === -1 && spl.match(this.abbrDays[locale])) ?
+											this.setDateFormat(format, i, 'ddd', true, true) :
+											format;
+
+						// If the locale has been found then break and continue
+						if (format !== prevFormat) {
+							format.locales.push(locale);
+						}
+					}
 				}
 			}
 		}
