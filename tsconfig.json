@@ -11,7 +11,7 @@
     "exclude": [
         "./node_modules/**/*"
     ],
-    "files": [
+    "include": [
         "src/cloudtables-type-detect.ts"
     ]
 }
