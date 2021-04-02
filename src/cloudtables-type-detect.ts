@@ -9,11 +9,28 @@ interface IDetails {
 	dp: null | number;
 }
 
+interface IDateFormat {
+	format: IFormat[];
+	hasDay: boolean;
+	hasMonth: boolean;
+	hasYear: boolean;
+	locale: string;
+	momentFormat: string;
+	separators: string[];
+	split: string[];
+	tokensUsed: string[];
+}
+
+interface IFormat {
+	value: string;
+	firm: boolean;
+	definite: boolean;
+}
+
 export default class typeDetect {
 
 	private decimalCharacter;
 	private thousandsSeparator;
-	private momentFormats;
 	private months;
 	private abbrMonths;
 	private days;
@@ -24,7 +41,6 @@ export default class typeDetect {
 	constructor(decimalCharacter= '.', thousandsSeparator= ',') {
 		this.decimalCharacter = decimalCharacter;
 		this.thousandsSeparator = thousandsSeparator;
-		this.momentFormats = JSON.parse(fs.readFileSync('resources/momentFormats.json').toString());
 		this.previouslyDiscarded = [];
 		this.months = {
 			en: /^((j|J)anuary|(f|F)ebruary|(m|M)arch|(a|A)pril|(m|M)ay|(j|J)une|(j|J)uly|(a|A)ugust|(s|S)eptember|(o|O)ctober|(n|N)ovember|(d|D)ecember)$/g
@@ -129,7 +145,7 @@ export default class typeDetect {
 			// Last chance to find a type is a date format
 			if (type === 'string') {
 				// Get a format for the datapoint
-				let format = this.getDateFormat(el, dateSuggestion, definiteOrder);
+				let format = this.getDateFormat(el, dateSuggestion);
 
 				// getDateFormat can tell if the data is mixed based on the suggested format and if there is a definite order
 				if (dateSuggestion !== null && format === 'mixed') {
@@ -194,7 +210,8 @@ export default class typeDetect {
 		return 'string';
 	}
 
-	public getDateFormat(el: string, suggestion, definiteOrder): any {
+	public getDateFormat(el: string, suggestion: IDateFormat): any {
+		// Current format object to store the details of this element
 		let format = {
 			format: [],
 			hasDay: false,
@@ -210,176 +227,159 @@ export default class typeDetect {
 		let charSplit = el.split('');
 		let separators = ['-', '/', ':', ',', ' '];
 		let prev = '';
+
+		// Iterate over all of the characters
 		for (let char of charSplit) {
+			// If the character is a separator
 			if (separators.indexOf(char) !== -1) {
-				format.split.push(prev);
-				format.format.push({value: '', definite: false, firm: false});
-				format.separators.push(char);
-				prev = '';
+				format.split.push(prev); // Add the characters that appeared since the last separator to the split array
+				format.format.push({value: '', definite: false, firm: false}); // Add a part to identify
+				format.separators.push(char); // Note the Separator at this point
+				prev = ''; // Clear the previous characters
 			}
 			else {
+				// The character is not a separator so note it can continue to the next one
 				prev += char;
 			}
 		}
+
+		// Add the final part to the split
 		format.split.push(prev);
 		format.format.push({value: '', definite: false, firm: false});
 
+		// If a previous format (suggestion) has been detected and the two have a different number of parts
+		//  then the format cannot be consistent so return mixed
 		if (suggestion !== null && format.split.length !== suggestion.split.length) {
 				return 'mixed';
 		}
 
-		let splSeparatorArr = format.separators;
+		// Iterate over every part of the potential datetime
 		for (let i = 0; i < format.split.length; i++) {
-			if (
-				suggestion !== null &&
-				suggestion.format[i].firm === true
-			) {
+			// If there has been a previous suggestion and it is firm for this part
+			if (suggestion !== null && suggestion.format[i].firm === true) {
+				// Copy into the current format
 				format.format[i] = suggestion.format[i];
-				format.tokensUsed.push(format.format[i].value);
-				if (format.format[i].value === 'DD' || format.format[i].value === 'D' || format.format[i].value === 'Do') {
+				let value = format.format[i].value;  // Used a lot so store in temp variable
+				format.tokensUsed.push(value);
+
+				// Set flags for days, months and years
+				if (value === 'DD' || value === 'D' || value === 'Do') {
 					format.hasDay = true;
 				}
-				else if (format.format[i].value === 'YYYY' || format.format[i].value === 'YY' || format.format[i].value === 'Y') {
+				else if (value === 'YYYY' || value === 'YY' || value === 'Y') {
 					format.hasYear = true;
 				}
 				else if (
-					format.format[i].value === 'MM' ||
-					format.format[i].value === 'M' ||
-					format.format[i].value === 'MMM' ||
-					format.format[i].value === 'MMMM'
+					value === 'MM' ||
+					value === 'M' ||
+					value === 'MMM' ||
+					value === 'MMMM'
 				) {
 					format.hasMonth = true;
 				}
+
 				continue;
 			}
+
 			let spl = format.split[i];
+
 			if (spl.length === 0) {
 				format.format[i] = {value: '', definite: true, firm: true};
 				continue;
 			}
 			if (!isNaN(+spl)) {
-				if (splSeparatorArr[i] === ':') {
+				if (format.separators[i] === ':') {
 					if (spl.indexOf('0') === 0) {
 						if (format.tokensUsed.indexOf('HH') === -1 && format.tokensUsed.indexOf('H') === -1 && format.tokensUsed.indexOf('hh') === -1 && format.tokensUsed.indexOf('h') === -1) {
-							format.format[i] = {value: 'HH', definite: true, firm: true};
-							format.tokensUsed.push('HH');
+							format = this.setDateFormat(format, i, 'HH', true, false);
 						}
 						else if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
-							format.format[i] = {value: 'mm', definite: true, firm: true};
-							format.tokensUsed.push('mm');
+							format = this.setDateFormat(format, i, 'mm', true, true);
 						}
 						else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('s') === -1) {
-							format.format[i] = {value: 'ss', definite: true, firm: true};
-							format.tokensUsed.push('ss');
+							format = this.setDateFormat(format, i, 'ss', true, true);
 						}
 					}
 					else {
 						if (format.tokensUsed.indexOf('HH') === -1 && format.tokensUsed.indexOf('H') === -1 && format.tokensUsed.indexOf('hh') === -1 && format.tokensUsed.indexOf('h') === -1) {
-							format.format[i] = {value: 'H', definite: true, firm: false};
-							format.tokensUsed.push('H');
+							format = this.setDateFormat(format, i, 'H', true, false);
 						}
 						else if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
-							format.format[i] = {value: 'm', definite: true, firm: false};
-							format.tokensUsed.push('m');
+							format = this.setDateFormat(format, i, 'm', true, false);
 						}
 						else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('s') === -1) {
-							format.format[i] = {value: 's', definite: true, firm: false};
-							format.tokensUsed.push('s');
+							format = this.setDateFormat(format, i, 's', true, false);
 						}
 					}
 				}
-				else if (i > 0 && splSeparatorArr[i - 1] === ':') {
+				else if (i > 0 && format.separators[i - 1] === ':') {
 					if (spl.indexOf('0') === 0) {
 						if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
-							format.format[i] = {value: 'mm', definite: true, firm: true};
-							format.tokensUsed.push('mm');
+							format = this.setDateFormat(format, i, 'mm', true, true);
 						}
 						else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('s') === -1) {
-							format.format[i] = {value: 'ss', definite: true, firm: true};
-							format.tokensUsed.push('ss');
+							format = this.setDateFormat(format, i, 'ss', true, true);
 						}
 					}
 					else {
 						if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
-							format.format[i] = {value: 'm', definite: true, firm: false};
-							format.tokensUsed.push('m');
+							format = this.setDateFormat(format, i, 'm', true, false);
 						}
 						else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('ss') === -1) {
-							format.format[i] = {value: 's', definite: true, firm: false};
-							format.tokensUsed.push('s');
+							format = this.setDateFormat(format, i, 's', true, false);
 						}
 					}
 				}
 				else {
 					if (format.tokensUsed.indexOf('YYYY') === -1 && spl.length === 4) {
-						format.format[i] = {value: 'YYYY', definite: true, firm: true};
-						format.tokensUsed.push('YYYY');
-						format.hasYear = true;
+						format = this.setDateFormat(format, i, 'YYYY', true, true, 'hasYear', true);
 						continue;
 					}
 					else if (format.tokensUsed.indexOf('YY') === -1 && +spl > 31) {
-						format.format[i] = {value: 'YY', definite: true, firm: false};
-						format.tokensUsed.push('YY');
-						format.hasYear = true;
+						format = this.setDateFormat(format, i, 'YY', true, false, 'hasYear', true);
 					}
-					// else if(format.tokensUsed.indexOf("D") === -1 && +spl > 12){
-					// 	format.format[i] = {value:"D", definite: true, firm: false}
-					// 	format.tokensUsed.push("D");
-					// 	format.hasDay = true;
-					// }
 				}
 			}
 			else {
 				if (format.tokensUsed.indexOf('Do') === -1 && spl.match(this.postFixes.en)) {
-					format.format[i] = {value: 'Do', definite: true, firm: true};
-					format.tokensUsed.push('Do');
-					format.hasDay = true;
+					format = this.setDateFormat(format, i, 'Do', true, true, 'hasDay', true);
 				}
 				else if (format.tokensUsed.indexOf('MMMM') === -1 && spl.match(this.months.en)) {
-					format.format[i] = {value: 'MMMM', definite: true, firm: spl === 'may' ? false : true};
-					format.tokensUsed.push('MMMM');
-					format.hasMonth = true;
+					format = this.setDateFormat(format, i, 'MMMM', true, spl === 'may' ? false : true, 'hasMonth', true);
 				}
 				else if (format.tokensUsed.indexOf('MMM') === -1 && spl.match(this.abbrMonths.en)) {
-					format.format[i] = {value: 'MMM', definite: true, firm: spl === 'may' ? false : true};
-					format.tokensUsed.push('MMM');
-					format.hasMonth = true;
+					format = this.setDateFormat(format, i, 'MMM', true, spl === 'may' ? false : true, 'hasMonth', true);
 				}
 				else if (format.tokensUsed.indexOf('dddd') === -1 && spl.match(this.days.en)) {
-					format.format[i] = {value: 'dddd', definite: true, firm: true};
-					format.tokensUsed.push('dddd');
+					format = this.setDateFormat(format, i, 'dddd', true, true);
 				}
 				else if (format.tokensUsed.indexOf('ddd') === -1 && spl.match(this.days.en)) {
-					format.format[i] = {value: 'ddd', definite: true, firm: true};
-					format.tokensUsed.push('ddd');
+					format = this.setDateFormat(format, i, 'ddd', true, true);
 				}
 				else if (format.tokensUsed.indexOf('A') === -1 && (spl === 'AM' || spl === 'PM')) {
-					format.format[i] = {value: 'A', definite: true, firm: true};
-					format.tokensUsed.push('A');
+					format = this.setDateFormat(format, i, 'A', true, true);
+
 					for (let j = 0; j < i; j++) {
 						if (format.format[j].value === 'H' && format.format[j].firm === false) {
-							format.format[j] = {value: 'h', definite: true, firm: true};
-							format.tokensUsed[format.tokensUsed.indexOf('H')] = 'h';
+							format = this.setDateFormat(format, j, 'h', true, true);
 							break;
 						}
 						if (format.format[j].value === 'HH' && format.format[j].firm === false) {
-							format.format[j] = {value: 'hh', definite: true, firm: true};
-							format.tokensUsed[format.tokensUsed.indexOf('HH')] = 'hh';
+							format = this.setDateFormat(format, j, 'hh', true, true);
 							break;
 						}
 					}
 				}
 				else if (format.tokensUsed.indexOf('a') === -1 && (spl === 'am' || spl === 'pm')) {
-					format.format[i] = {value: 'a', definite: true, firm: true};
+					format = this.setDateFormat(format, i, 'a', true, true);
+
 					for (let j = 0; j < i; j++) {
 						if (format.format[j].value === 'H' && format.format[j].firm === false) {
-							format.format[j] = {value: 'h', definite: true, firm: true};
-							format.tokensUsed[format.tokensUsed.indexOf('H')] = 'h';
+							format = this.setDateFormat(format, j, 'h', true, true);
 							break;
 						}
 						if (format.format[j].value === 'HH' && format.format[j].firm === false) {
-							format.format[j] = {value: 'hh', definite: true, firm: true};
-							format.tokensUsed[format.tokensUsed.indexOf('HH')] = 'hh';
+							format = this.setDateFormat(format, j, 'hh', true, true);
 							break;
 						}
 					}
@@ -389,6 +389,7 @@ export default class typeDetect {
 
 		let missing = 0;
 		let empties = [];
+
 		for (let i = 0; i < format.format.length; i++) {
 			if (format.format[i].definite === false) {
 				missing++;
@@ -399,6 +400,7 @@ export default class typeDetect {
 		if (!format.hasDay && !format.hasMonth && !format.hasYear && missing === 3) {
 			let possMonth = [];
 			let not = [];
+
 			for (let empty of empties) {
 				if (!isNaN(+format.split[empty])) {
 					if (+format.split[empty] <= 12) {
@@ -410,92 +412,35 @@ export default class typeDetect {
 				}
 			}
 			if (possMonth.length === 1) {
-				if (format.split[possMonth[0]].indexOf('0') === 0) {
-					format.format[possMonth[0]] = {value: 'MM', definite: true, firm: false};
-					format.hasMonth = true;
-				}
-				else {
-					format.format[possMonth[0]] = {value: 'M', definite: true, firm: false};
-					format.hasMonth = true;
-				}
+				format = format.split[possMonth[0]].indexOf('0') === 0 ?
+					this.setDateFormat(format, possMonth[0], 'MM', true, false, 'hasMonth', true) :
+					this.setDateFormat(format, possMonth[0], 'M', true, false, 'hasMonth', true);
 			}
 		}
 
 		for (let i = 0; i < format.format.length; i++) {
-			if (format.format[i].value.length === 0 && format.format[i].definite === false) {
-				if (!isNaN(+format.split[i])) {
-					if (!format.hasDay || !format.hasYear || !format.hasMonth) {
-						if (format.hasYear && format.hasDay) {
-							if (format.split[i].indexOf('0') === 0) {
-								format.format[i] = {value: 'MM', definite: true, firm: true};
-								format.hasMonth = true;
-							}
-							else {
-								format.format[i] = {value: 'M', definite: true, firm: false};
-								format.hasMonth = true;
-							}
-						}
-						else if (format.hasDay && format.hasMonth) {
-							if (format.split[i].indexOf('0') === 0) {
-								format.format[i] = {value: 'YY', definite: true, firm: true};
-								format.hasYear = true;
-							}
-							else {
-								format.format[i] = {value: 'Y', definite: true, firm: false};
-								format.hasYear = true;
-							}
-						}
-						else if (format.hasMonth && format.hasYear) {
-							if (format.split[i].indexOf('0') === 0) {
-								format.format[i] = {value: 'DD', definite: true, firm: true};
-								format.hasDay = true;
-							}
-							else {
-								format.format[i] = {value: 'D', definite: true, firm: false};
-								format.hasDay = true;
-							}
-						}
-						else if (format.hasYear) {
-							if (format.split[i].indexOf('0') === 0) {
-								format.format[i] = {value: 'MM', definite: true, firm: true};
-								format.hasMonth = true;
-							}
-							else {
-								format.format[i] = {value: 'M', definite: true, firm: false};
-								format.hasMonth = true;
-							}
-						}
-						else if (format.hasDay) {
-							if (format.split[i].indexOf('0') === 0) {
-								format.format[i] = {value: 'MM', definite: true, firm: true};
-								format.hasMonth = true;
-							}
-							else {
-								format.format[i] = {value: 'M', definite: true, firm: false};
-								format.hasMonth = true;
-							}
-						}
-						else if (format.hasMonth) {
-							if (format.split[i].indexOf('0') === 0) {
-								format.format[i] = {value: 'DD', definite: true, firm: true};
-								format.hasDay = true;
-							}
-							else {
-								format.format[i] = {value: 'D', definite: true, firm: false};
-								format.hasDay = true;
-							}
-						}
-						else {
-							if (format.split[i].indexOf('0') === 0) {
-								format.format[i] = {value: 'MM', definite: true, firm: true};
-								format.hasMonth = true;
-							}
-							else {
-								format.format[i] = {value: 'M', definite: true, firm: false};
-								format.hasMonth = true;
-							}
-						}
-					}
+			if (
+				format.format[i].value.length === 0 && format.format[i].definite === false &&
+				!isNaN(+format.split[i]) &&
+				(!format.hasDay || !format.hasYear || !format.hasMonth)
+			) {
+				if (format.hasYear && format.hasDay) {
+					format = this.determineTokenFormat(format, i, 'MM', 'M', 'hasMonth');
+				}
+				else if (format.hasDay && format.hasMonth) {
+					format = this.determineTokenFormat(format, i, 'YY', 'Y', 'hasYear');
+				}
+				else if (format.hasMonth && format.hasYear) {
+					format = this.determineTokenFormat(format, i, 'DD', 'D', 'hasDay');
+				}
+				else if (format.hasYear || format.hasDay) {
+					format = this.determineTokenFormat(format, i, 'MM', 'M', 'hasMonth');
+				}
+				else if (format.hasMonth) {
+					format = this.determineTokenFormat(format, i, 'DD', 'D', 'hasDay');
+				}
+				else {
+					format = this.determineTokenFormat(format, i, 'MM', 'M', 'hasMonth');
 				}
 			}
 		}
@@ -504,6 +449,7 @@ export default class typeDetect {
 			format.momentFormat += format.format[i].value;
 			format.momentFormat += format.separators[i];
 		}
+
 		format.momentFormat += format.format[format.split.length - 1].value;
 
 		if (format.momentFormat.length > 0 && moment(el, format.momentFormat).isValid()) {
@@ -513,6 +459,23 @@ export default class typeDetect {
 		else {
 			return 'mixed';
 		}
+	}
+
+	public determineTokenFormat(format, idx, a, b, has) {
+		return format.split[idx].indexOf('0') === 0 ?
+			this.setDateFormat(format, idx, a, true, true, has, true) :
+			this.setDateFormat(format, idx, b, true, false, has, true);
+	}
+
+	public setDateFormat(format, idx, value, definite, firm, has = '', hasValue = false) {
+		format.format[idx] = {value, definite, firm};
+		format.tokensUsed.push(value);
+
+		if (hasValue) {
+			format[has] = hasValue;
+		}
+
+		return format;
 	}
 
 	public getFormat(data, type: string): string {
@@ -592,6 +555,7 @@ export default class typeDetect {
 				// Otherwise it isn't the same across all of the elements so slice it down to what has passed so far and check again
 				if (el.indexOf(postfix.slice(0, i)) !== 0) {
 					postfix = postfix.slice(0, i - 1);
+
 					if (postfix.length === 0) {
 						return '';
 					}
