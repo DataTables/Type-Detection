@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import * as moment from '../node_modules/moment/moment';
 
 interface IDetails {
@@ -15,7 +14,9 @@ interface IDateFormat {
 	hasDay: boolean;
 	hasMonth: boolean;
 	hasYear: boolean;
-	locale: string;
+	latestLocale: string | null;
+	latestToken: string | null;
+	locales: string[];
 	momentFormat: string;
 	separators: string[];
 	split: string[];
@@ -50,10 +51,10 @@ export default class typeDetect {
 			frFR: /^(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)$/gi
 		};
 		this.abbrMonths = {
-			deDE: /^(jan|feb|märz|apr|mai|juni|juli|aug|sep|okt|nov|dez)$/gi,
+			deDE: /^(jan\.|feb\.|märz\.|apr\.|mai\.|juni\.|juli\.|aug\.|sep\.|okt\.|nov\.|dez\.)$/gi,
 			en: /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)$/gi,
-			esES: /^(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)$/gi,
-			frFR: /^(janv|févr|mars|avr|mai|juin|juil|août|sept|oct|nov|dec)$/gi
+			esES: /^(ene\.|feb\.|mar\.|abr\.|may\.|jun\.|jul\.|ago\.|sep\.|oct\.|nov\.|dic\.)$/gi,
+			frFR: /^(janv\.|févr\.|mars\.|avr\.|mai\.|juin\.|juil\.|août\.|sept\.|oct\.|nov\.|dec\.)$/gi
 		};
 		this.days = {
 			deDE: /^(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)$/gi,
@@ -62,14 +63,14 @@ export default class typeDetect {
 			frFR: /^(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)$/gi
 		};
 		this.abbrDays = {
-			deDE: /^(mo|di|mi|do|fr|sa|so)$/gi,
+			deDE: /^(mo\.|di\.|mi\.|do\.|fr\.|sa\.|so\.)$/gi,
 			en: /^(mon|tue|wed|thu|fri|sat|sun)$/gi,
-			esES: /^(lun|mar|mié|jue|vie|sáb|dom)$/gi,
-			frFR: /^(lun|mar|mer|jeu|ven|sam|dim)$/gi
+			esES: /^(lun\.|mar\.|mié\.|jue\.|vie\.|sáb\.|dom\.)$/gi,
+			frFR: /^(lun\.|mar\.|mer\.|jeu\.|ven\.|sam\.|dim\.)$/gi
 		};
 		this.postFixes = {
 			deDE: /^[0-9]+(st|nd|rd|th)$/gi,
-			en: /^[0-9]+(st|nd|rd|th)$/gi,
+			en:   /^[0-9]+(st|nd|rd|th)$/gi,
 			esES: /^[0-9]+(st|nd|rd|th)$/gi,
 			frFR: /^[0-9]+(st|nd|rd|th)$/gi
 		};
@@ -122,7 +123,6 @@ export default class typeDetect {
 	public getType(data, prefix, postfix): string {
 		let types = [];
 		let dateSuggestion = null;
-		let definiteOrder = null;
 		this.previouslyDiscarded = [];
 
 		// A type can only be set if all of the data fits it
@@ -174,7 +174,15 @@ export default class typeDetect {
 					//  of the previous data points against this new format as it could work for them
 					if (dateSuggestion !== null && format.momentFormat !== dateSuggestion.momentFormat) {
 						for (let j = 0; j < i; j++) {
-							if (!moment(data[j], format.momentFormat).isValid()) {
+							if (
+								!moment(
+									data[j],
+									format.momentFormat,
+									format.locales.length > 0 ?
+										format.locales[0].substring(0, 2) :
+										'en'
+								).isValid()
+							) {
 								return 'mixed';
 							}
 						}
@@ -230,11 +238,13 @@ export default class typeDetect {
 
 	public getDateFormat(el: string, suggestion: IDateFormat): any {
 		// Current format object to store the details of this element
-		let format = {
+		let format: IDateFormat = {
 			format: [],
 			hasDay: false,
 			hasMonth: false,
 			hasYear: false,
+			latestLocale: null,
+			latestToken: null,
 			locales: [],
 			momentFormat: '',
 			separators: [],
@@ -276,6 +286,7 @@ export default class typeDetect {
 			// If there has been a previous suggestion and it is firm for this part
 			if (suggestion !== null && suggestion.format[i].firm === true) {
 				// Copy into the current format
+				format.locales = suggestion.locales;
 				format.format[i] = suggestion.format[i];
 				let value = format.format[i].value;  // Used a lot so store in temp variable
 				format.tokensUsed.push(value);
@@ -335,12 +346,12 @@ export default class typeDetect {
 				else {
 					// Only year can be 4 characters long and a number
 					if (format.tokensUsed.indexOf('YYYY') === -1 && spl.length === 4) {
-						format = this.setDateFormat(format, i, 'YYYY', true, true, 'hasYear');
+						format = this.setDateFormat(format, i, 'YYYY', true, true, undefined, 'hasYear');
 						continue;
 					}
 					// Alternatively could be 2 digits if greater than 31
 					else if (format.tokensUsed.indexOf('YY') === -1 && +spl > 31) {
-						format = this.setDateFormat(format, i, 'YY', true, false, 'hasYear');
+						format = this.setDateFormat(format, i, 'YY', true, false, undefined, 'hasYear');
 					}
 				}
 			}
@@ -381,29 +392,60 @@ export default class typeDetect {
 				// Check for other string tokens
 				else {
 					// Get the possible locales
-					let prevFormat = format;
 					let locales = format.locales.length > 0 ?
 						format.locales :
 						Object.keys(this.abbrDays);
 
-					for (let locale of locales) {
-						format = (format.tokensUsed.indexOf('Do') === -1 && spl.match(this.postFixes[locale])) ?
-							this.setDateFormat(format, i, 'Do', true, true, 'hasDay') :
-							(format.tokensUsed.indexOf('MMMM') === -1 && spl.match(this.months[locale])) ?
-								this.setDateFormat(format, i, 'MMMM', true, spl === 'may' ? false : true, 'hasMonth') :
-								(format.tokensUsed.indexOf('MMM') === -1 && spl.match(this.abbrMonths[locale])) ?
-									this.setDateFormat(format, i, 'MMM', true, spl === 'may' ? false : true, 'hasMonth') :
-									(format.tokensUsed.indexOf('dddd') === -1 && spl.match(this.days[locale])) ?
-										this.setDateFormat(format, i, 'dddd', true, true) :
-										(format.tokensUsed.indexOf('ddd') === -1 && spl.match(this.abbrDays[locale])) ?
-											this.setDateFormat(format, i, 'ddd', true, true) :
-											format;
+					let tokensThisRound = [];
+					let localesThisRound = [];
 
-						// If the locale has been found then break and continue
-						if (format !== prevFormat) {
-							format.locales.push(locale);
+					for (let locale of locales) {
+						format.latestToken = null;
+						format.latestLocale = null;
+						format = (
+								(format.tokensUsed.indexOf('Do') === -1 || tokensThisRound.indexOf('Do') !== -1) &&
+								spl.match(this.postFixes[locale])
+							) ?
+								this.setDateFormat(format, i, 'Do', true, true, locale, 'hasDay') :
+								(
+									(format.tokensUsed.indexOf('MMMM') === -1 || tokensThisRound.indexOf('MMMM') !== -1) &&
+									spl.match(this.months[locale])
+								) ?
+									this.setDateFormat(format, i, 'MMMM', true, spl === 'may' ? false : true, locale, 'hasMonth') :
+									(
+										(format.tokensUsed.indexOf('MMM') === -1 || tokensThisRound.indexOf('MMM') !== -1) &&
+										spl.match(this.abbrMonths[locale])
+									) ?
+										this.setDateFormat(format, i, 'MMM', true, spl === 'may' ? false : true, locale, 'hasMonth') :
+										(
+											(format.tokensUsed.indexOf('dddd') === -1 || tokensThisRound.indexOf('dddd') !== -1) &&
+											spl.match(this.days[locale])
+										) ?
+											this.setDateFormat(format, i, 'dddd', true, true, locale) :
+											(
+												(format.tokensUsed.indexOf('ddd') === -1 || tokensThisRound.indexOf('ddd') !== -1) &&
+												spl.match(this.abbrDays[locale])
+											) ?
+												this.setDateFormat(format, i, 'ddd', true, true, locale) :
+												format;
+
+						if (format.latestToken !== null) {
+							tokensThisRound.push(format.latestToken);
+						}
+						if (format.latestLocale !== null) {
+							localesThisRound.push(format.latestLocale);
 						}
 					}
+
+					let newLocales = [];
+
+					for (let locale of localesThisRound) {
+						if (format.locales.indexOf(locale) !== -1) {
+							newLocales.push(locale);
+						}
+					}
+
+					format.locales = localesThisRound;
 				}
 			}
 		}
@@ -433,8 +475,8 @@ export default class typeDetect {
 			if (possMonth.length === 1) {
 				// Can now declare this a month if the others are over
 				format = format.split[possMonth[0]].indexOf('0') === 0 ?
-					this.setDateFormat(format, possMonth[0], 'MM', true, false, 'hasMonth') :
-					this.setDateFormat(format, possMonth[0], 'M', true, false, 'hasMonth');
+					this.setDateFormat(format, possMonth[0], 'MM', true, false, undefined, 'hasMonth') :
+					this.setDateFormat(format, possMonth[0], 'M', true, false, undefined, 'hasMonth');
 			}
 		}
 
@@ -445,16 +487,16 @@ export default class typeDetect {
 				(!format.hasDay || !format.hasYear || !format.hasMonth)
 			) {
 				format = (format.hasYear && format.hasDay) ? // Year and Day - must be month
-					this.determineTokenFormat(format, i, 'MM', 'M', 'hasMonth') :
+					this.determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth') :
 					(format.hasDay && format.hasMonth) ? // Day and Month - must be year
-						this.determineTokenFormat(format, i, 'YY', 'Y', 'hasYear') :
+						this.determineTokenFormat(format, i, 'YY', 'Y', undefined, 'hasYear') :
 						(format.hasMonth && format.hasYear) ? // Month and Year - must be day
-							this.determineTokenFormat(format, i, 'DD', 'D', 'hasDay') :
+							this.determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay') :
 							(format.hasYear || format.hasDay) ? // Year or Day - must be month. Wouldn't make sense otherwise
-								this.determineTokenFormat(format, i, 'MM', 'M', 'hasMonth') :
+								this.determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth') :
 								(format.hasMonth) ? // Month then assume day next
-									this.determineTokenFormat(format, i, 'DD', 'D', 'hasDay') :
-									this.determineTokenFormat(format, i, 'MM', 'M', 'hasMonth'); // Last resort assume Month
+									this.determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay') :
+									this.determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth'); // Last resort assume Month
 			}
 		}
 
@@ -468,7 +510,10 @@ export default class typeDetect {
 		format.momentFormat += format.format[format.split.length - 1].value;
 
 		// If there is a format and it is valid then return it
-		if (format.momentFormat.length > 0 && moment(el, format.momentFormat).isValid()) {
+		if (
+			format.momentFormat.length > 0 &&
+			moment(el, format.momentFormat, format.locales.length > 0 ? format.locales[0].substring(0, 2) : 'en').isValid()
+		) {
 			return format;
 		}
 		// Otherwise assume mixed
@@ -486,10 +531,10 @@ export default class typeDetect {
 	 * @param has Any flag to be set
 	 * @returns the updated format
 	 */
-	public determineTokenFormat(format, idx, a, b, has = '') {
+	public determineTokenFormat(format, idx, a, b, locale?, has = '') {
 		return format.split[idx].indexOf('0') === 0 ?
-			this.setDateFormat(format, idx, a, true, true, has) :
-			this.setDateFormat(format, idx, b, true, false, has);
+			this.setDateFormat(format, idx, a, true, true, locale, has) :
+			this.setDateFormat(format, idx, b, true, false, locale, has);
 	}
 
 	/**
@@ -499,12 +544,19 @@ export default class typeDetect {
 	 * @param value The token to be set
 	 * @param definite Whether this is definitely the token's type
 	 * @param firm Whether this is the exact token
+	 * @param locale Optional, any locale that is associated with this value/token combination
 	 * @param has Any flag to be set
 	 * @returns the updated format
 	 */
-	public setDateFormat(format, idx, value, definite, firm, has = '') {
+	public setDateFormat(format, idx, value, definite, firm, locale?, has = '') {
 		format.format[idx] = {value, definite, firm};
 		format.tokensUsed.push(value);
+		format.latestToken = value;
+		format.latestLocale = (locale !== undefined) ? locale : null;
+
+		if (locale !== undefined && format.locales.indexOf(locale) === -1) {
+			format.locales.push(locale);
+		}
 
 		// Set the flag if it has been defined
 		if (has.length > 0) {

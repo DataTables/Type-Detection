@@ -262,5 +262,82 @@ checkDetails(
     }
 )
 
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with ddd Do comma and MMMM and AMPM...")
+checkDetails(
+    detector.typeDetect(['Thu 1st Oct, 2020 11:12:47 AM','Sun 17th Oct, 1999 10:56:07 PM','Fri 3rd Jan, 2025 9:02:00 AM']),
+    {
+        type: 'date',
+        format: 'ddd Do MMM, YYYY h:mm:ss A',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with dddd Do comma and MMMM and AMPM...")
+checkDetails(
+    detector.typeDetect(['Thursday 1st Oct, 2020 11:12:47 AM','Sunday 17th Oct, 1999 10:56:07 PM','Friday 3rd Jan, 2025 9:02:00 AM']),
+    {
+        type: 'date',
+        format: 'dddd Do MMM, YYYY h:mm:ss A',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK German Dates with Do comma and MMM and ampm...")
+checkDetails(
+    detector.typeDetect(['1st Okt., 2020 11:12:47 am','17th Okt., 1999 10:56:07 pm','2nd Jan., 2025 9:02:00 am']),
+    {
+        type: 'date',
+        format: 'Do MMM, YYYY h:mm:ss a',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK German Dates with Do comma and MMMM and AMPM...")
+checkDetails(
+    detector.typeDetect(['1st Oktober, 2020 11:12:47 AM','17th Oktober, 1999 10:56:07 PM','2nd Jan., 2025 9:02:00 AM']),
+    {
+        type: 'date',
+        format: 'Do MMMM, YYYY h:mm:ss A',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK German Dates with ddd Do comma and MMMM and AMPM...")
+checkDetails(
+    detector.typeDetect(['Do. 1st Okt., 2020 11:12:47 AM','So. 17th Okt., 1999 10:56:07 PM','Fr. 3rd Jan., 2025 9:02:00 AM']),
+    {
+        type: 'date',
+        format: 'ddd Do MMM, YYYY h:mm:ss A',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK German Dates with dddd Do comma and MMMM and AMPM...")
+checkDetails(
+    detector.typeDetect(['Donnerstag 1st Okt., 2020 11:12:47 AM','Sonntag 17th Okt., 1999 10:56:07 PM','Freitag 3rd Jan., 2025 9:02:00 AM']),
+    {
+        type: 'date',
+        format: 'dddd Do MMM, YYYY h:mm:ss A',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
 
 console.log("Failed", failed, "of", total, "tests. See above for details");
