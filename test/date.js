@@ -343,7 +343,7 @@ checkDetails(
 // Dates YYYY-MM-DD
 console.log("CHECK French Dates with Do comma and MMM and ampm...")
 checkDetails(
-    detector.typeDetect(['1st Okt., 2020 11:12:47 am','17th Oct., 1999 10:56:07 pm','2nd Janv., 2025 9:02:00 am']),
+    detector.typeDetect(['1st Oct., 2020 11:12:47 am','17th Oct., 1999 10:56:07 pm','2nd Janv., 2025 9:02:00 am']),
     {
         type: 'date',
         format: 'Do MMM, YYYY h:mm:ss a',
@@ -383,6 +383,58 @@ checkDetails(
 console.log("CHECK French Dates with dddd Do comma and MMMM and AMPM...")
 checkDetails(
     detector.typeDetect(['Jeudi 1st Oct., 2020 11:12:47 AM','Dimanche 17th Oct., 1999 10:56:07 PM','Vendredi 3rd Jan., 2025 9:02:00 AM']),
+    {
+        type: 'date',
+        format: 'dddd Do MMM, YYYY h:mm:ss A',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK Spanish Dates with Do comma and MMM and ampm...")
+checkDetails(
+    detector.typeDetect(['1st Oct., 2020 11:12:47 am','17th Oct., 1999 10:56:07 pm','2nd Ene., 2025 9:02:00 am']),
+    {
+        type: 'date',
+        format: 'Do MMM, YYYY h:mm:ss a',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK Spanish Dates with Do comma and MMMM and AMPM...")
+checkDetails(
+    detector.typeDetect(['1st Octubre, 2020 11:12:47 AM','17th Octubre, 1999 10:56:07 PM','2nd Enero, 2025 9:02:00 AM']),
+    {
+        type: 'date',
+        format: 'Do MMMM, YYYY h:mm:ss A',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK Spanish Dates with ddd Do comma and MMMM and AMPM...")
+checkDetails(
+    detector.typeDetect(['Jue. 1st Oct., 2020 11:12:47 AM','Dom. 17th Oct., 1999 10:56:07 PM','Vie. 3rd Ene., 2025 9:02:00 AM']),
+    {
+        type: 'date',
+        format: 'ddd Do MMM, YYYY h:mm:ss A',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK Spanish Dates with dddd Do comma and MMMM and AMPM...")
+checkDetails(
+    detector.typeDetect(['Jueves 1st Oct., 2020 11:12:47 AM','Domingo 17th Oct., 1999 10:56:07 PM','Viernes 3rd Ene., 2025 9:02:00 AM']),
     {
         type: 'date',
         format: 'dddd Do MMM, YYYY h:mm:ss A',
