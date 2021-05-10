@@ -2,7 +2,7 @@ import * as moment from '../node_modules/moment/moment';
 
 interface IDetails {
 	type: null | string;
-	format: null | string;
+	format: null | string | object;
 	locale: null | string;
 	prefix: null | string;
 	postfix: null | string;
@@ -116,6 +116,12 @@ export default class typeDetect {
 			// Also determine the number of decimal places
 			details.dp = this.getDP(data, possPostfix);
 		}
+		else if (details.type === 'excel_number') {
+			details.type = 'number';
+			details.prefix = possPrefix;
+			details.postfix = possPostfix;
+			details.dp = this.getExcelDP(data);
+		}
 
 		return details;
 	}
@@ -136,23 +142,49 @@ export default class typeDetect {
 			}
 
 			// If the prefix exists, replace it within the temporary el
-			if (prefix.length > 0 && el.indexOf(prefix) === 0) {
+			if (type === 'string' && prefix.length > 0 && el.indexOf(prefix) === 0) {
 				tempEl = tempEl.replace(prefix, '');
+			}
+			else if (
+				type === 'object' &&
+				prefix.length > 0 &&
+				typeof tempEl.value === 'string' &&
+				el.value.indexOf(prefix) === 0
+			) {
+				tempEl.value = tempEl.value.replace(prefix, '');
 			}
 
 			// If the postfix exists replace it within the temporary el
-			if (postfix.length > 0 && el.indexOf(postfix) === el.length - postfix.length) {
+			if (type === 'string' && postfix.length > 0 && el.indexOf(postfix) === el.length - postfix.length) {
 				tempEl = tempEl.replace(new RegExp(postfix + '$'), '');
+			}
+			else if (
+				type === 'object' &&
+				postfix.length > 0 &&
+				typeof tempEl.value === 'string' &&
+				el.value.indexOf(postfix) === el.value.length - postfix.length
+			) {
+				tempEl.value = tempEl.value.replace(new RegExp(postfix + '$'), '');
 			}
 
 			// Replace any thousands separators in the temporary element
 			if (type === 'string' && tempEl.indexOf(this.thousandsSeparator) !== -1) {
 				tempEl = tempEl.split(this.thousandsSeparator).join('');
 			}
+			else if (
+				type === 'object' &&
+				typeof tempEl.value === 'string' &&
+				tempEl.value.indexOf(this.thousandsSeparator) !== -1
+			) {
+				tempEl.value = tempEl.value.split(this.thousandsSeparator).join('');
+			}
 
 			// At this point the remaining value within tempEl can be converted to a number then that is it's types
 			if (type === 'string' && (!isNaN(+el) || !isNaN(+tempEl))) {
 				type = 'number';
+			}
+			else if (type === 'object' && (!isNaN(+el.value) || !isNaN(+tempEl.value))) {
+				type = 'excel_number';
 			}
 
 			// Check if there are any html tags
@@ -231,9 +263,18 @@ export default class typeDetect {
 		else if (types[0].indexOf('date') === 0) {
 			return types[0];
 		}
+		else if (types[0] === 'excel_number') {
+			return types[0];
+		}
 
 		// If no other types are found then default to string
 		return 'string';
+	}
+
+	public getExcelFormat(el: any): any {
+		if (el.match(/^[0-9\#\?\.\;]*$/ig) !== null) {
+			return 'excel_number';
+		}
 	}
 
 	public getDateFormat(el: string, suggestion: IDateFormat): any {
@@ -572,89 +613,129 @@ export default class typeDetect {
 
 	public getPrefix(data): string {
 		let prefix = data[0]; // Initialise prefix to be the entire first value
-		let first = true;
 
-		for (let el of data) {
-			if (first) {
-				first = false;
-				continue;
-			}
-			// There can't be a prefix if the type isn't a string
-			if (typeof el !== 'string') {
-				return '';
-			}
+		if (typeof prefix === 'object') {
+			if (prefix.excel.indexOf('"') === 0 && prefix.excel.indexOf('"') !== prefix.excel.lastIndexOf('"')) {
+				let excelPrefix = prefix.excel.split('"')[1];
 
-			if (el.indexOf(prefix) === 0) {
-				continue;
-			}
-
-			// Gradually increase the prefix to check that it matches
-			for (let i = 0; i < prefix.length; i++) {
-				// If this portion of prefix is at the beginning of the string then carry on
-				// Otherwise it isn't the same across all of the elements so slice it down to what has passed so far and check again
-				if (el.indexOf(prefix.slice(0, i)) !== 0) {
-					prefix = prefix.slice(0, i - 1);
-
-					if (prefix.length === 0) {
+				for (let el of data) {
+					if (el.excel.indexOf('"' + excelPrefix) !== 0) {
 						return '';
 					}
 				}
-			}
-		}
 
-		// Anything left at this point is present at the start of every value
-		//  and _may_ be considered a prefix, but this will depend on the type
-		let matches = prefix.match(/^[^0-9]+/g);
-		return matches !== null ? matches[0] : '';
+				return excelPrefix;
+			}
+			return '';
+		}
+		else {
+			let first = true;
+
+			for (let el of data) {
+				if (first) {
+					first = false;
+					continue;
+				}
+				// There can't be a prefix if the type isn't a string
+				if (typeof el !== 'string') {
+					return '';
+				}
+
+				if (el.indexOf(prefix) === 0) {
+					continue;
+				}
+
+				// Gradually increase the prefix to check that it matches
+				for (let i = 0; i < prefix.length; i++) {
+					// If this portion of prefix is at the beginning of the string then carry on
+					// Otherwise it isn't the same across all of the elements so slice it down
+					//  to what has passed so far and check again
+					if (el.indexOf(prefix.slice(0, i)) !== 0) {
+						prefix = prefix.slice(0, i - 1);
+
+						if (prefix.length === 0) {
+							return '';
+						}
+					}
+				}
+			}
+
+			// Anything left at this point is present at the start of every value
+			//  and _may_ be considered a prefix, but this will depend on the type
+			let matches = prefix.match(/^[^0-9]+/g);
+			return matches !== null ? matches[0] : '';
+		}
 	}
 
 	public getPostfix(data): string {
-		// If the type of the first element is not a string then there cannot be a postfix
-		// Need to check this now before the string operations
-		if (typeof data[0] !== 'string') {
-			return '';
-		}
+		if (typeof data[0] === 'object') {
+			let postfix = data[0];
+			if (
+				postfix.excel.lastIndexOf('"') === postfix.excel.length - 1 &&
+				postfix.excel.indexOf('"') !== postfix.excel.lastIndexOf('"')
+			) {
+				let codeSplit = postfix.excel.split('"');
+				let excelPostfix = codeSplit[codeSplit.length - 2];
 
-		// Reverse the string, a postfix is a prefix working from the other end of the string
-		// So, can use the same algorithm as above in `getPrefix()` to do this
-		let postfix = data[0].split('').reverse().join('');
-		let first = true;
-
-		for (let el of data) {
-			if (first) {
-				first = false;
-				continue;
-			}
-			// There can't be a postfix if the type isn't a string
-			if (typeof el !== 'string') {
-				return '';
-			}
-
-			// Reverse the element to match the reversed postfix
-			el = el.split('').reverse().join('');
-
-			if (el.indexOf(postfix) === 0) {
-				continue;
-			}
-
-			// Gradually increase the postfix to check that it matches
-			for (let i = 0; i < postfix.length; i++) {
-				// If this portion of postfix is at the beginning of the string then carry on
-				// Otherwise it isn't the same across all of the elements so slice it down to what has passed so far and check again
-				if (el.indexOf(postfix.slice(0, i)) !== 0) {
-					postfix = postfix.slice(0, i - 1);
-
-					if (postfix.length === 0) {
+				for (let el of data) {
+					if (el.excel.lastIndexOf(excelPostfix + '"') !== el.excel.length - (excelPostfix.length + 1)) {
 						return '';
 					}
 				}
+
+				return excelPostfix;
 			}
+			return '';
+		}
+		// If the type of the first element is not a string then there cannot be a postfix
+		// Need to check this now before the string operations
+		else if (typeof data[0] !== 'string') {
+			return '';
+		}
+		else {
+			// Reverse the string, a postfix is a prefix working from the other end of the string
+			// So, can use the same algorithm as above in `getPrefix()` to do this
+			let postfix = data[0].split('').reverse().join('');
+			let first = true;
+
+			for (let el of data) {
+				if (first) {
+					first = false;
+					continue;
+				}
+				// There can't be a postfix if the type isn't a string
+				if (typeof el !== 'string') {
+					return '';
+				}
+
+				// Reverse the element to match the reversed postfix
+				el = el.split('').reverse().join('');
+
+				if (el.indexOf(postfix) === 0) {
+					continue;
+				}
+
+				// Gradually increase the postfix to check that it matches
+				for (let i = 0; i < postfix.length; i++) {
+					// If this portion of postfix is at the beginning of the string then carry on
+					// Otherwise it isn't the same across all of the elements so slice it down to
+					//  what has passed so far and check again
+					if (el.indexOf(postfix.slice(0, i)) !== 0) {
+						postfix = postfix.slice(0, i - 1);
+
+						if (postfix.length === 0) {
+							return '';
+						}
+					}
+				}
+			}
+
+			// Anything left at this point is present at the end of every value, once it is
+			//  reversed and _may_ be considered a postfix, but this will depend on the type
+			let matches = postfix.split('').reverse().join('').match(/[^0-9]+$/g);
+			return matches !== null ? matches[matches.length - 1] : '';
 		}
 
-		// Anything left at this point is present at the end of every value, once it is
-		//  reversed and _may_ be considered a postfix, but this will depend on the type
-		let matches = postfix.split('').reverse().join('').match(/[^0-9]+$/g);
-		return matches !== null ? matches[matches.length - 1] : '';
 	}
 
 	public getDP(data, postfix): number {
@@ -673,4 +754,107 @@ export default class typeDetect {
 
 		return highestDP;
 	}
+
+	public getExcelDP(data): number {
+		let highestDP = 0;
+
+		for (let el of data) {
+			// Replace the postfix as it's characters do not count as decimal places
+			let split = el.value.toString().split(this.decimalCharacter);
+
+			// Check that there is a decimal place and also if there are
+			// more than previously seen - the highest value should be used
+			if (split.length > 1 && split[1].length > highestDP) {
+				highestDP = split[1].length;
+			}
+		}
+
+		return highestDP;
+	}
 }
+
+// This method is a good start towards more advanced excel format detection.
+// Cloudtables is not yet equipped to deal with this much info yet though so it can wait here incase that point comes.
+
+// interface IExcelFormat {
+// 	dp: number;
+// 	fraction: boolean;
+// 	scaleThousands: number;
+// 	thousandsSeparated: boolean;
+// 	leadingZeros: number;
+// 	forceLeadingZeros: boolean;
+// 	colours: object[];
+// 	hideZeroValues: boolean;
+// 	hideAllValues: boolean;
+// 	includesDateTime: boolean;
+// }
+
+// public getAdvancedExcelFormat(el: any): any {
+// 	if (typeof el !== 'object' || Object.keys(el).length !== 2) {
+// 		return false;
+// 	}
+
+// 	let value = el.value;
+// 	let code = el.excel;
+// 	let format: IExcelFormat = {
+// 		colours: [],
+// 		dp: 0,
+// 		forceLeadingZeros: false,
+// 		fraction: false,
+// 		hideAllValues: false,
+// 		hideZeroValues: false,
+// 		includesDateTime: false,
+// 		leadingZeros: 0,
+// 		scaleThousands: 0,
+// 		thousandsSeparated: false
+// 	};
+
+// 	if (code.indexOf('.') !== -1) {
+// 		format.dp = code.split('.')[1].length;
+// 	}
+
+// 	if (code.indexOf('/') !== -1 && code.match(/[a-z]/ig) === null) {
+// 		format.fraction = true;
+// 	}
+
+// 	if (code.indexOf(',') !== - 1) {
+// 		if (code.lastIndexOf(',') !== code.length - 1) {
+// 			format.thousandsSeparated = true;
+// 		}
+
+// 		let tempCode = code;
+
+// 		while (tempCode.lastIndexOf(',') === tempCode.length - 1) {
+// 			tempCode = tempCode.slice(0, -1);
+// 			format.scaleThousands++;
+// 		}
+// 	}
+
+// 	if (code.indexOf('"') === 0 && code.split('"')[1].indexOf('0') === 0) {
+// 		format.forceLeadingZeros = true;
+// 	}
+
+// 	if (code.split('"')[(code.split('"').length > 1 ? 1 : 0)].match(/^0+/g) !== null) {
+// 		format.leadingZeros = code.split('"')[(code.split('"').length > 1 ? 1 : 0)].match(/^0+/g)[0].length;
+// 	}
+
+// 	let tempCode = code;
+// 	while (tempCode.indexOf('[') !== -1) {
+// 		let match = tempCode.match(/\[[^\[]*\]/ig)[0];
+// 		let colour = match.split(/(\[|\])/ig)[1];
+// 		let condition = null;
+// 		tempCode = tempCode.replace(match, '');
+// 		if (tempCode.indexOf('[') !== -1) {
+// 			match = tempCode.match(/\[[^\[]*\]/ig)[0];
+// 			condition = match.split(/(\[|\])/ig)[1];
+// 			tempCode = tempCode.replace(match, '');
+// 		}
+// 		format.colours.push({colour, condition});
+// 	}
+
+// 	if (code.match(/[^0-9\#\?]*/ig) !== null && code.match(/[^0-9\#\?]*/ig)[0].length === code.length) {
+// 		format.includesDateTime = true;
+// 	}
+
+// 	return format;
+// }
