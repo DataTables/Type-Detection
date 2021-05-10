@@ -38,12 +38,10 @@ export default class typeDetect {
 	private days;
 	private abbrDays;
 	private postFixes;
-	private previouslyDiscarded;
 
 	constructor(decimalCharacter= '.', thousandsSeparator= ',') {
 		this.decimalCharacter = decimalCharacter;
 		this.thousandsSeparator = thousandsSeparator;
-		this.previouslyDiscarded = [];
 		this.months = {
 			deDE: /^(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember)$/gi,
 			en: /^(january|february|march|april|may|june|july|august|september|october|november|december)$/gi,
@@ -76,7 +74,12 @@ export default class typeDetect {
 		};
 	}
 
-	public typeDetect(data) {
+	/**
+	 * Detects the type and additional details from the overall data set.
+	 * @param data The dataset to have a type detected
+	 * @returns string - the type that has been detected and any additional details for that type
+	 */
+	public typeDetect(data: any[]): IDetails {
 		let details: IDetails = {
 			dp: null,
 			format: null,
@@ -95,205 +98,159 @@ export default class typeDetect {
 		let possPrefix = this.getPrefix(data);
 		let possPostfix = this.getPostfix(data);
 
-		details.type = this.getType(data, possPrefix, possPostfix); // Get the type of the data
+		details.type = this.getType(data, possPrefix, possPostfix);
 
 		// If the type is a datetime, date or time then the format needs to be set.
-		if (details.type === 'datetime' || details.type.indexOf('date') !== -1 || details.type === 'time') {
+		if (details.type.indexOf('date') !== -1) {
 			let splitdate = details.type.split('_');
-			details.type = splitdate[0];
 			details.format = splitdate[1];
-			details.locale = splitdate[2];
 
 			// If a format cannot be determined then default back to a string type
 			if (details.format === null) {
 				details.type = 'string';
 			}
+			else {
+				details.type = splitdate[0];
+				details.locale = splitdate[2];
+			}
 		}
-		else if (details.type === 'number') {
+		else if (details.type.indexOf('number') !== -1) {
 			// If the type is a number then use the previously identified postfix and prefix
-			details.prefix = possPrefix;
-			details.postfix = possPostfix;
-			// Also determine the number of decimal places
-			details.dp = this.getDP(data, possPostfix);
-		}
-		else if (details.type === 'excel_number') {
 			details.type = 'number';
 			details.prefix = possPrefix;
 			details.postfix = possPostfix;
-			details.dp = this.getExcelDP(data, possPostfix);
+			// Also determine the number of decimal places
+			details.dp = details.type === 'excel_number' ?
+				this.getExcelDP(data, possPostfix) :
+				this.getDP(data, possPostfix);
 		}
 
 		return details;
 	}
 
-	public getType(data, prefix, postfix): string {
-		let types = [];
-		let dateSuggestion = null;
-		this.previouslyDiscarded = [];
+	/**
+	 * Gets the actual type of the data as a string
+	 * @param data The array of data to be processed
+	 * @param prefix Any prefix that has been detected within the dataset
+	 * @param postfix Any postfix that has been detected within the dataset
+	 * @returns string - the actual type of the data
+	 */
+	public getType(data: any[], prefix: string, postfix: string): string {
+		let types: string[] = [];
+		let dateSuggestion: null | IDateFormat = null;
 
 		// A type can only be set if all of the data fits it
 		for (let i = 0; i < data.length; i ++) {
 			let el = data[i];
-			let type: string = typeof el; // Get the js type of the element
-			let tempEl = el; // Hold a temporary version of el that can be manipulated
-
-			if (type === 'object') {
-				tempEl = {...el};
-			}
 
 			if (el === null || el === undefined || el.length === 0) {
 				continue;
 			}
 
+			let type: string = typeof el;
+			let tempEl = type === 'object' ?
+				{...el} :
+				el;
+
 			// If the prefix exists, replace it within the temporary el
-			if (type === 'string' && prefix.length > 0 && el.indexOf(prefix) === 0) {
-				tempEl = tempEl.replace(prefix, '');
-			}
-			else if (
-				type === 'object' &&
-				prefix.length > 0 &&
-				typeof tempEl.value === 'string' &&
-				el.value.indexOf(prefix) === 0
-			) {
-				tempEl.value = tempEl.value.replace(prefix, '');
+			if (prefix.length > 0 && el.indexOf(prefix) === 0) {
+				if (type === 'string') {
+					tempEl = tempEl.replace(prefix, '');
+				}
+				else if (typeof tempEl.value === 'string') {
+					tempEl.value = tempEl.value.replace(prefix, '');
+				}
 			}
 
 			// If the postfix exists replace it within the temporary el
-			if (type === 'string' && postfix.length > 0 && el.indexOf(postfix) === el.length - postfix.length) {
-				tempEl = tempEl.replace(new RegExp(postfix + '$'), '');
-			}
-			else if (
-				type === 'object' &&
-				postfix.length > 0 &&
-				typeof tempEl.value === 'string' &&
-				el.value.indexOf(postfix) === el.value.length - postfix.length
-			) {
-				tempEl.value = tempEl.value.replace(new RegExp(postfix + '$'), '');
+			if (postfix.length > 0 && el.indexOf(postfix) === el.length - postfix.length) {
+				if (type === 'string') {
+					tempEl = tempEl.replace(new RegExp(postfix + '$'), '');
+				}
+				else if (typeof tempEl.value === 'string') {
+					tempEl.value = tempEl.value.replace(new RegExp(postfix + '$'), '');
+				}
 			}
 
 			// Replace any thousands separators in the temporary element
-			if (type === 'string' && tempEl.indexOf(this.thousandsSeparator) !== -1) {
-				tempEl = tempEl.split(this.thousandsSeparator).join('');
-			}
-			else if (
-				type === 'object' &&
-				typeof tempEl.value === 'string' &&
-				tempEl.value.indexOf(this.thousandsSeparator) !== -1
-			) {
-				tempEl.value = tempEl.value.split(this.thousandsSeparator).join('');
+			if (tempEl.indexOf(this.thousandsSeparator) !== -1) {
+				if (type === 'string') {
+					tempEl = tempEl.split(this.thousandsSeparator).join('');
+				}
+				else if (typeof tempEl.value === 'string') {
+					tempEl.value = tempEl.value.split(this.thousandsSeparator).join('');
+				}
 			}
 
 			// At this point the remaining value within tempEl can be converted to a number then that is it's types
 			if (type === 'string' && (!isNaN(+el) || !isNaN(+tempEl))) {
 				type = 'number';
 			}
-			else if (type === 'object' && (!isNaN(+el.value) || !isNaN(+tempEl.value))) {
+			else if (!isNaN(+el.value) || !isNaN(+tempEl.value)) {
 				type = 'excel_number';
 			}
-
 			// Check if there are any html tags
-			if (type === 'string' && el.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
+			else if (el.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
 				type = 'html';
 			}
+			else {
+				let excel = null;
 
-			// Last chance to find a type is a date format
-			if (type === 'string') {
-				// Get a format for the datapoint
-				let format = this.getDateFormat(el, dateSuggestion);
-
-				// getDateFormat can tell if the data is mixed based on the suggested format and if there is a definite order
-				if (dateSuggestion !== null && format === 'mixed') {
-					return format;
+				// This flag makes sure that the correct values are used to check for dates
+				if (type === 'object') {
+					excel = true;
 				}
-				else if (format !== 'mixed') {
-					// If there is a suggested format and it doesn't match this format then check all
-					//  of the previous data points against this new format as it could work for them
-					if (dateSuggestion !== null && format.momentFormat !== dateSuggestion.momentFormat) {
-						for (let j = 0; j < i; j++) {
-							if (
-								!moment(
-									data[j],
-									format.momentFormat,
-									format.locales.length > 0 ?
-										format.locales[0].substring(0, 2) :
-										'en'
-								).isValid()
-							) {
-								return 'mixed';
-							}
-						}
-					}
-
-					// If a format has been found for this data point
-					if (format !== null) {
-						// if there is a suggested format
-						if (dateSuggestion !== null) {
-							// if the suggested format is shorter than this then it has probably
-							//  identified a short representation and so it should be used
-							if (dateSuggestion.format.length < format.format.length) {
-								format.format = dateSuggestion.format;
-							}
-							// Otherwise it must use the new format so remove the old one from potential types
-							else {
-								types.splice(types.indexOf('date-' + dateSuggestion), 1);
-								this.previouslyDiscarded.push(dateSuggestion);
-							}
-						}
-						// Set the type for this format and the suggestion for the next
-						type = 'date_' + format.momentFormat + '_' + format.locales.join('-');
-						dateSuggestion = format;
-					}
+				else if (type === 'string') {
+					excel = false;
 				}
 
-			}
-			else if (type === 'object') {
-				// Get a format for the datapoint
-				let format = this.getDateFormat(el.value, dateSuggestion);
+				if (excel !== null) {
+					// Get a format for the datapoint
+					let format = this.getDateFormat(!excel ? el : el.value, dateSuggestion);
 
-				// getDateFormat can tell if the data is mixed based on the suggested format and if there is a definite order
-				if (dateSuggestion !== null && format === 'mixed') {
-					return format;
-				}
-				else if (format !== 'mixed') {
-					// If there is a suggested format and it doesn't match this format then check all
-					//  of the previous data points against this new format as it could work for them
-					if (dateSuggestion !== null && format.momentFormat !== dateSuggestion.momentFormat) {
-						for (let j = 0; j < i; j++) {
-							if (
-								!moment(
-									data[j].value,
-									format.momentFormat,
-									format.locales.length > 0 ?
-										format.locales[0].substring(0, 2) :
-										'en'
-								).isValid()
-							) {
-								return 'mixed';
+					// getDateFormat can tell if the data is mixed based on the suggested format and if there is a definite order
+					if (dateSuggestion !== null && format === 'mixed') {
+						return format;
+					}
+					else if (format !== 'mixed') {
+						// If there is a suggested format and it doesn't match this format then check all
+						//  of the previous data points against this new format as it could work for them
+						if (dateSuggestion !== null && format.momentFormat !== dateSuggestion.momentFormat) {
+							for (let j = 0; j < i; j++) {
+								if (
+									!moment(
+										!excel ? data[j] : data[j].value,
+										format.momentFormat,
+										format.locales.length > 0 ?
+											format.locales[0].substring(0, 2) :
+											'en'
+									).isValid()
+								) {
+									return 'mixed';
+								}
 							}
 						}
-					}
 
-					// If a format has been found for this data point
-					if (format !== null) {
-						// if there is a suggested format
-						if (dateSuggestion !== null) {
-							// if the suggested format is shorter than this then it has probably
-							//  identified a short representation and so it should be used
-							if (dateSuggestion.format.length < format.format.length) {
-								format.format = dateSuggestion.format;
+						// If a format has been found for this data point
+						if (format !== null) {
+							// if there is a suggested format
+							if (dateSuggestion !== null) {
+								// if the suggested format is shorter than this then it has probably
+								//  identified a short representation and so it should be used
+								if (dateSuggestion.format.length < format.format.length) {
+									format.format = dateSuggestion.format;
+								}
+								// Otherwise it must use the new format so remove the old one from potential types
+								else {
+									types.splice(types.indexOf('date-' + dateSuggestion), 1);
+								}
 							}
-							// Otherwise it must use the new format so remove the old one from potential types
-							else {
-								types.splice(types.indexOf('date-' + dateSuggestion), 1);
-								this.previouslyDiscarded.push(dateSuggestion);
-							}
+							// Set the type for this format and the suggestion for the next
+							type = 'date_' + format.momentFormat + '_' + format.locales.join('-');
+							dateSuggestion = format;
 						}
-						// Set the type for this format and the suggestion for the next
-						type = 'date_' + format.momentFormat + '_' + format.locales.join('-');
-						dateSuggestion = format;
 					}
 				}
-
 			}
 
 			// If this type has not been identified yet then add it to the array
@@ -310,24 +267,11 @@ export default class typeDetect {
 			return 'mixed';
 		}
 		// Otherwise if only numbers have been found then that is the type
-		else if (types[0] === 'number') {
-			return 'number';
-		}
-		else if (types[0].indexOf('date') === 0) {
+		else if (types[0] === 'number' || types[0].indexOf('date') === 0 || types[0] === 'excel_number') {
 			return types[0];
 		}
-		else if (types[0] === 'excel_number') {
-			return types[0];
-		}
-
 		// If no other types are found then default to string
 		return 'string';
-	}
-
-	public getExcelFormat(el: any): any {
-		if (el.match(/^[0-9\#\?\.\;]*$/ig) !== null) {
-			return 'excel_number';
-		}
 	}
 
 	public getDateFormat(el: string, suggestion: IDateFormat): any {
@@ -658,10 +602,6 @@ export default class typeDetect {
 		}
 
 		return format;
-	}
-
-	public getFormat(data, type: string): string {
-		return null;
 	}
 
 	public getPrefix(data): string {
