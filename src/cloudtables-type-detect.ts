@@ -274,6 +274,12 @@ export default class typeDetect {
 		return 'string';
 	}
 
+	/**
+	 * Determines a date format for a value that is passed in.
+	 * @param el The potential date that is to have a value determined
+	 * @param suggestion The previously suggested format for other values in the same field
+	 * @returns the suggested format for the field
+	 */
 	public getDateFormat(el: string, suggestion: IDateFormat): any {
 		// Current format object to store the details of this element
 		let format: IDateFormat = {
@@ -290,6 +296,8 @@ export default class typeDetect {
 			tokensUsed: []
 		};
 
+		let defaultFormatFormat = {value: '', definite: false, firm: false};
+
 		let charSplit = el.split('');
 		let separators = ['-', '/', ':', ',', ' '];
 		let prev = '';
@@ -299,7 +307,7 @@ export default class typeDetect {
 			// If the character is a separator
 			if (separators.indexOf(char) !== -1) {
 				format.split.push(prev); // Add the characters that appeared since the last separator to the split array
-				format.format.push({value: '', definite: false, firm: false}); // Add a part to identify
+				format.format.push(defaultFormatFormat); // Add a part to identify
 				format.separators.push(char); // Note the Separator at this point
 				prev = ''; // Clear the previous characters
 			}
@@ -311,12 +319,14 @@ export default class typeDetect {
 
 		// Add the final part to the split
 		format.split.push(prev);
-		format.format.push({value: '', definite: false, firm: false});
+		format.format.push(defaultFormatFormat);
+
+		let formatSplitLength = format.split.length;
 
 		// If a previous format (suggestion) has been detected and the two have a different number of parts
 		//  then the format cannot be consistent so return mixed
-		if (suggestion !== null && format.split.length !== suggestion.split.length) {
-				return 'mixed';
+		if (suggestion !== null && formatSplitLength !== suggestion.split.length) {
+			return 'mixed';
 		}
 
 		// Iterate over every part of the potential datetime
@@ -401,12 +411,9 @@ export default class typeDetect {
 
 					// If this is found then need to make sure that any hours found are 12 hour
 					for (let j = 0; j < i; j++) {
-						if (format.format[j].value === 'H' && format.format[j].firm === false) {
-							format = this.setDateFormat(format, j, 'h', true, true);
-							break;
-						}
-						if (format.format[j].value === 'HH' && format.format[j].firm === false) {
-							format = this.setDateFormat(format, j, 'hh', true, true);
+						let formatFormat = format.format[j];
+						if (formatFormat.firm === false && formatFormat.value.indexOf('H') !== -1) {
+							format = this.setDateFormat(format, j, formatFormat.value.toLocaleLowerCase(), true, true);
 							break;
 						}
 					}
@@ -417,12 +424,9 @@ export default class typeDetect {
 
 					// If this is found then need to make sure that any hours found are 12 hour
 					for (let j = 0; j < i; j++) {
-						if (format.format[j].value === 'H' && format.format[j].firm === false) {
-							format = this.setDateFormat(format, j, 'h', true, true);
-							break;
-						}
-						if (format.format[j].value === 'HH' && format.format[j].firm === false) {
-							format = this.setDateFormat(format, j, 'hh', true, true);
+						let formatFormat = format.format[j];
+						if (formatFormat.firm === false && formatFormat.value.indexOf('H') !== -1) {
+							format = this.setDateFormat(format, j, formatFormat.value.toLocaleLowerCase(), true, true);
 							break;
 						}
 					}
