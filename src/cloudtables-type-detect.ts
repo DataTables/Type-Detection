@@ -173,13 +173,11 @@ export default class typeDetect {
 			}
 
 			// Replace any thousands separators in the temporary element
-			if (tempEl.indexOf(this.thousandsSeparator) !== -1) {
-				if (type === 'string') {
-					tempEl = tempEl.split(this.thousandsSeparator).join('');
-				}
-				else if (typeof tempEl.value === 'string') {
-					tempEl.value = tempEl.value.split(this.thousandsSeparator).join('');
-				}
+			if (type === 'string' && tempEl.indexOf(this.thousandsSeparator) !== -1) {
+				tempEl = tempEl.split(this.thousandsSeparator).join('');
+			}
+			else if (typeof tempEl.value === 'string' && tempEl.value.indexOf(this.thousandsSeparator) !== -1) {
+				tempEl.value = tempEl.value.split(this.thousandsSeparator).join('');
 			}
 
 			// At this point the remaining value within tempEl can be converted to a number then that is it's types
@@ -190,7 +188,7 @@ export default class typeDetect {
 				type = 'excel_number';
 			}
 			// Check if there are any html tags
-			else if (el.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
+			else if (type === 'string' && el.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
 				type = 'html';
 			}
 			else {
