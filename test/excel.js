@@ -295,6 +295,225 @@ checkDetails(
     }
 )
 
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates standard...")
+checkDetails(
+    detector.typeDetect([
+        { value: '2021-03-11', excel: 'yyyy-mm-dd' },
+        { value: '2020-12-25', excel: 'yyyy-mm-dd' },
+        { value: '2021-01-01', excel: 'yyyy-mm-dd' }
+    ]),
+    {
+        type: 'date',
+        format: 'YYYY-MM-DD',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
 
+// Dates YYYY-MM-D
+console.log("CHECK  Dates small day...")
+checkDetails(
+    detector.typeDetect([
+        { value: '2021-03-1', excel: 'yyyy-mm-d' },
+        { value: '2020-12-25', excel: 'yyyy-mm-d' },
+        { value: '2021-01-11', excel: 'yyyy-mm-d' }
+    ]),
+    {
+        type: 'date',
+        format: 'YYYY-MM-D',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-D but not in the first element
+console.log("CHECK  Dates small day not first...")
+checkDetails(
+    detector.typeDetect([
+        { value: '2020-12-25', excel: 'yyyy-mm-d'},
+        { value: '2021-03-1', excel: 'yyyy-mm-d'},
+        { value: '2021-01-11', excel: 'yyyy-mm-d'}
+    ]),
+    {
+        type: 'date',
+        format: 'YYYY-MM-D',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-D but not in the first element
+console.log("CHECK  Dates year last...")
+checkDetails(
+    detector.typeDetect([
+        { value: '12-25-2020', excel: 'mm-d-yyyy' },
+        { value: '03-1-2021', excel: 'mm-d-yyyy' },
+        { value: '01-11-1999', excel: 'mm-d-yyyy' }
+    ]),
+    {
+        type: 'date',
+        format: 'MM-D-YYYY',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-D but not in the first element
+console.log("CHECK  Dates small day and small month not first...")
+checkDetails(
+    detector.typeDetect([
+        { value: '12-25-2020', excel: 'm-dd-yyyy'},
+        { value: '3-01-2021', excel: 'm-dd-yyyy'},
+        { value: '1-11-1999', excel: 'm-dd-yyyy'}
+    ]),
+    {
+        type: 'date',
+        format: 'M-DD-YYYY',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-D but not in the first element
+console.log("CHECK  Dates small day and small month not first...")
+checkDetails(
+    detector.typeDetect([
+        { value: '12-25-2020', excel: 'm-d-yyyy'},
+        { value: '3-1-2021', excel: 'm-d-yyyy'},
+        { value: '1-11-1999', excel: 'm-d-yyyy'}
+    ]),
+    {
+        type: 'date',
+        format: 'M-D-YYYY',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-D but not in the first element
+console.log("CHECK  Mixed Dates...")
+checkDetails(
+    detector.typeDetect([
+        { value: '12-25-2020', excel: 'mm-dd-yyyy'},
+        { value: '03-01-2021', excel: 'mm-dd-yyyy'},
+        { value: '25-01-1999', excel: 'dd-mm-yyyy'}
+        ]),
+    {
+        type: 'mixed',
+        format: null,
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-D but not in the first element
+console.log("CHECK  Small Year...")
+checkDetails(
+    detector.typeDetect([
+        { value: '12-25-20', excel: 'mm-dd-yy'},
+        { value: '03-01-21', excel: 'mm-dd-yy'},
+        { value: '04-01-99', excel: 'mm-dd-yy'}
+    ]),
+    {
+        type: 'date',
+        format: 'MM-DD-YY',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates standard '/' separator...")
+checkDetails(
+    detector.typeDetect([
+        { value: '2021/03/11', excel: 'yyyy/mm/dd'},
+        { value: '2020/12/25', excel: 'yyyy/mm/dd'},
+        { value: '2021/01/01', excel: 'yyyy/mm/dd'}
+    ]),
+    {
+        type: 'date',
+        format: 'YYYY/MM/DD',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates standard ' ' separator...")
+checkDetails(
+    detector.typeDetect([
+        { value: '2021 03 11', excel: 'yyyy mm dd' },
+        { value: '2020 12 25', excel: 'yyyy mm dd' },
+        { value: '2021 01 01', excel: 'yyyy mm dd' }
+    ]),
+    {
+        type: 'date',
+        format: 'YYYY MM DD',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with Do comma and MMMM...")
+checkDetails(
+    detector.typeDetect([
+        { value: '1 October, 2020', excel: 'd mmmm, yyyy' },
+        { value: '17 October, 1999', excel: 'd mmmm, yyyy' },
+        { value: '2 January, 2025', excel: 'd mmmm, yyyy' }
+    ]),
+    {
+        type: 'date',
+        format: 'D MMMM, YYYY',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with Do comma and MMM...")
+checkDetails(
+    detector.typeDetect([
+        { value: '1O Oct, 2020', excel: 'd mmm, yyyy' },
+        { value: '17 Oct, 1999', excel: 'd mmm, yyyy' },
+        { value: '2 Jan, 2025', excel: 'd mmm, yyyy' }
+    ]),
+    {
+        type: 'date',
+        format: 'D MMM, YYYY',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
+
+// Dates YYYY-MM-DD
+console.log("CHECK  Dates with Do comma and MMM and long time...")
+checkDetails(
+    detector.typeDetect([
+        { value: '1O Oct, 2020 17:12:47', excel: 'd mmmm, yyyy hh:mm:ss' },
+        { value: '17 Oct, 1999 12:56:07', excel: 'd mmmm, yyyy hh:mm:ss' },
+        { value: '2 Jan, 2025 09:02:00', excel: 'd mmmm, yyyy hh:mm:ss' }
+    ]),
+    {
+        type: 'date',
+        format: 'D MMM, YYYY HH:mm:ss',
+        prefix: null,
+        postfix: null,
+        dp: null
+    }
+)
 
 console.log("Failed", failed, "of", total, "tests. See above for details");

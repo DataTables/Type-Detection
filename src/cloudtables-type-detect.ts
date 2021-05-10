@@ -120,7 +120,7 @@ export default class typeDetect {
 			details.type = 'number';
 			details.prefix = possPrefix;
 			details.postfix = possPostfix;
-			details.dp = this.getExcelDP(data);
+			details.dp = this.getExcelDP(data, possPostfix);
 		}
 
 		return details;
@@ -136,6 +136,10 @@ export default class typeDetect {
 			let el = data[i];
 			let type: string = typeof el; // Get the js type of the element
 			let tempEl = el; // Hold a temporary version of el that can be manipulated
+
+			if (type === 'object') {
+				tempEl = {...el};
+			}
 
 			if (el === null || el === undefined || el.length === 0) {
 				continue;
@@ -209,6 +213,55 @@ export default class typeDetect {
 							if (
 								!moment(
 									data[j],
+									format.momentFormat,
+									format.locales.length > 0 ?
+										format.locales[0].substring(0, 2) :
+										'en'
+								).isValid()
+							) {
+								return 'mixed';
+							}
+						}
+					}
+
+					// If a format has been found for this data point
+					if (format !== null) {
+						// if there is a suggested format
+						if (dateSuggestion !== null) {
+							// if the suggested format is shorter than this then it has probably
+							//  identified a short representation and so it should be used
+							if (dateSuggestion.format.length < format.format.length) {
+								format.format = dateSuggestion.format;
+							}
+							// Otherwise it must use the new format so remove the old one from potential types
+							else {
+								types.splice(types.indexOf('date-' + dateSuggestion), 1);
+								this.previouslyDiscarded.push(dateSuggestion);
+							}
+						}
+						// Set the type for this format and the suggestion for the next
+						type = 'date_' + format.momentFormat + '_' + format.locales.join('-');
+						dateSuggestion = format;
+					}
+				}
+
+			}
+			else if (type === 'object') {
+				// Get a format for the datapoint
+				let format = this.getDateFormat(el.value, dateSuggestion);
+
+				// getDateFormat can tell if the data is mixed based on the suggested format and if there is a definite order
+				if (dateSuggestion !== null && format === 'mixed') {
+					return format;
+				}
+				else if (format !== 'mixed') {
+					// If there is a suggested format and it doesn't match this format then check all
+					//  of the previous data points against this new format as it could work for them
+					if (dateSuggestion !== null && format.momentFormat !== dateSuggestion.momentFormat) {
+						for (let j = 0; j < i; j++) {
+							if (
+								!moment(
+									data[j].value,
 									format.momentFormat,
 									format.locales.length > 0 ?
 										format.locales[0].substring(0, 2) :
@@ -755,12 +808,12 @@ export default class typeDetect {
 		return highestDP;
 	}
 
-	public getExcelDP(data): number {
+	public getExcelDP(data, postfix): number {
 		let highestDP = 0;
 
 		for (let el of data) {
 			// Replace the postfix as it's characters do not count as decimal places
-			let split = el.value.toString().split(this.decimalCharacter);
+			let split = el.value.toString().replace(new RegExp(postfix + '$'), '').split(this.decimalCharacter);
 
 			// Check that there is a decimal place and also if there are
 			// more than previously seen - the highest value should be used
