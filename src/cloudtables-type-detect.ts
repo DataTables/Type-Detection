@@ -1,4 +1,4 @@
-import * as moment from '../node_modules/moment/moment';
+import * as moment from './node_modules/moment/moment';
 
 interface IDetails {
 	type: null | string;
@@ -95,10 +95,10 @@ export default class typeDetect {
 		}
 
 		// Identify possible prefix and postfix - will only be used if certain types are identified
-		let possPrefix = this.getPrefix(data);
-		let possPostfix = this.getPostfix(data);
+		let possPrefix = this._getPrefix(data);
+		let possPostfix = this._getPostfix(data);
 
-		details.type = this.getType(data, possPrefix, possPostfix);
+		details.type = this._getType(data, possPrefix, possPostfix);
 
 		// If the type is a datetime, date or time then the format needs to be set.
 		if (details.type.indexOf('date') !== -1) {
@@ -121,8 +121,8 @@ export default class typeDetect {
 			details.postfix = possPostfix;
 			// Also determine the number of decimal places
 			details.dp = details.type === 'excel_number' ?
-				this.getExcelDP(data, possPostfix) :
-				this.getDP(data, possPostfix);
+				this._getExcelDP(data, possPostfix) :
+				this._getDP(data, possPostfix);
 		}
 
 		return details;
@@ -135,7 +135,7 @@ export default class typeDetect {
 	 * @param postfix Any postfix that has been detected within the dataset
 	 * @returns string - the actual type of the data
 	 */
-	public getType(data: any[], prefix: string, postfix: string): string {
+	private _getType(data: any[], prefix: string, postfix: string): string {
 		let types: string[] = [];
 		let dateSuggestion: null | IDateFormat = null;
 
@@ -149,7 +149,7 @@ export default class typeDetect {
 
 			let type: string = typeof el;
 			let tempEl = type === 'object' ?
-				{...el} :
+				{..el} :
 				el;
 
 			// If the prefix exists, replace it within the temporary el
@@ -204,7 +204,7 @@ export default class typeDetect {
 
 				if (excel !== null) {
 					// Get a format for the datapoint
-					let format = this.getDateFormat(!excel ? el : el.value, dateSuggestion);
+					let format = this._getDateFormat(!excel ? el : el.value, dateSuggestion);
 
 					// getDateFormat can tell if the data is mixed based on the suggested format and if there is a definite order
 					if (dateSuggestion !== null && format === 'mixed') {
@@ -278,7 +278,7 @@ export default class typeDetect {
 	 * @param suggestion The previously suggested format for other values in the same field
 	 * @returns the suggested format for the field
 	 */
-	public getDateFormat(el: string, suggestion: IDateFormat): any {
+	private _getDateFormat(el: string, suggestion: IDateFormat): any {
 		// Current format object to store the details of this element
 		let format: IDateFormat = {
 			format: [],
@@ -370,34 +370,34 @@ export default class typeDetect {
 				// This has to be in that order
 				if (format.separators[i] === ':') {
 					if (format.tokensUsed.indexOf('HH') === -1 && format.tokensUsed.indexOf('H') === -1 && format.tokensUsed.indexOf('hh') === -1 && format.tokensUsed.indexOf('h') === -1) {
-						format = this.determineTokenFormat(format, i, 'HH', 'H');
+						format = this._determineTokenFormat(format, i, 'HH', 'H');
 					}
 					else if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
-						format = this.determineTokenFormat(format, i, 'mm', 'm');
+						format = this._determineTokenFormat(format, i, 'mm', 'm');
 					}
 					else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('s') === -1) {
-						format = this.determineTokenFormat(format, i, 'ss', 's');
+						format = this._determineTokenFormat(format, i, 'ss', 's');
 					}
 				}
 				// If the last separator was a colon then it is the end of the time so can only be a minute or second token
 				else if (i > 0 && format.separators[i - 1] === ':') {
 					if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
-						format = this.determineTokenFormat(format, i, 'mm', 'm');
+						format = this._determineTokenFormat(format, i, 'mm', 'm');
 					}
 					else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('s') === -1) {
-						format = this.determineTokenFormat(format, i, 'ss', 's');
+						format = this._determineTokenFormat(format, i, 'ss', 's');
 					}
 				}
 				// If it's not a colon then can attempt to detect year
 				else {
 					// Only year can be 4 characters long and a number
 					if (format.tokensUsed.indexOf('YYYY') === -1 && spl.length === 4) {
-						format = this.setDateFormat(format, i, 'YYYY', true, true, undefined, 'hasYear');
+						format = this._setDateFormat(format, i, 'YYYY', true, true, undefined, 'hasYear');
 						continue;
 					}
 					// Alternatively could be 2 digits if greater than 31
 					else if (format.tokensUsed.indexOf('YY') === -1 && +spl > 31) {
-						format = this.setDateFormat(format, i, 'YY', true, false, undefined, 'hasYear');
+						format = this._setDateFormat(format, i, 'YY', true, false, undefined, 'hasYear');
 					}
 				}
 			}
@@ -405,26 +405,26 @@ export default class typeDetect {
 			else {
 				// Check for capitalised AM/PM
 				if (format.tokensUsed.indexOf('A') === -1 && (spl === 'AM' || spl === 'PM')) {
-					format = this.setDateFormat(format, i, 'A', true, true);
+					format = this._setDateFormat(format, i, 'A', true, true);
 
 					// If this is found then need to make sure that any hours found are 12 hour
 					for (let j = 0; j < i; j++) {
 						let formatFormat = format.format[j];
 						if (formatFormat.firm === false && formatFormat.value.indexOf('H') !== -1) {
-							format = this.setDateFormat(format, j, formatFormat.value.toLocaleLowerCase(), true, true);
+							format = this._setDateFormat(format, j, formatFormat.value.toLocaleLowerCase(), true, true);
 							break;
 						}
 					}
 				}
 				// Check for lower-case am/pm
 				else if (format.tokensUsed.indexOf('a') === -1 && (spl === 'am' || spl === 'pm')) {
-					format = this.setDateFormat(format, i, 'a', true, true);
+					format = this._setDateFormat(format, i, 'a', true, true);
 
 					// If this is found then need to make sure that any hours found are 12 hour
 					for (let j = 0; j < i; j++) {
 						let formatFormat = format.format[j];
 						if (formatFormat.firm === false && formatFormat.value.indexOf('H') !== -1) {
-							format = this.setDateFormat(format, j, formatFormat.value.toLocaleLowerCase(), true, true);
+							format = this._setDateFormat(format, j, formatFormat.value.toLocaleLowerCase(), true, true);
 							break;
 						}
 					}
@@ -446,27 +446,27 @@ export default class typeDetect {
 								(format.tokensUsed.indexOf('Do') === -1 || tokensThisRound.indexOf('Do') !== -1) &&
 								spl.match(this.postFixes[locale])
 							) ?
-								this.setDateFormat(format, i, 'Do', true, true, locale, 'hasDay') :
+								this._setDateFormat(format, i, 'Do', true, true, locale, 'hasDay') :
 								(
 									(format.tokensUsed.indexOf('MMMM') === -1 || tokensThisRound.indexOf('MMMM') !== -1) &&
 									spl.match(this.months[locale])
 								) ?
-									this.setDateFormat(format, i, 'MMMM', true, spl === 'may' ? false : true, locale, 'hasMonth') :
+									this._setDateFormat(format, i, 'MMMM', true, spl === 'may' ? false : true, locale, 'hasMonth') :
 									(
 										(format.tokensUsed.indexOf('MMM') === -1 || tokensThisRound.indexOf('MMM') !== -1) &&
 										spl.match(this.abbrMonths[locale])
 									) ?
-										this.setDateFormat(format, i, 'MMM', true, spl === 'may' ? false : true, locale, 'hasMonth') :
+										this._setDateFormat(format, i, 'MMM', true, spl === 'may' ? false : true, locale, 'hasMonth') :
 										(
 											(format.tokensUsed.indexOf('dddd') === -1 || tokensThisRound.indexOf('dddd') !== -1) &&
 											spl.match(this.days[locale])
 										) ?
-											this.setDateFormat(format, i, 'dddd', true, true, locale) :
+											this._setDateFormat(format, i, 'dddd', true, true, locale) :
 											(
 												(format.tokensUsed.indexOf('ddd') === -1 || tokensThisRound.indexOf('ddd') !== -1) &&
 												spl.match(this.abbrDays[locale])
 											) ?
-												this.setDateFormat(format, i, 'ddd', true, true, locale) :
+												this._setDateFormat(format, i, 'ddd', true, true, locale) :
 												format;
 
 						if (format.latestToken !== null) {
@@ -515,8 +515,8 @@ export default class typeDetect {
 			if (possMonth.length === 1) {
 				// Can now declare this a month if the others are over
 				format = format.split[possMonth[0]].indexOf('0') === 0 ?
-					this.setDateFormat(format, possMonth[0], 'MM', true, false, undefined, 'hasMonth') :
-					this.setDateFormat(format, possMonth[0], 'M', true, false, undefined, 'hasMonth');
+					this._setDateFormat(format, possMonth[0], 'MM', true, false, undefined, 'hasMonth') :
+					this._setDateFormat(format, possMonth[0], 'M', true, false, undefined, 'hasMonth');
 			}
 		}
 
@@ -527,16 +527,16 @@ export default class typeDetect {
 				(!format.hasDay || !format.hasYear || !format.hasMonth)
 			) {
 				format = (format.hasYear && format.hasDay) ? // Year and Day - must be month
-					this.determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth') :
+					this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth') :
 					(format.hasDay && format.hasMonth) ? // Day and Month - must be year
-						this.determineTokenFormat(format, i, 'YY', 'Y', undefined, 'hasYear') :
+						this._determineTokenFormat(format, i, 'YY', 'Y', undefined, 'hasYear') :
 						(format.hasMonth && format.hasYear) ? // Month and Year - must be day
-							this.determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay') :
+							this._determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay') :
 							(format.hasYear || format.hasDay) ? // Year or Day - must be month. Wouldn't make sense otherwise
-								this.determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth') :
+								this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth') :
 								(format.hasMonth) ? // Month then assume day next
-									this.determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay') :
-									this.determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth'); // Last resort assume Month
+									this._determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay') :
+									this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth'); // Last resort assume Month
 			}
 		}
 
@@ -571,10 +571,10 @@ export default class typeDetect {
 	 * @param has Any flag to be set
 	 * @returns the updated format
 	 */
-	public determineTokenFormat(format, idx, a, b, locale?, has = '') {
+	private _determineTokenFormat(format, idx, a, b, locale?, has = '') {
 		return format.split[idx].indexOf('0') === 0 ?
-			this.setDateFormat(format, idx, a, true, true, locale, has) :
-			this.setDateFormat(format, idx, b, true, false, locale, has);
+			this._setDateFormat(format, idx, a, true, true, locale, has) :
+			this._setDateFormat(format, idx, b, true, false, locale, has);
 	}
 
 	/**
@@ -588,7 +588,7 @@ export default class typeDetect {
 	 * @param has Any flag to be set
 	 * @returns the updated format
 	 */
-	public setDateFormat(format, idx, value, definite, firm, locale?, has = '') {
+	private _setDateFormat(format, idx, value, definite, firm, locale?, has = '') {
 		format.format[idx] = {value, definite, firm};
 		format.tokensUsed.push(value);
 		format.latestToken = value;
@@ -606,7 +606,7 @@ export default class typeDetect {
 		return format;
 	}
 
-	public getPrefix(data): string {
+	private _getPrefix(data): string {
 		let prefix = data[0]; // Initialise prefix to be the entire first value
 
 		if (typeof prefix === 'object') {
@@ -674,7 +674,7 @@ export default class typeDetect {
 		}
 	}
 
-	public getPostfix(data): string {
+	private _getPostfix(data): string {
 		let type = typeof data[0];
 		if (type === 'object') {
 			let postfix = data[0];
@@ -751,7 +751,7 @@ export default class typeDetect {
 		return '';
 	}
 
-	public getDP(data, postfix): number {
+	private _getDP(data, postfix): number {
 		let highestDP = 0;
 		let replaceRegex = new RegExp(postfix + '$');
 
@@ -769,7 +769,7 @@ export default class typeDetect {
 		return highestDP;
 	}
 
-	public getExcelDP(data, postfix): number {
+	private _getExcelDP(data, postfix): number {
 		let highestDP = 0;
 		let replaceRegex = new RegExp(postfix + '$');
 
