@@ -100,8 +100,8 @@ export default class typeDetect {
 		// If the type is a datetime, date or time then the format needs to be set.
 		if (details.type === 'datetime' || details.type.indexOf('date') !== -1 || details.type === 'time') {
 			let splitdate = details.type.split('_');
-			details.format = splitdate[1];
 			details.type = splitdate[0];
+			details.format = splitdate[1];
 			details.locale = splitdate[2];
 
 			// If a format cannot be determined then default back to a string type
@@ -668,17 +668,29 @@ export default class typeDetect {
 		let prefix = data[0]; // Initialise prefix to be the entire first value
 
 		if (typeof prefix === 'object') {
-			if (prefix.excel.indexOf('"') === 0 && prefix.excel.indexOf('"') !== prefix.excel.lastIndexOf('"')) {
-				let excelPrefix = prefix.excel.split('"')[1];
+			let idx = prefix.excel.indexOf('"');
 
-				for (let el of data) {
-					if (el.excel.indexOf('"' + excelPrefix) !== 0) {
+			// Can check for a quotation mark before going any further
+			// If there is not one at the start then no prefix
+			if (idx !== 0) {
+				return '';
+			}
+
+			let lastIdx = prefix.excel.indexOf('"');
+
+			// There needs to be at least 2 quotation marks
+			if (idx !== lastIdx) {
+				let excelPrefix = prefix.excel.match(/^\"[^"]*\"/ig)[0];
+
+				for (let i = 1; i < data.length; i++) {
+					if (data[i].excel.indexOf(excelPrefix) !== 0) {
 						return '';
 					}
 				}
 
 				return excelPrefix;
 			}
+
 			return '';
 		}
 		else {
@@ -721,41 +733,46 @@ export default class typeDetect {
 	}
 
 	public getPostfix(data): string {
-		if (typeof data[0] === 'object') {
+		let type = typeof data[0];
+		if (type === 'object') {
 			let postfix = data[0];
-			if (
-				postfix.excel.lastIndexOf('"') === postfix.excel.length - 1 &&
-				postfix.excel.indexOf('"') !== postfix.excel.lastIndexOf('"')
-			) {
-				let codeSplit = postfix.excel.split('"');
-				let excelPostfix = codeSplit[codeSplit.length - 2];
+			let idx = postfix.excel.indexOf('"');
 
-				for (let el of data) {
-					if (el.excel.lastIndexOf(excelPostfix + '"') !== el.excel.length - (excelPostfix.length + 1)) {
+			// Can check for a quotation mark before going any further
+			// If there is not one then there is no postfix with excel
+			if (idx === -1) {
+				return'';
+			}
+
+			let lastIdx = postfix.excel.lastIndexOf('"');
+
+			// There need to be at least 2 quotation marks and the last one must be at the end
+			if (
+				idx !== lastIdx &&
+				lastIdx === postfix.excel.length - 1
+			) {
+				let excelPostfix = postfix.excel.match(/\"[^\"]*\"$/ig)[0];
+
+				for (let i = 1; i < data.length; i++) {
+					if (data[i].excel.match(new RegExp(excelPostfix + '$')) === null) {
 						return '';
 					}
 				}
 
-				return excelPostfix;
+				return excelPostfix.replace(/\"/g, '');
 			}
+
 			return '';
 		}
 		// If the type of the first element is not a string then there cannot be a postfix
 		// Need to check this now before the string operations
-		else if (typeof data[0] !== 'string') {
-			return '';
-		}
-		else {
+		else if (type === 'string') {
 			// Reverse the string, a postfix is a prefix working from the other end of the string
 			// So, can use the same algorithm as above in `getPrefix()` to do this
 			let postfix = data[0].split('').reverse().join('');
-			let first = true;
 
-			for (let el of data) {
-				if (first) {
-					first = false;
-					continue;
-				}
+			for (let i = 1; i < data.length; i++) {
+				let el = data[i];
 				// There can't be a postfix if the type isn't a string
 				if (typeof el !== 'string') {
 					return '';
@@ -769,12 +786,12 @@ export default class typeDetect {
 				}
 
 				// Gradually increase the postfix to check that it matches
-				for (let i = 0; i < postfix.length; i++) {
+				for (let j = 0; j < postfix.length; j++) {
 					// If this portion of postfix is at the beginning of the string then carry on
 					// Otherwise it isn't the same across all of the elements so slice it down to
 					//  what has passed so far and check again
-					if (el.indexOf(postfix.slice(0, i)) !== 0) {
-						postfix = postfix.slice(0, i - 1);
+					if (el.indexOf(postfix.slice(0, j)) !== 0) {
+						postfix = postfix.slice(0, j - 1);
 
 						if (postfix.length === 0) {
 							return '';
@@ -789,14 +806,16 @@ export default class typeDetect {
 			return matches !== null ? matches[matches.length - 1] : '';
 		}
 
+		return '';
 	}
 
 	public getDP(data, postfix): number {
 		let highestDP = 0;
+		let replaceRegex = new RegExp(postfix + '$');
 
 		for (let el of data) {
 			// Replace the postfix as it's characters do not count as decimal places
-			let split = el.toString().replace(new RegExp(postfix + '$'), '').split(this.decimalCharacter);
+			let split = el.toString().replace(replaceRegex, '').split(this.decimalCharacter);
 
 			// Check that there is a decimal place and also if there are
 			// more than previously seen - the highest value should be used
@@ -810,10 +829,11 @@ export default class typeDetect {
 
 	public getExcelDP(data, postfix): number {
 		let highestDP = 0;
+		let replaceRegex = new RegExp(postfix + '$');
 
 		for (let el of data) {
 			// Replace the postfix as it's characters do not count as decimal places
-			let split = el.value.toString().replace(new RegExp(postfix + '$'), '').split(this.decimalCharacter);
+			let split = el.value.toString().replace(replaceRegex, '').split(this.decimalCharacter);
 
 			// Check that there is a decimal place and also if there are
 			// more than previously seen - the highest value should be used
