@@ -2,13 +2,21 @@
 This is the type detection library for CloudTables, although it could easily be used with other libraries.
 
 ## Usage
-
+### ES3
 ```js
-var typeDetect = require('../dist/cloudtables-type-detect');
+var TypeDetect = require('../dist/cloudtables-type-detect');
 
-var detector = new typeDetect["default"]();
+var detector = new TypeDetect["default"]();
 
 var type = detector.typeDetect(dataArray);
+```
+### ES6
+```ts
+import TypeDetect from './cloudtables-type-detect';
+
+let detector = new TypeDetect();
+
+let type = detector.typeDetect(dataArray);
 ```
 
 Where `dataArray` is a single dimensional array of data who's type is to be detected.
