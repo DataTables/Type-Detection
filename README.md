@@ -131,6 +131,16 @@ When it comes to dates in the above format where certainty is not guaranteed the
 
 When it comes to time the order of priority is Hours > Minutes > Seconds.
 
+#### Locales
+Differnet locales can also be detected where the tokens are strings rather than numbers (`Do`, `dddd` etc.). The languages that are currently integrated are 
+* English (default)
+* German
+* French
+* Spanish
+
+As with other elements of date detection, where a single locale cannot be determined, one will be selected that can apply to all of the data in the set.
+
+The detection of locales is completed using [a series of Regular Expressions](https://github.com/DataTables/Type-Detection/blob/main/src/cloudtables-type-detect.ts#L45-L74). These are iterated over in an attempt to find matches.
 ### Mixed
 If multiple different types are detected across the entire dataset then a mixed type is returned. This type will also be returned if there are dates with multiple different formats.
 
@@ -138,3 +148,8 @@ Note. The only exception to the mixed rule is a combination of strings and html.
 ### Strings
 
 If no other type can be detected then the type defaults to string.
+
+## Performance
+The library has been tested with a data set 10,000 elements in length for each type that can be detected. The response times achieved were around 10-20 ms for most types. The exception to this was complex date formats where the response time increased to around 400 ms.
+
+Pull requests are welcome and encouraged to increase the performance of the library.
