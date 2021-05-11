@@ -180,6 +180,16 @@ export default class typeDetect {
 				tempEl.value = tempEl.value.split(this.thousandsSeparator).join('');
 			}
 
+			// Replace any thousands separators in the temporary element
+			if (this.decimalCharacter !== '.'){
+				if (type === 'string' && tempEl.indexOf(this.decimalCharacter) !== -1) {
+					tempEl = tempEl.split(this.decimalCharacter).join('.');
+				}
+				else if (typeof tempEl.value === 'string' && tempEl.value.indexOf(this.decimalCharacter) !== -1) {
+					tempEl.value = tempEl.value.split(this.decimalCharacter).join('.');
+				}
+			}
+
 			// At this point the remaining value within tempEl can be converted to a number then that is it's types
 			if (type === 'string' && (!isNaN(+el) || !isNaN(+tempEl))) {
 				type = 'number';
