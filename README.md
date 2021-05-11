@@ -21,6 +21,30 @@ let type = detector.typeDetect(dataArray);
 
 Where `dataArray` is a single dimensional array of data who's type is to be detected.
 
+The constructor takes 2 parameters as follows.
+| Parameter | Default | Description |
+|:---------:|:-------:|:-----------:|
+| `decimalCharacter` | `'.'` | This is used when determining the number of decimal places that a number has. |
+| `thousandsSeparator` | `','` | This is removed from strings when attempting to determine a number type. |
+
+They are configured as follows.
+
+### ES3
+```js
+var TypeDetect = require('../dist/cloudtables-type-detect');
+
+var detector = new TypeDetect["default"](',', '.');
+
+var type = detector.typeDetect(dataArray);
+```
+### ES6
+```ts
+import TypeDetect from './cloudtables-type-detect';
+
+let detector = new TypeDetect(decimalCharacter, thousandsSeparator);
+
+let type = detector.typeDetect(dataArray);
+```
 ## Return Format
 The following object is returned from the `detector.typeDetect(dataArray)` call mentioned above. If a given property is not relevant to the type that has been detected then it is set to null.
 ```
