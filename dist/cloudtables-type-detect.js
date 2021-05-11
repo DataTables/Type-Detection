@@ -133,7 +133,6 @@ var typeDetect = /** @class */ (function () {
                     tempEl.value = tempEl.value.replace(new RegExp(postfix + '$'), '');
                 }
             }
-            console.log(tempEl);
             // Replace any thousands separators in the temporary element
             if (type === 'string' && tempEl.indexOf(this.thousandsSeparator) !== -1) {
                 tempEl = tempEl.split(this.thousandsSeparator).join('');
@@ -141,17 +140,14 @@ var typeDetect = /** @class */ (function () {
             else if (typeof tempEl.value === 'string' && tempEl.value.indexOf(this.thousandsSeparator) !== -1) {
                 tempEl.value = tempEl.value.split(this.thousandsSeparator).join('');
             }
-            console.log(tempEl);
             // Replace any thousands separators in the temporary element
             if (this.decimalCharacter !== '.') {
-                console.log(tempEl);
                 if (type === 'string' && tempEl.indexOf(this.decimalCharacter) !== -1) {
                     tempEl = tempEl.split(this.decimalCharacter).join('.');
                 }
                 else if (typeof tempEl.value === 'string' && tempEl.value.indexOf(this.decimalCharacter) !== -1) {
                     tempEl.value = tempEl.value.split(this.decimalCharacter).join('.');
                 }
-                console.log(tempEl);
             }
             // At this point the remaining value within tempEl can be converted to a number then that is it's types
             if (type === 'string' && (!isNaN(+el) || !isNaN(+tempEl))) {

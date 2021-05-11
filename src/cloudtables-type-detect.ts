@@ -181,7 +181,7 @@ export default class typeDetect {
 			}
 
 			// Replace any thousands separators in the temporary element
-			if (this.decimalCharacter !== '.'){
+			if (this.decimalCharacter !== '.') {
 				if (type === 'string' && tempEl.indexOf(this.decimalCharacter) !== -1) {
 					tempEl = tempEl.split(this.decimalCharacter).join('.');
 				}
