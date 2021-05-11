@@ -1,5 +1,5 @@
 {
-  "name": "cloudtables-type-detect",
+  "name": "type-detector",
   "version": "0.0.1",
   "description": "Type detection for cloudtables",
   "main": "index.js",
