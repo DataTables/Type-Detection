@@ -1,12 +1,24 @@
 {
   "name": "type-detector",
   "version": "0.0.1",
-  "description": "Type detection for cloudtables",
-  "main": "index.js",
+  "description": "Type detection for Cloudtables",
+  "main": "./dist/cloudtables-type-detect.js",
   "directories": {
     "doc": "docs",
-    "test": "test"
+    "test": "test",
+    "dist": "dist"
   },
+  "files": [
+    "dist/**/*.js"
+  ],
+  "keywords": [
+    "Type",
+    "Detection",
+    "Detector",
+    "Cloudtables",
+    "Datatables",
+    "moment"
+  ],
   "scripts": {
     "test": "node ./test/numbers.js && node ./test/date.js && node ./test/time.js && node ./test/html.js && node ./test/string.js && node ./test/empty.js",
     "quickTest": "npm run buildNoInstall && node ./test/numbers.js && node ./test/date.js && node ./test/time.js && node ./test/html.js && node ./test/string.js && node ./test/empty.js && node ./test/excel.js",
@@ -27,9 +39,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DataTables/cloudtables-type-detect.git"
+    "url": "https://github.com/DataTables/Type-Detection/"
   },
-  "author": "SpryMedia ltd",
+  "author": {
+    "name": "SpryMedia ltd",
+    "url": "https://cloudtables.com"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/DataTables/cloudtables-type-detect/issues"
