@@ -1,4 +1,4 @@
-import * as moment from './node_modules/moment/moment';
+import * as moment from '../node_modules/moment/moment';
 
 interface IDetails {
 	type: null | string;
@@ -149,7 +149,7 @@ export default class typeDetect {
 
 			let type: string = typeof el;
 			let tempEl = type === 'object' ?
-				{..el} :
+				{...el} :
 				el;
 
 			// If the prefix exists, replace it within the temporary el
