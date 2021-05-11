@@ -1,6 +1,6 @@
 # Type-Detection
-This is the type detection library for CloudTables, although it could easily be used with other libraries.
-
+This Library provieds raw data type detection for Numbers, HTML, Dates and Strings. It was created with 	
+&#10084; by the CloudTables team.
 ## Usage
 ### ES3
 ```js

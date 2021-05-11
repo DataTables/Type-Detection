@@ -1,7 +1,7 @@
 {
   "name": "type-detector",
   "version": "0.0.1",
-  "description": "Type detection for Cloudtables",
+  "description": "Raw data type detection.",
   "main": "./dist/cloudtables-type-detect.js",
   "directories": {
     "doc": "docs",
