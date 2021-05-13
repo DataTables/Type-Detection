@@ -1,6 +1,6 @@
 {
   "name": "@datatables/type-detector",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Raw data type detection.",
   "main": "./dist/cloudtables-type-detect.js",
   "directories": {
