@@ -9,7 +9,7 @@
     "dist": "dist"
   },
   "files": [
-    "dist/**/*.js"
+    "dist/**/*"
   ],
   "keywords": [
     "Type",
