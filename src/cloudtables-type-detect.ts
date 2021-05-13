@@ -2,7 +2,7 @@ import * as moment from '../node_modules/moment/moment';
 
 interface IDetails {
 	type: null | string;
-	format: null | string | object;
+	format: null | string;
 	locale: null | string;
 	prefix: null | string;
 	postfix: null | string;
