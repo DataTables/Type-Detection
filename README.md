@@ -1,10 +1,17 @@
 # Type-Detection
 This Library provieds raw data type detection for Numbers, HTML, Dates and Strings. It was created with 	
 &#10084; by the [CloudTables](https://cloudtables.com) team.
+
+## Install
+Install from npm by using
+
+```bash
+npm install @datatables/type-detector
+```
 ## Usage
 ### ES3
 ```js
-var TypeDetect = require('../dist/cloudtables-type-detect');
+var TypeDetect = require('@datatables/type-detector');
 
 var detector = new TypeDetect["default"]();
 
@@ -12,7 +19,7 @@ var type = detector.typeDetect(dataArray);
 ```
 ### ES6
 ```ts
-import TypeDetect from './cloudtables-type-detect';
+import TypeDetect from '@datatables/type-detector';
 
 let detector = new TypeDetect();
 
