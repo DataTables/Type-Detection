@@ -204,6 +204,7 @@ export default class typeDetect {
 			}
 			// Check if there are any html tags
 			else if (type === 'string' && el.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
+				console.log("html")
 				type = 'html';
 			}
 			else {
@@ -301,7 +302,8 @@ export default class typeDetect {
 			types[0] === 'number' ||
 			types[0] === 'excel_number' ||
 			types[0].indexOf('date') !== -1 ||
-			types[0].indexOf('time') !== -1
+			types[0].indexOf('time') !== -1 ||
+			types[0].indexOf('html') !== -1
 		) {
 			return types[0];
 		}

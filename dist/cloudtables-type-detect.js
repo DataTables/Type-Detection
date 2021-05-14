@@ -161,6 +161,7 @@ var typeDetect = /** @class */ (function () {
             }
             // Check if there are any html tags
             else if (type === 'string' && el.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
+                console.log("html");
                 type = 'html';
             }
             else {
@@ -239,7 +240,8 @@ var typeDetect = /** @class */ (function () {
         else if (types[0] === 'number' ||
             types[0] === 'excel_number' ||
             types[0].indexOf('date') !== -1 ||
-            types[0].indexOf('time') !== -1) {
+            types[0].indexOf('time') !== -1 ||
+            types[0].indexOf('html') !== -1) {
             return types[0];
         }
         // If no other types are found then default to string
