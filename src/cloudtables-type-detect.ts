@@ -1,7 +1,9 @@
 import * as moment from '../node_modules/moment/moment';
 
+type TReturnType = 'date' | 'datetime' | 'time' | 'mixed' | 'string' | 'number' | 'html';
+
 interface IDetails {
-	type: null | string;
+	type: null | TReturnType;
 	format: null | string;
 	locale: null | string;
 	prefix: null | string;
@@ -98,11 +100,11 @@ export default class typeDetect {
 		let possPrefix = this._getPrefix(data);
 		let possPostfix = this._getPostfix(data);
 
-		details.type = this._getType(data, possPrefix, possPostfix);
+		let potentialType = this._getType(data, possPrefix, possPostfix);
 
 		// If the type is a datetime, date or time then the format needs to be set.
-		if (details.type.indexOf('date') !== -1) {
-			let splitdate = details.type.split('_');
+		if (potentialType.indexOf('date') !== -1 || potentialType.indexOf('time') !== -1) {
+			let splitdate = potentialType.split('_');
 			details.format = splitdate[1];
 
 			// If a format cannot be determined then default back to a string type
@@ -110,19 +112,22 @@ export default class typeDetect {
 				details.type = 'string';
 			}
 			else {
-				details.type = splitdate[0];
+				details.type = splitdate[0] as TReturnType;
 				details.locale = splitdate[2];
 			}
 		}
-		else if (details.type.indexOf('number') !== -1) {
+		else if (potentialType.indexOf('number') !== -1) {
 			// If the type is a number then use the previously identified postfix and prefix
 			details.type = 'number';
 			details.prefix = possPrefix;
 			details.postfix = possPostfix;
 			// Also determine the number of decimal places
-			details.dp = details.type === 'excel_number' ?
+			details.dp = potentialType === 'excel_number' ?
 				this._getExcelDP(data, possPostfix) :
 				this._getDP(data, possPostfix);
+		}
+		else {
+			details.type = potentialType as TReturnType;
 		}
 
 		return details;
@@ -153,21 +158,21 @@ export default class typeDetect {
 				el;
 
 			// If the prefix exists, replace it within the temporary el
-			if (prefix.length > 0 && el.indexOf(prefix) === 0) {
-				if (type === 'string') {
+			if (prefix.length > 0) {
+				if (type === 'string'  && el.indexOf(prefix) === 0) {
 					tempEl = tempEl.replace(prefix, '');
 				}
-				else if (typeof tempEl.value === 'string') {
+				else if (typeof tempEl.value === 'string'  && el.value.indexOf(prefix) === 0) {
 					tempEl.value = tempEl.value.replace(prefix, '');
 				}
 			}
 
 			// If the postfix exists replace it within the temporary el
-			if (postfix.length > 0 && el.indexOf(postfix) === el.length - postfix.length) {
-				if (type === 'string') {
+			if (postfix.length > 0) {
+				if (type === 'string' && el.indexOf(postfix) === el.length - postfix.length) {
 					tempEl = tempEl.replace(new RegExp(postfix + '$'), '');
 				}
-				else if (typeof tempEl.value === 'string') {
+				else if (typeof tempEl.value === 'string' && el.value.indexOf(postfix) === el.value.length - postfix.length) {
 					tempEl.value = tempEl.value.replace(new RegExp(postfix + '$'), '');
 				}
 			}
@@ -253,8 +258,15 @@ export default class typeDetect {
 									types.splice(types.indexOf('date-' + dateSuggestion), 1);
 								}
 							}
+
+							let leadingtoken = 'date_'
+							if (format.momentFormat.indexOf(':') !== -1) {
+								leadingtoken = (format.momentFormat.indexOf(' ') !== -1) ?
+									'datetime_' :
+									'time_';
+							}
 							// Set the type for this format and the suggestion for the next
-							type = 'date_' + format.momentFormat + '_' + format.locales.join('-');
+							type = leadingtoken + format.momentFormat + '_' + format.locales.join('-');
 							dateSuggestion = format;
 						}
 					}
@@ -264,6 +276,16 @@ export default class typeDetect {
 			// If this type has not been identified yet then add it to the array
 			if (types.indexOf(type) === -1) {
 				types.push(type);
+			}
+
+			if (
+				types.length > 1 &&
+				(
+					types.indexOf('string') === -1 ||
+					types.indexOf('html') === -1
+				)
+			) {
+				return 'mixed';
 			}
 		}
 
@@ -275,7 +297,12 @@ export default class typeDetect {
 			return 'mixed';
 		}
 		// Otherwise if only numbers have been found then that is the type
-		else if (types[0] === 'number' || types[0].indexOf('date') === 0 || types[0] === 'excel_number') {
+		else if (
+			types[0] === 'number' ||
+			types[0] === 'excel_number' ||
+			types[0].indexOf('date') !== -1 ||
+			types[0].indexOf('time') !== -1
+		) {
 			return types[0];
 		}
 		// If no other types are found then default to string
@@ -628,7 +655,7 @@ export default class typeDetect {
 				return '';
 			}
 
-			let lastIdx = prefix.excel.indexOf('"');
+			let lastIdx = prefix.excel.lastIndexOf('"');
 
 			// There needs to be at least 2 quotation marks
 			if (idx !== lastIdx) {
@@ -640,7 +667,7 @@ export default class typeDetect {
 					}
 				}
 
-				return excelPrefix;
+				return excelPrefix.replace(/\"/g, '');
 			}
 
 			return '';

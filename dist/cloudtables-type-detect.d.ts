@@ -1,6 +1,7 @@
+declare type TReturnType = 'date' | 'datetime' | 'time' | 'mixed' | 'string' | 'number' | 'html';
 interface IDetails {
-    type: null | string;
-    format: null | string | object;
+    type: null | TReturnType;
+    format: null | string;
     locale: null | string;
     prefix: null | string;
     postfix: null | string;
