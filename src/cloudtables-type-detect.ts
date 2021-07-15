@@ -3,12 +3,12 @@ import * as moment from '../node_modules/moment/moment';
 type TReturnType = 'date' | 'datetime' | 'time' | 'mixed' | 'string' | 'number' | 'html';
 
 interface IDetails {
-	type: null | TReturnType;
+	dp: null | number;
 	format: null | string;
 	locale: null | string;
-	prefix: null | string;
 	postfix: null | string;
-	dp: null | number;
+	prefix: null | string;
+	type: null | TReturnType;
 }
 
 interface IDateFormat {
@@ -26,12 +26,12 @@ interface IDateFormat {
 }
 
 interface IFormat {
-	value: string;
-	firm: boolean;
 	definite: boolean;
+	firm: boolean;
+	value: string;
 }
 
-export default class typeDetect {
+export default class TypeDetect {
 
 	private decimalCharacter;
 	private thousandsSeparator;
@@ -41,7 +41,7 @@ export default class typeDetect {
 	private abbrDays;
 	private postFixes;
 
-	constructor(decimalCharacter= '.', thousandsSeparator= ',') {
+	public constructor(decimalCharacter= '.', thousandsSeparator= ',') {
 		this.decimalCharacter = decimalCharacter;
 		this.thousandsSeparator = thousandsSeparator;
 		this.months = {
@@ -78,6 +78,7 @@ export default class typeDetect {
 
 	/**
 	 * Detects the type and additional details from the overall data set.
+	 *
 	 * @param data The dataset to have a type detected
 	 * @returns string - the type that has been detected and any additional details for that type
 	 */
@@ -103,7 +104,7 @@ export default class typeDetect {
 		let potentialType = this._getType(data, possPrefix, possPostfix);
 
 		// If the type is a datetime, date or time then the format needs to be set.
-		if (potentialType.indexOf('date') !== -1 || potentialType.indexOf('time') !== -1) {
+		if (potentialType === 'date' || potentialType === 'time' || potentialType === 'datetime') {
 			let splitdate = potentialType.split('_');
 			details.format = splitdate[1];
 
@@ -135,6 +136,7 @@ export default class typeDetect {
 
 	/**
 	 * Gets the actual type of the data as a string
+	 *
 	 * @param data The array of data to be processed
 	 * @param prefix Any prefix that has been detected within the dataset
 	 * @param postfix Any postfix that has been detected within the dataset
@@ -172,7 +174,10 @@ export default class typeDetect {
 				if (type === 'string' && el.indexOf(postfix) === el.length - postfix.length) {
 					tempEl = tempEl.replace(new RegExp(postfix + '$'), '');
 				}
-				else if (typeof tempEl.value === 'string' && el.value.indexOf(postfix) === el.value.length - postfix.length) {
+				else if (
+					typeof tempEl.value === 'string' &&
+					el.value.indexOf(postfix) === el.value.length - postfix.length
+				) {
 					tempEl.value = tempEl.value.replace(new RegExp(postfix + '$'), '');
 				}
 			}
@@ -204,7 +209,6 @@ export default class typeDetect {
 			}
 			// Check if there are any html tags
 			else if (type === 'string' && el.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
-				console.log("html")
 				type = 'html';
 			}
 			else {
@@ -222,7 +226,8 @@ export default class typeDetect {
 					// Get a format for the datapoint
 					let format = this._getDateFormat(!excel ? el : el.value, dateSuggestion);
 
-					// getDateFormat can tell if the data is mixed based on the suggested format and if there is a definite order
+					// getDateFormat can tell if the data is mixed based on the
+					//  suggested format and if there is a definite order
 					if (dateSuggestion !== null && format === 'mixed') {
 						return format;
 					}
@@ -260,7 +265,7 @@ export default class typeDetect {
 								}
 							}
 
-							let leadingtoken = 'date_'
+							let leadingtoken = 'date_';
 							if (format.momentFormat.indexOf(':') !== -1) {
 								leadingtoken = (format.momentFormat.indexOf(' ') !== -1) ?
 									'datetime_' :
@@ -313,6 +318,7 @@ export default class typeDetect {
 
 	/**
 	 * Determines a date format for a value that is passed in.
+	 *
 	 * @param el The potential date that is to have a value determined
 	 * @param suggestion The previously suggested format for other values in the same field
 	 * @returns the suggested format for the field
@@ -333,7 +339,11 @@ export default class typeDetect {
 			tokensUsed: []
 		};
 
-		let defaultFormatFormat = {value: '', definite: false, firm: false};
+		let defaultFormatFormat = {
+			definite: false,
+			firm: false,
+			value: ''
+		};
 
 		let charSplit = el.split('');
 		let separators = ['-', '/', ':', ',', ' '];
@@ -399,16 +409,25 @@ export default class typeDetect {
 
 			// If the value of this part is an empty string then it is a straightforward set
 			if (spl.length === 0) {
-				format.format[i] = {value: '', definite: true, firm: true};
+				format.format[i] = {
+					definite: true,
+					firm: true,
+					value: ''
+				};
 				continue;
 			}
 
 			// Some tokens are numbers
 			if (!isNaN(+spl)) {
-				// If the current separator is a colon then it must be immediately followed by an hour, minute or second token
-				// This has to be in that order
+				// If the current separator is a colon then it must be immediately followed by an hour,
+				// minute or second token. This has to be in that order
 				if (format.separators[i] === ':') {
-					if (format.tokensUsed.indexOf('HH') === -1 && format.tokensUsed.indexOf('H') === -1 && format.tokensUsed.indexOf('hh') === -1 && format.tokensUsed.indexOf('h') === -1) {
+					if (
+						format.tokensUsed.indexOf('HH') === -1 &&
+						format.tokensUsed.indexOf('H') === -1 &&
+						format.tokensUsed.indexOf('hh') === -1 &&
+						format.tokensUsed.indexOf('h') === -1
+					) {
 						format = this._determineTokenFormat(format, i, 'HH', 'H');
 					}
 					else if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
@@ -418,7 +437,8 @@ export default class typeDetect {
 						format = this._determineTokenFormat(format, i, 'ss', 's');
 					}
 				}
-				// If the last separator was a colon then it is the end of the time so can only be a minute or second token
+				// If the last separator was a colon then it is the end of the time so can only be
+				//   a minute or second token
 				else if (i > 0 && format.separators[i - 1] === ':') {
 					if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
 						format = this._determineTokenFormat(format, i, 'mm', 'm');
@@ -482,31 +502,52 @@ export default class typeDetect {
 						format.latestToken = null;
 						format.latestLocale = null;
 						format = (
-								(format.tokensUsed.indexOf('Do') === -1 || tokensThisRound.indexOf('Do') !== -1) &&
+							(format.tokensUsed.indexOf('Do') === -1 || tokensThisRound.indexOf('Do') !== -1) &&
 								spl.match(this.postFixes[locale])
-							) ?
-								this._setDateFormat(format, i, 'Do', true, true, locale, 'hasDay') :
-								(
-									(format.tokensUsed.indexOf('MMMM') === -1 || tokensThisRound.indexOf('MMMM') !== -1) &&
+						) ?
+							this._setDateFormat(format, i, 'Do', true, true, locale, 'hasDay') :
+							(
+								(format.tokensUsed.indexOf('MMMM') === -1 || tokensThisRound.indexOf('MMMM') !== -1) &&
 									spl.match(this.months[locale])
-								) ?
-									this._setDateFormat(format, i, 'MMMM', true, spl === 'may' ? false : true, locale, 'hasMonth') :
+							) ?
+								this._setDateFormat(
+									format,
+									i,
+									'MMMM',
+									true,
+									spl === 'may' ? false : true, locale, 'hasMonth'
+								) :
+								(
 									(
-										(format.tokensUsed.indexOf('MMM') === -1 || tokensThisRound.indexOf('MMM') !== -1) &&
-										spl.match(this.abbrMonths[locale])
-									) ?
-										this._setDateFormat(format, i, 'MMM', true, spl === 'may' ? false : true, locale, 'hasMonth') :
+										format.tokensUsed.indexOf('MMM') === -1 ||
+										tokensThisRound.indexOf('MMM') !== -1
+									) &&
+									spl.match(this.abbrMonths[locale])
+								) ?
+									this._setDateFormat(
+										format,
+										i,
+										'MMM',
+										true,
+										spl === 'may' ? false : true, locale, 'hasMonth'
+									) :
+									(
 										(
-											(format.tokensUsed.indexOf('dddd') === -1 || tokensThisRound.indexOf('dddd') !== -1) &&
+											format.tokensUsed.indexOf('dddd') === -1 ||
+											tokensThisRound.indexOf('dddd') !== -1
+										) &&
 											spl.match(this.days[locale])
-										) ?
-											this._setDateFormat(format, i, 'dddd', true, true, locale) :
+									) ?
+										this._setDateFormat(format, i, 'dddd', true, true, locale) :
+										(
 											(
-												(format.tokensUsed.indexOf('ddd') === -1 || tokensThisRound.indexOf('ddd') !== -1) &&
+												format.tokensUsed.indexOf('ddd') === -1 ||
+												tokensThisRound.indexOf('ddd') !== -1
+											) &&
 												spl.match(this.abbrDays[locale])
-											) ?
-												this._setDateFormat(format, i, 'ddd', true, true, locale) :
-												format;
+										) ?
+											this._setDateFormat(format, i, 'ddd', true, true, locale) :
+											format;
 
 						if (format.latestToken !== null) {
 							tokensThisRound.push(format.latestToken);
@@ -571,11 +612,12 @@ export default class typeDetect {
 						this._determineTokenFormat(format, i, 'YY', 'Y', undefined, 'hasYear') :
 						(format.hasMonth && format.hasYear) ? // Month and Year - must be day
 							this._determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay') :
-							(format.hasYear || format.hasDay) ? // Year or Day - must be month. Wouldn't make sense otherwise
+							(format.hasYear || format.hasDay) ? // Year or Day - must be month
 								this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth') :
 								(format.hasMonth) ? // Month then assume day next
 									this._determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay') :
-									this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth'); // Last resort assume Month
+									// Last resort assume Month
+									this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth');
 			}
 		}
 
@@ -591,7 +633,11 @@ export default class typeDetect {
 		// If there is a format and it is valid then return it
 		if (
 			format.momentFormat.length > 0 &&
-			moment(el, format.momentFormat, format.locales.length > 0 ? format.locales[0].substring(0, 2) : 'en').isValid()
+			moment(
+				el,
+				format.momentFormat,
+				format.locales.length > 0 ? format.locales[0].substring(0, 2) : 'en'
+			).isValid()
 		) {
 			return format;
 		}
@@ -603,6 +649,7 @@ export default class typeDetect {
 
 	/**
 	 * Determine whether to use a double or single token if there is a leading 0
+	 *
 	 * @param format The format object currently being constructed
 	 * @param idx The part number
 	 * @param a The first option if double token
@@ -618,6 +665,7 @@ export default class typeDetect {
 
 	/**
 	 * Set's all of the relevant values when a new token is determined
+	 *
 	 * @param format The format object currently being constructed
 	 * @param idx The part number
 	 * @param value The token to be set
@@ -628,7 +676,11 @@ export default class typeDetect {
 	 * @returns the updated format
 	 */
 	private _setDateFormat(format, idx, value, definite, firm, locale?, has = '') {
-		format.format[idx] = {value, definite, firm};
+		format.format[idx] = {
+			definite,
+			firm,
+			value
+		};
 		format.tokensUsed.push(value);
 		format.latestToken = value;
 		format.latestLocale = (locale !== undefined) ? locale : null;
@@ -661,7 +713,7 @@ export default class typeDetect {
 
 			// There needs to be at least 2 quotation marks
 			if (idx !== lastIdx) {
-				let excelPrefix = prefix.excel.match(/^\"[^"]*\"/ig)[0];
+				let excelPrefix = prefix.excel.match(/^"[^"]*"/ig)[0];
 
 				for (let i = 1; i < data.length; i++) {
 					if (data[i].excel.indexOf(excelPrefix) !== 0) {
@@ -669,7 +721,7 @@ export default class typeDetect {
 					}
 				}
 
-				return excelPrefix.replace(/\"/g, '');
+				return excelPrefix.replace(/"/g, '');
 			}
 
 			return '';
@@ -732,7 +784,7 @@ export default class typeDetect {
 				idx !== lastIdx &&
 				lastIdx === postfix.excel.length - 1
 			) {
-				let excelPostfix = postfix.excel.match(/\"[^\"]*\"$/ig)[0];
+				let excelPostfix = postfix.excel.match(/"[^"]*"$/ig)[0];
 
 				for (let i = 1; i < data.length; i++) {
 					if (data[i].excel.match(new RegExp(excelPostfix + '$')) === null) {
@@ -740,7 +792,7 @@ export default class typeDetect {
 					}
 				}
 
-				return excelPostfix.replace(/\"/g, '');
+				return excelPostfix.replace(/"/g, '');
 			}
 
 			return '';
