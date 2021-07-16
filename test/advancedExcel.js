@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 // This code is only useful if at some point more advanced formatting data for excel is required.
 
 
