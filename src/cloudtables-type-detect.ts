@@ -323,6 +323,10 @@ export default class TypeDetect {
 
 	/**
 	 * Determines a date format for a value that is passed in.
+	 * A big major condition here is that some combinations of tokens are not allowed.
+	 * For example, `2021 2021` will not be picked up as `YYYY YYYY` and
+	 * `2021 21` will not be picked up as `YYYY YY` Full details on this are provided in the readme
+	 * https://github.com/DataTables/Type-Detection#tokens
 	 *
 	 * @param el The potential date that is to have a value determined
 	 * @param suggestion The previously suggested format for other values in the same field
