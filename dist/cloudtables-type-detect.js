@@ -12,8 +12,8 @@ var __assign = (this && this.__assign) || function () {
 };
 exports.__esModule = true;
 var moment = require("../node_modules/moment/moment");
-var typeDetect = /** @class */ (function () {
-    function typeDetect(decimalCharacter, thousandsSeparator) {
+var TypeDetect = /** @class */ (function () {
+    function TypeDetect(decimalCharacter, thousandsSeparator) {
         if (decimalCharacter === void 0) { decimalCharacter = '.'; }
         if (thousandsSeparator === void 0) { thousandsSeparator = ','; }
         this.decimalCharacter = decimalCharacter;
@@ -51,10 +51,11 @@ var typeDetect = /** @class */ (function () {
     }
     /**
      * Detects the type and additional details from the overall data set.
+     *
      * @param data The dataset to have a type detected
      * @returns string - the type that has been detected and any additional details for that type
      */
-    typeDetect.prototype.typeDetect = function (data) {
+    TypeDetect.prototype.typeDetect = function (data) {
         var details = {
             dp: null,
             format: null,
@@ -72,7 +73,9 @@ var typeDetect = /** @class */ (function () {
         var possPostfix = this._getPostfix(data);
         var potentialType = this._getType(data, possPrefix, possPostfix);
         // If the type is a datetime, date or time then the format needs to be set.
-        if (potentialType.indexOf('date') !== -1 || potentialType.indexOf('time') !== -1) {
+        if (potentialType.indexOf('date_') === 0 ||
+            potentialType.indexOf('time_') === 0 ||
+            potentialType.indexOf('datetime_') === 0) {
             var splitdate = potentialType.split('_');
             details.format = splitdate[1];
             // If a format cannot be determined then default back to a string type
@@ -84,7 +87,7 @@ var typeDetect = /** @class */ (function () {
                 details.locale = splitdate[2];
             }
         }
-        else if (potentialType.indexOf('number') !== -1) {
+        else if (potentialType.includes('number')) {
             // If the type is a number then use the previously identified postfix and prefix
             details.type = 'number';
             details.prefix = possPrefix;
@@ -101,14 +104,18 @@ var typeDetect = /** @class */ (function () {
     };
     /**
      * Gets the actual type of the data as a string
+     *
      * @param data The array of data to be processed
      * @param prefix Any prefix that has been detected within the dataset
      * @param postfix Any postfix that has been detected within the dataset
-     * @returns string - the actual type of the data
+     * @returns string - the actual type of the data and occasionally the
+     * format of the data in dates this is underscore separated
      */
-    typeDetect.prototype._getType = function (data, prefix, postfix) {
+    TypeDetect.prototype._getType = function (data, prefix, postfix) {
         var types = [];
         var dateSuggestion = null;
+        var postFixRegExp = new RegExp(postfix + '$');
+        var thousandsRegExp = new RegExp(this.thousandsSeparator, 'g');
         // A type can only be set if all of the data fits it
         for (var i = 0; i < data.length; i++) {
             var el = data[i];
@@ -130,20 +137,21 @@ var typeDetect = /** @class */ (function () {
             // If the postfix exists replace it within the temporary el
             if (postfix.length > 0) {
                 if (type === 'string' && el.indexOf(postfix) === el.length - postfix.length) {
-                    tempEl = tempEl.replace(new RegExp(postfix + '$'), '');
+                    tempEl = tempEl.replace(postFixRegExp, '');
                 }
-                else if (typeof tempEl.value === 'string' && el.value.indexOf(postfix) === el.value.length - postfix.length) {
-                    tempEl.value = tempEl.value.replace(new RegExp(postfix + '$'), '');
+                else if (typeof tempEl.value === 'string' &&
+                    el.value.indexOf(postfix) === el.value.length - postfix.length) {
+                    tempEl.value = tempEl.value.replace(postFixRegExp, '');
                 }
             }
             // Replace any thousands separators in the temporary element
-            if (type === 'string' && tempEl.indexOf(this.thousandsSeparator) !== -1) {
-                tempEl = tempEl.split(this.thousandsSeparator).join('');
+            if (type === 'string') {
+                tempEl = tempEl.replace(thousandsRegExp, '');
             }
             else if (typeof tempEl.value === 'string' && tempEl.value.indexOf(this.thousandsSeparator) !== -1) {
-                tempEl.value = tempEl.value.split(this.thousandsSeparator).join('');
+                tempEl.value = tempEl.value.replace(thousandsRegExp, '');
             }
-            // Replace any thousands separators in the temporary element
+            // Replace any decimal characters in the temporary element
             if (this.decimalCharacter !== '.') {
                 if (type === 'string' && tempEl.indexOf(this.decimalCharacter) !== -1) {
                     tempEl = tempEl.split(this.decimalCharacter).join('.');
@@ -161,7 +169,6 @@ var typeDetect = /** @class */ (function () {
             }
             // Check if there are any html tags
             else if (type === 'string' && el.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
-                console.log("html");
                 type = 'html';
             }
             else {
@@ -176,7 +183,8 @@ var typeDetect = /** @class */ (function () {
                 if (excel !== null) {
                     // Get a format for the datapoint
                     var format = this._getDateFormat(!excel ? el : el.value, dateSuggestion);
-                    // getDateFormat can tell if the data is mixed based on the suggested format and if there is a definite order
+                    // getDateFormat can tell if the data is mixed based on the
+                    //  suggested format and if there is a definite order
                     if (dateSuggestion !== null && format === 'mixed') {
                         return format;
                     }
@@ -192,45 +200,43 @@ var typeDetect = /** @class */ (function () {
                                 }
                             }
                         }
-                        // If a format has been found for this data point
-                        if (format !== null) {
-                            // if there is a suggested format
-                            if (dateSuggestion !== null) {
-                                // if the suggested format is shorter than this then it has probably
-                                //  identified a short representation and so it should be used
-                                if (dateSuggestion.format.length < format.format.length) {
-                                    format.format = dateSuggestion.format;
-                                }
-                                // Otherwise it must use the new format so remove the old one from potential types
-                                else {
-                                    types.splice(types.indexOf('date-' + dateSuggestion), 1);
-                                }
+                        // if there is a suggested format
+                        if (dateSuggestion !== null) {
+                            // if the suggested format is shorter than this then it has probably
+                            //  identified a short representation and so it should be used
+                            if (dateSuggestion.format.length < format.format.length) {
+                                format.format = dateSuggestion.format;
                             }
-                            var leadingtoken = 'date_';
-                            if (format.momentFormat.indexOf(':') !== -1) {
-                                leadingtoken = (format.momentFormat.indexOf(' ') !== -1) ?
-                                    'datetime_' :
-                                    'time_';
+                            // Otherwise it must use the new format so remove the old one from potential types
+                            else {
+                                types.splice(types.indexOf('date-' + dateSuggestion), 1);
                             }
-                            // Set the type for this format and the suggestion for the next
-                            type = leadingtoken + format.momentFormat + '_' + format.locales.join('-');
-                            dateSuggestion = format;
                         }
+                        var leadingtoken = 'date_';
+                        if (format.momentFormat.indexOf(':') !== -1) {
+                            var tempFormat = format.momentFormat.replace(' A', 'A').replace(' a', 'a');
+                            leadingtoken = (tempFormat.indexOf(' ') !== -1) ?
+                                'datetime_' :
+                                'time_';
+                        }
+                        // Set the type for this format and the suggestion for the next
+                        type = leadingtoken + format.momentFormat + '_' + format.locales.join('-');
+                        dateSuggestion = format;
                     }
                 }
             }
             // If this type has not been identified yet then add it to the array
-            if (types.indexOf(type) === -1) {
+            if (!types.includes(type)) {
                 types.push(type);
             }
             if (types.length > 1 &&
-                (types.indexOf('string') === -1 ||
-                    types.indexOf('html') === -1)) {
+                (!types.includes('string') ||
+                    !types.includes('html'))) {
                 return 'mixed';
             }
         }
         // If more than one type has been identified then it must be mixed
-        if (types.length === 2 && types.indexOf('string') !== -1 && types.indexOf('html') !== -1) {
+        if (types.length === 2 && types.includes('string') && types.includes('html')) {
             return 'html';
         }
         else if (types.length > 1) {
@@ -239,9 +245,9 @@ var typeDetect = /** @class */ (function () {
         // Otherwise if only numbers have been found then that is the type
         else if (types[0] === 'number' ||
             types[0] === 'excel_number' ||
-            types[0].indexOf('date') !== -1 ||
-            types[0].indexOf('time') !== -1 ||
-            types[0].indexOf('html') !== -1) {
+            types[0].includes('date') ||
+            types[0].includes('time') ||
+            types[0].includes('html')) {
             return types[0];
         }
         // If no other types are found then default to string
@@ -249,11 +255,12 @@ var typeDetect = /** @class */ (function () {
     };
     /**
      * Determines a date format for a value that is passed in.
+     *
      * @param el The potential date that is to have a value determined
      * @param suggestion The previously suggested format for other values in the same field
      * @returns the suggested format for the field
      */
-    typeDetect.prototype._getDateFormat = function (el, suggestion) {
+    TypeDetect.prototype._getDateFormat = function (el, suggestion) {
         // Current format object to store the details of this element
         var format = {
             format: [],
@@ -268,7 +275,11 @@ var typeDetect = /** @class */ (function () {
             split: [],
             tokensUsed: []
         };
-        var defaultFormatFormat = { value: '', definite: false, firm: false };
+        var defaultFormatFormat = {
+            definite: false,
+            firm: false,
+            value: ''
+        };
         var charSplit = el.split('');
         var separators = ['-', '/', ':', ',', ' '];
         var prev = '';
@@ -276,7 +287,7 @@ var typeDetect = /** @class */ (function () {
         for (var _i = 0, charSplit_1 = charSplit; _i < charSplit_1.length; _i++) {
             var char = charSplit_1[_i];
             // If the character is a separator
-            if (separators.indexOf(char) !== -1) {
+            if (separators.includes(char)) {
                 format.split.push(prev); // Add the characters that appeared since the last separator to the split array
                 format.format.push(defaultFormatFormat); // Add a part to identify
                 format.separators.push(char); // Note the Separator at this point
@@ -323,42 +334,50 @@ var typeDetect = /** @class */ (function () {
             var spl = format.split[i];
             // If the value of this part is an empty string then it is a straightforward set
             if (spl.length === 0) {
-                format.format[i] = { value: '', definite: true, firm: true };
+                format.format[i] = {
+                    definite: true,
+                    firm: true,
+                    value: ''
+                };
                 continue;
             }
             // Some tokens are numbers
             if (!isNaN(+spl)) {
-                // If the current separator is a colon then it must be immediately followed by an hour, minute or second token
-                // This has to be in that order
+                // If the current separator is a colon then it must be immediately followed by an hour,
+                // minute or second token. This has to be in that order
                 if (format.separators[i] === ':') {
-                    if (format.tokensUsed.indexOf('HH') === -1 && format.tokensUsed.indexOf('H') === -1 && format.tokensUsed.indexOf('hh') === -1 && format.tokensUsed.indexOf('h') === -1) {
+                    if (!format.tokensUsed.includes('HH') &&
+                        !format.tokensUsed.includes('H') &&
+                        !format.tokensUsed.includes('hh') &&
+                        !format.tokensUsed.includes('h')) {
                         format = this._determineTokenFormat(format, i, 'HH', 'H');
                     }
-                    else if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
+                    else if (!format.tokensUsed.includes('mm') && !format.tokensUsed.includes('m')) {
                         format = this._determineTokenFormat(format, i, 'mm', 'm');
                     }
-                    else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('s') === -1) {
+                    else if (!format.tokensUsed.includes('ss') && !format.tokensUsed.includes('s')) {
                         format = this._determineTokenFormat(format, i, 'ss', 's');
                     }
                 }
-                // If the last separator was a colon then it is the end of the time so can only be a minute or second token
+                // If the last separator was a colon then it is the end of the time so can only be
+                //   a minute or second token
                 else if (i > 0 && format.separators[i - 1] === ':') {
-                    if (format.tokensUsed.indexOf('mm') === -1 && format.tokensUsed.indexOf('m') === -1) {
+                    if (!format.tokensUsed.includes('mm') && !format.tokensUsed.includes('m')) {
                         format = this._determineTokenFormat(format, i, 'mm', 'm');
                     }
-                    else if (format.tokensUsed.indexOf('ss') === -1 && format.tokensUsed.indexOf('s') === -1) {
+                    else if (!format.tokensUsed.includes('ss') && !format.tokensUsed.includes('s')) {
                         format = this._determineTokenFormat(format, i, 'ss', 's');
                     }
                 }
                 // If it's not a colon then can attempt to detect year
                 else {
                     // Only year can be 4 characters long and a number
-                    if (format.tokensUsed.indexOf('YYYY') === -1 && spl.length === 4) {
+                    if (!format.tokensUsed.includes('YYYY') && spl.length === 4) {
                         format = this._setDateFormat(format, i, 'YYYY', true, true, undefined, 'hasYear');
                         continue;
                     }
                     // Alternatively could be 2 digits if greater than 31
-                    else if (format.tokensUsed.indexOf('YY') === -1 && +spl > 31) {
+                    else if (!format.tokensUsed.includes('YY') && +spl > 31) {
                         format = this._setDateFormat(format, i, 'YY', true, false, undefined, 'hasYear');
                     }
                 }
@@ -366,24 +385,24 @@ var typeDetect = /** @class */ (function () {
             // Some tokens are strings
             else {
                 // Check for capitalised AM/PM
-                if (format.tokensUsed.indexOf('A') === -1 && (spl === 'AM' || spl === 'PM')) {
+                if (!format.tokensUsed.includes('A') && (spl === 'AM' || spl === 'PM')) {
                     format = this._setDateFormat(format, i, 'A', true, true);
                     // If this is found then need to make sure that any hours found are 12 hour
                     for (var j = 0; j < i; j++) {
                         var formatFormat = format.format[j];
-                        if (formatFormat.firm === false && formatFormat.value.indexOf('H') !== -1) {
+                        if (formatFormat.firm === false && formatFormat.value.includes('H')) {
                             format = this._setDateFormat(format, j, formatFormat.value.toLocaleLowerCase(), true, true);
                             break;
                         }
                     }
                 }
                 // Check for lower-case am/pm
-                else if (format.tokensUsed.indexOf('a') === -1 && (spl === 'am' || spl === 'pm')) {
+                else if (!format.tokensUsed.includes('a') && (spl === 'am' || spl === 'pm')) {
                     format = this._setDateFormat(format, i, 'a', true, true);
                     // If this is found then need to make sure that any hours found are 12 hour
                     for (var j = 0; j < i; j++) {
                         var formatFormat = format.format[j];
-                        if (formatFormat.firm === false && formatFormat.value.indexOf('H') !== -1) {
+                        if (formatFormat.firm === false && formatFormat.value.includes('H')) {
                             format = this._setDateFormat(format, j, formatFormat.value.toLocaleLowerCase(), true, true);
                             break;
                         }
@@ -401,22 +420,26 @@ var typeDetect = /** @class */ (function () {
                         var locale = locales_1[_a];
                         format.latestToken = null;
                         format.latestLocale = null;
-                        format = ((format.tokensUsed.indexOf('Do') === -1 || tokensThisRound.indexOf('Do') !== -1) &&
-                            spl.match(this.postFixes[locale])) ?
-                            this._setDateFormat(format, i, 'Do', true, true, locale, 'hasDay') :
-                            ((format.tokensUsed.indexOf('MMMM') === -1 || tokensThisRound.indexOf('MMMM') !== -1) &&
-                                spl.match(this.months[locale])) ?
-                                this._setDateFormat(format, i, 'MMMM', true, spl === 'may' ? false : true, locale, 'hasMonth') :
-                                ((format.tokensUsed.indexOf('MMM') === -1 || tokensThisRound.indexOf('MMM') !== -1) &&
-                                    spl.match(this.abbrMonths[locale])) ?
-                                    this._setDateFormat(format, i, 'MMM', true, spl === 'may' ? false : true, locale, 'hasMonth') :
-                                    ((format.tokensUsed.indexOf('dddd') === -1 || tokensThisRound.indexOf('dddd') !== -1) &&
-                                        spl.match(this.days[locale])) ?
-                                        this._setDateFormat(format, i, 'dddd', true, true, locale) :
-                                        ((format.tokensUsed.indexOf('ddd') === -1 || tokensThisRound.indexOf('ddd') !== -1) &&
-                                            spl.match(this.abbrDays[locale])) ?
-                                            this._setDateFormat(format, i, 'ddd', true, true, locale) :
-                                            format;
+                        if ((!format.tokensUsed.includes('Do') || tokensThisRound.includes('Do')) &&
+                            spl.match(this.postFixes[locale])) {
+                            format = this._setDateFormat(format, i, 'Do', true, true, locale, 'hasDay');
+                        }
+                        else if ((!format.tokensUsed.includes('MMMM') || tokensThisRound.includes('MMMM')) &&
+                            spl.match(this.months[locale])) {
+                            format = this._setDateFormat(format, i, 'MMMM', true, spl === 'may' ? false : true, locale, 'hasMonth');
+                        }
+                        else if ((!format.tokensUsed.includes('MMM') || tokensThisRound.includes('MMM')) &&
+                            spl.match(this.abbrMonths[locale])) {
+                            format = this._setDateFormat(format, i, 'MMM', true, spl === 'may' ? false : true, locale, 'hasMonth');
+                        }
+                        else if ((!format.tokensUsed.includes('dddd') || tokensThisRound.includes('dddd')) &&
+                            spl.match(this.days[locale])) {
+                            this._setDateFormat(format, i, 'dddd', true, true, locale);
+                        }
+                        else if ((!format.tokensUsed.includes('ddd') || tokensThisRound.includes('ddd')) &&
+                            spl.match(this.abbrDays[locale])) {
+                            this._setDateFormat(format, i, 'ddd', true, true, locale);
+                        }
                         if (format.latestToken !== null) {
                             tokensThisRound.push(format.latestToken);
                         }
@@ -427,7 +450,7 @@ var typeDetect = /** @class */ (function () {
                     var newLocales = [];
                     for (var _b = 0, localesThisRound_1 = localesThisRound; _b < localesThisRound_1.length; _b++) {
                         var locale = localesThisRound_1[_b];
-                        if (format.locales.indexOf(locale) !== -1) {
+                        if (format.locales.includes(locale)) {
                             newLocales.push(locale);
                         }
                     }
@@ -465,17 +488,30 @@ var typeDetect = /** @class */ (function () {
             if (format.format[i].value.length === 0 && format.format[i].definite === false &&
                 !isNaN(+format.split[i]) &&
                 (!format.hasDay || !format.hasYear || !format.hasMonth)) {
-                format = (format.hasYear && format.hasDay) ? // Year and Day - must be month
-                    this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth') :
-                    (format.hasDay && format.hasMonth) ? // Day and Month - must be year
-                        this._determineTokenFormat(format, i, 'YY', 'Y', undefined, 'hasYear') :
-                        (format.hasMonth && format.hasYear) ? // Month and Year - must be day
-                            this._determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay') :
-                            (format.hasYear || format.hasDay) ? // Year or Day - must be month. Wouldn't make sense otherwise
-                                this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth') :
-                                (format.hasMonth) ? // Month then assume day next
-                                    this._determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay') :
-                                    this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth'); // Last resort assume Month
+                // Year and Day - must be month
+                if (format.hasYear && format.hasDay) {
+                    format = this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth');
+                }
+                // Day and Month - must be year
+                else if (format.hasDay && format.hasMonth) {
+                    format = this._determineTokenFormat(format, i, 'YY', 'Y', undefined, 'hasYear');
+                }
+                // Month and Year - must be day
+                else if (format.hasMonth && format.hasYear) {
+                    format = this._determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay');
+                }
+                // Year or Day - must be month
+                else if (format.hasYear || format.hasDay) {
+                    format = this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth');
+                }
+                // Month then assume day next
+                else if (format.hasMonth) {
+                    format = this._determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay');
+                }
+                // Last resort assume Month
+                else {
+                    format = this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth');
+                }
             }
         }
         // Construct momentFormat from parts and separator
@@ -497,6 +533,7 @@ var typeDetect = /** @class */ (function () {
     };
     /**
      * Determine whether to use a double or single token if there is a leading 0
+     *
      * @param format The format object currently being constructed
      * @param idx The part number
      * @param a The first option if double token
@@ -504,7 +541,7 @@ var typeDetect = /** @class */ (function () {
      * @param has Any flag to be set
      * @returns the updated format
      */
-    typeDetect.prototype._determineTokenFormat = function (format, idx, a, b, locale, has) {
+    TypeDetect.prototype._determineTokenFormat = function (format, idx, a, b, locale, has) {
         if (has === void 0) { has = ''; }
         return format.split[idx].indexOf('0') === 0 ?
             this._setDateFormat(format, idx, a, true, true, locale, has) :
@@ -512,6 +549,7 @@ var typeDetect = /** @class */ (function () {
     };
     /**
      * Set's all of the relevant values when a new token is determined
+     *
      * @param format The format object currently being constructed
      * @param idx The part number
      * @param value The token to be set
@@ -521,13 +559,17 @@ var typeDetect = /** @class */ (function () {
      * @param has Any flag to be set
      * @returns the updated format
      */
-    typeDetect.prototype._setDateFormat = function (format, idx, value, definite, firm, locale, has) {
+    TypeDetect.prototype._setDateFormat = function (format, idx, value, definite, firm, locale, has) {
         if (has === void 0) { has = ''; }
-        format.format[idx] = { value: value, definite: definite, firm: firm };
+        format.format[idx] = {
+            definite: definite,
+            firm: firm,
+            value: value
+        };
         format.tokensUsed.push(value);
         format.latestToken = value;
         format.latestLocale = (locale !== undefined) ? locale : null;
-        if (locale !== undefined && format.locales.indexOf(locale) === -1) {
+        if (locale !== undefined && !format.locales.includes(locale)) {
             format.locales.push(locale);
         }
         // Set the flag if it has been defined
@@ -536,7 +578,7 @@ var typeDetect = /** @class */ (function () {
         }
         return format;
     };
-    typeDetect.prototype._getPrefix = function (data) {
+    TypeDetect.prototype._getPrefix = function (data) {
         var prefix = data[0]; // Initialise prefix to be the entire first value
         if (typeof prefix === 'object') {
             var idx = prefix.excel.indexOf('"');
@@ -548,13 +590,13 @@ var typeDetect = /** @class */ (function () {
             var lastIdx = prefix.excel.lastIndexOf('"');
             // There needs to be at least 2 quotation marks
             if (idx !== lastIdx) {
-                var excelPrefix = prefix.excel.match(/^\"[^"]*\"/ig)[0];
+                var excelPrefix = prefix.excel.match(/^"[^"]*"/ig)[0];
                 for (var i = 1; i < data.length; i++) {
                     if (data[i].excel.indexOf(excelPrefix) !== 0) {
                         return '';
                     }
                 }
-                return excelPrefix.replace(/\"/g, '');
+                return excelPrefix.replace(/"/g, '');
             }
             return '';
         }
@@ -592,7 +634,7 @@ var typeDetect = /** @class */ (function () {
             return matches !== null ? matches[0] : '';
         }
     };
-    typeDetect.prototype._getPostfix = function (data) {
+    TypeDetect.prototype._getPostfix = function (data) {
         var type = typeof data[0];
         if (type === 'object') {
             var postfix = data[0];
@@ -606,13 +648,13 @@ var typeDetect = /** @class */ (function () {
             // There need to be at least 2 quotation marks and the last one must be at the end
             if (idx !== lastIdx &&
                 lastIdx === postfix.excel.length - 1) {
-                var excelPostfix = postfix.excel.match(/\"[^\"]*\"$/ig)[0];
+                var excelPostfix = postfix.excel.match(/"[^"]*"$/ig)[0];
                 for (var i = 1; i < data.length; i++) {
                     if (data[i].excel.match(new RegExp(excelPostfix + '$')) === null) {
                         return '';
                     }
                 }
-                return excelPostfix.replace(/\"/g, '');
+                return excelPostfix.replace(/"/g, '');
             }
             return '';
         }
@@ -653,7 +695,7 @@ var typeDetect = /** @class */ (function () {
         }
         return '';
     };
-    typeDetect.prototype._getDP = function (data, postfix) {
+    TypeDetect.prototype._getDP = function (data, postfix) {
         var highestDP = 0;
         var replaceRegex = new RegExp(postfix + '$');
         for (var _i = 0, data_2 = data; _i < data_2.length; _i++) {
@@ -668,7 +710,7 @@ var typeDetect = /** @class */ (function () {
         }
         return highestDP;
     };
-    typeDetect.prototype._getExcelDP = function (data, postfix) {
+    TypeDetect.prototype._getExcelDP = function (data, postfix) {
         var highestDP = 0;
         var replaceRegex = new RegExp(postfix + '$');
         for (var _i = 0, data_3 = data; _i < data_3.length; _i++) {
@@ -683,9 +725,9 @@ var typeDetect = /** @class */ (function () {
         }
         return highestDP;
     };
-    return typeDetect;
+    return TypeDetect;
 }());
-exports["default"] = typeDetect;
+exports["default"] = TypeDetect;
 // This method is a good start towards more advanced excel format detection.
 // Cloudtables is not yet equipped to deal with this much info yet though so it can wait here incase that point comes.
 // interface IExcelFormat {
@@ -718,13 +760,13 @@ exports["default"] = typeDetect;
 // 		scaleThousands: 0,
 // 		thousandsSeparated: false
 // 	};
-// 	if (code.indexOf('.') !== -1) {
+// 	if (code.includes('.')) {
 // 		format.dp = code.split('.')[1].length;
 // 	}
-// 	if (code.indexOf('/') !== -1 && code.match(/[a-z]/ig) === null) {
+// 	if (code.includes('/') && code.match(/[a-z]/ig) === null) {
 // 		format.fraction = true;
 // 	}
-// 	if (code.indexOf(',') !== - 1) {
+// 	if (code.includes(',')) {
 // 		if (code.lastIndexOf(',') !== code.length - 1) {
 // 			format.thousandsSeparated = true;
 // 		}
@@ -741,12 +783,12 @@ exports["default"] = typeDetect;
 // 		format.leadingZeros = code.split('"')[(code.split('"').length > 1 ? 1 : 0)].match(/^0+/g)[0].length;
 // 	}
 // 	let tempCode = code;
-// 	while (tempCode.indexOf('[') !== -1) {
+// 	while (tempCode.includes('[')) {
 // 		let match = tempCode.match(/\[[^\[]*\]/ig)[0];
 // 		let colour = match.split(/(\[|\])/ig)[1];
 // 		let condition = null;
 // 		tempCode = tempCode.replace(match, '');
-// 		if (tempCode.indexOf('[') !== -1) {
+// 		if (tempCode.includes('[')) {
 // 			match = tempCode.match(/\[[^\[]*\]/ig)[0];
 // 			condition = match.split(/(\[|\])/ig)[1];
 // 			tempCode = tempCode.replace(match, '');

@@ -104,7 +104,11 @@ export default class TypeDetect {
 		let potentialType = this._getType(data, possPrefix, possPostfix);
 
 		// If the type is a datetime, date or time then the format needs to be set.
-		if (potentialType === 'date' || potentialType === 'time' || potentialType === 'datetime') {
+		if (
+			potentialType.indexOf('date_') === 0 ||
+			potentialType.indexOf('time_') === 0 ||
+			potentialType.indexOf('datetime_') === 0
+		) {
 			let splitdate = potentialType.split('_');
 			details.format = splitdate[1];
 
@@ -147,6 +151,7 @@ export default class TypeDetect {
 		let types: string[] = [];
 		let dateSuggestion: null | IDateFormat = null;
 		let postFixRegExp = new RegExp(postfix + '$');
+		let thousandsRegExp = new RegExp(this.thousandsSeparator, 'g');
 
 		// A type can only be set if all of the data fits it
 		for (let i = 0; i < data.length; i ++) {
@@ -186,10 +191,10 @@ export default class TypeDetect {
 
 			// Replace any thousands separators in the temporary element
 			if (type === 'string') {
-				tempEl = tempEl.replace(this.thousandsSeparator, '');
+				tempEl = tempEl.replace(thousandsRegExp, '');
 			}
 			else if (typeof tempEl.value === 'string' && tempEl.value.indexOf(this.thousandsSeparator) !== -1) {
-				tempEl.value = tempEl.value.split(this.thousandsSeparator).join('');
+				tempEl.value = tempEl.value.replace(thousandsRegExp, '');
 			}
 
 			// Replace any decimal characters in the temporary element
@@ -267,7 +272,8 @@ export default class TypeDetect {
 
 						let leadingtoken = 'date_';
 						if (format.momentFormat.indexOf(':') !== -1) {
-							leadingtoken = (format.momentFormat.indexOf(' ') !== -1) ?
+							let tempFormat = format.momentFormat.replace(' A', 'A').replace(' a', 'a');
+							leadingtoken = (tempFormat.indexOf(' ') !== -1) ?
 								'datetime_' :
 								'time_';
 						}
