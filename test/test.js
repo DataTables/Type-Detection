@@ -102,7 +102,9 @@ let detector = new typeDetect['default']();
 // // Excel
 // console.log("CHECK  Excel...")
 // checkDetails(
-//     detector.typeDetect([{ value: '1', excel: '0.00' },{ value: '1.45', excel: '0.00' },{ value: '10', excel: '0.00' }]),
+//     detector.typeDetect(
+// 			[{ value: '1', excel: '0.00' },{ value: '1.45', excel: '0.00' },{ value: '10', excel: '0.00' }]
+//		),
 //     {
 //         type: 'excel',
 //         format: null,
