@@ -140,7 +140,8 @@ export default class TypeDetect {
 	 * @param data The array of data to be processed
 	 * @param prefix Any prefix that has been detected within the dataset
 	 * @param postfix Any postfix that has been detected within the dataset
-	 * @returns string - the actual type of the data
+	 * @returns string - the actual type of the data and occasionally the
+	 * format of the data in dates this is underscore separated
 	 */
 	private _getType(data: any[], prefix: string, postfix: string): string {
 		let types: string[] = [];
@@ -278,15 +279,15 @@ export default class TypeDetect {
 			}
 
 			// If this type has not been identified yet then add it to the array
-			if (types.includes(type)) {
+			if (!types.includes(type)) {
 				types.push(type);
 			}
 
 			if (
 				types.length > 1 &&
 				(
-					types.includes('string') ||
-					types.includes('html')
+					!types.includes('string') ||
+					!types.includes('html')
 				)
 			) {
 				return 'mixed';
@@ -421,39 +422,39 @@ export default class TypeDetect {
 				// minute or second token. This has to be in that order
 				if (format.separators[i] === ':') {
 					if (
-						format.tokensUsed.includes('HH') &&
-						format.tokensUsed.includes('H') &&
-						format.tokensUsed.includes('hh') &&
-						format.tokensUsed.includes('h')
+						!format.tokensUsed.includes('HH') &&
+						!format.tokensUsed.includes('H') &&
+						!format.tokensUsed.includes('hh') &&
+						!format.tokensUsed.includes('h')
 					) {
 						format = this._determineTokenFormat(format, i, 'HH', 'H');
 					}
-					else if (format.tokensUsed.includes('mm') && format.tokensUsed.includes('m')) {
+					else if (!format.tokensUsed.includes('mm') && !format.tokensUsed.includes('m')) {
 						format = this._determineTokenFormat(format, i, 'mm', 'm');
 					}
-					else if (format.tokensUsed.includes('ss') && format.tokensUsed.includes('s')) {
+					else if (!format.tokensUsed.includes('ss') && !format.tokensUsed.includes('s')) {
 						format = this._determineTokenFormat(format, i, 'ss', 's');
 					}
 				}
 				// If the last separator was a colon then it is the end of the time so can only be
 				//   a minute or second token
 				else if (i > 0 && format.separators[i - 1] === ':') {
-					if (format.tokensUsed.includes('mm') && format.tokensUsed.includes('m')) {
+					if (!format.tokensUsed.includes('mm') && !format.tokensUsed.includes('m')) {
 						format = this._determineTokenFormat(format, i, 'mm', 'm');
 					}
-					else if (format.tokensUsed.includes('ss') && format.tokensUsed.includes('s')) {
+					else if (!format.tokensUsed.includes('ss') && !format.tokensUsed.includes('s')) {
 						format = this._determineTokenFormat(format, i, 'ss', 's');
 					}
 				}
 				// If it's not a colon then can attempt to detect year
 				else {
 					// Only year can be 4 characters long and a number
-					if (format.tokensUsed.includes('YYYY') && spl.length === 4) {
+					if (!format.tokensUsed.includes('YYYY') && spl.length === 4) {
 						format = this._setDateFormat(format, i, 'YYYY', true, true, undefined, 'hasYear');
 						continue;
 					}
 					// Alternatively could be 2 digits if greater than 31
-					else if (format.tokensUsed.includes('YY') && +spl > 31) {
+					else if (!format.tokensUsed.includes('YY') && +spl > 31) {
 						format = this._setDateFormat(format, i, 'YY', true, false, undefined, 'hasYear');
 					}
 				}
@@ -461,7 +462,7 @@ export default class TypeDetect {
 			// Some tokens are strings
 			else {
 				// Check for capitalised AM/PM
-				if (format.tokensUsed.includes('A') && (spl === 'AM' || spl === 'PM')) {
+				if (!format.tokensUsed.includes('A') && (spl === 'AM' || spl === 'PM')) {
 					format = this._setDateFormat(format, i, 'A', true, true);
 
 					// If this is found then need to make sure that any hours found are 12 hour
@@ -474,7 +475,7 @@ export default class TypeDetect {
 					}
 				}
 				// Check for lower-case am/pm
-				else if (format.tokensUsed.includes('a') && (spl === 'am' || spl === 'pm')) {
+				else if (!format.tokensUsed.includes('a') && (spl === 'am' || spl === 'pm')) {
 					format = this._setDateFormat(format, i, 'a', true, true);
 
 					// If this is found then need to make sure that any hours found are 12 hour
@@ -500,13 +501,13 @@ export default class TypeDetect {
 						format.latestToken = null;
 						format.latestLocale = null;
 						if (
-							(format.tokensUsed.includes('Do') || tokensThisRound.includes('Do')) &&
+							(!format.tokensUsed.includes('Do') || tokensThisRound.includes('Do')) &&
 							spl.match(this.postFixes[locale])
 						){
 							format = this._setDateFormat(format, i, 'Do', true, true, locale, 'hasDay');
 						}
 						else if (
-							(format.tokensUsed.includes('MMMM') || tokensThisRound.includes('MMMM')) &&
+							(!format.tokensUsed.includes('MMMM') || tokensThisRound.includes('MMMM')) &&
 							spl.match(this.months[locale])
 						) {
 							format = this._setDateFormat(
@@ -518,7 +519,7 @@ export default class TypeDetect {
 							);
 						}
 						else if (
-							(format.tokensUsed.includes('MMM') || tokensThisRound.includes('MMM')) &&
+							(!format.tokensUsed.includes('MMM') || tokensThisRound.includes('MMM')) &&
 							spl.match(this.abbrMonths[locale])
 						) {
 							format = this._setDateFormat(
@@ -530,13 +531,13 @@ export default class TypeDetect {
 							);
 						}
 						else if (
-							(format.tokensUsed.includes('dddd') || tokensThisRound.includes('dddd')) &&
+							(!format.tokensUsed.includes('dddd') || tokensThisRound.includes('dddd')) &&
 							spl.match(this.days[locale])
 						) {
 							this._setDateFormat(format, i, 'dddd', true, true, locale);
 						}
 						else if (
-							(format.tokensUsed.includes('ddd') || tokensThisRound.includes('ddd')) &&
+							(!format.tokensUsed.includes('ddd') || tokensThisRound.includes('ddd')) &&
 							spl.match(this.abbrDays[locale])
 						) {
 							this._setDateFormat(format, i, 'ddd', true, true, locale);
@@ -690,7 +691,7 @@ export default class TypeDetect {
 		format.latestToken = value;
 		format.latestLocale = (locale !== undefined) ? locale : null;
 
-		if (locale !== undefined && format.locales.includes(locale)) {
+		if (locale !== undefined && !format.locales.includes(locale)) {
 			format.locales.push(locale);
 		}
 
