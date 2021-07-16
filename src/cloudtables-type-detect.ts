@@ -31,48 +31,54 @@ interface IFormat {
 	value: string;
 }
 
+interface ILangOpts {
+	abbrDays?: {[key: string]: RegExp};
+	abbrMonths?: {[key: string]: RegExp};
+	days?: {[key: string]: RegExp};
+	months?: {[key: string]: RegExp};
+	postFixes?: {[key: string]: RegExp};
+}
+
 export default class TypeDetect {
 
-	private decimalCharacter;
-	private thousandsSeparator;
-	private months;
-	private abbrMonths;
-	private days;
-	private abbrDays;
-	private postFixes;
+	private decimalCharacter: string;
+	private thousandsSeparator: string;
+	private langOpts: ILangOpts;
 
 	public constructor(decimalCharacter= '.', thousandsSeparator= ',') {
 		this.decimalCharacter = decimalCharacter;
 		this.thousandsSeparator = thousandsSeparator;
-		this.months = {
-			deDE: /^(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember)$/gi,
-			en: /^(january|february|march|april|may|june|july|august|september|october|november|december)$/gi,
-			esES: /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)$/gi,
-			frFR: /^(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)$/gi
-		};
-		this.abbrMonths = {
-			deDE: /^(jan\.|feb\.|märz\.|apr\.|mai\.|juni\.|juli\.|aug\.|sep\.|okt\.|nov\.|dez\.)$/gi,
-			en: /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)$/gi,
-			esES: /^(ene\.|feb\.|mar\.|abr\.|may\.|jun\.|jul\.|ago\.|sep\.|oct\.|nov\.|dic\.)$/gi,
-			frFR: /^(janv\.|févr\.|mars\.|avr\.|mai\.|juin\.|juil\.|août\.|sept\.|oct\.|nov\.|dec\.)$/gi
-		};
-		this.days = {
-			deDE: /^(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)$/gi,
-			en: /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/gi,
-			esES: /^(lunes|martes|miércoles|jueves|viernes|sábado|domingo)$/gi,
-			frFR: /^(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)$/gi
-		};
-		this.abbrDays = {
-			deDE: /^(mo\.|di\.|mi\.|do\.|fr\.|sa\.|so\.)$/gi,
-			en: /^(mon|tue|wed|thu|fri|sat|sun)$/gi,
-			esES: /^(lun\.|mar\.|mié\.|jue\.|vie\.|sáb\.|dom\.)$/gi,
-			frFR: /^(lun\.|mar\.|mer\.|jeu\.|ven\.|sam\.|dim\.)$/gi
-		};
-		this.postFixes = {
-			deDE: /^[0-9]+(st|nd|rd|th)$/gi,
-			en:   /^[0-9]+(st|nd|rd|th)$/gi,
-			esES: /^[0-9]+(st|nd|rd|th)$/gi,
-			frFR: /^[0-9]+(st|nd|rd|th)$/gi
+		this.langOpts = {
+			abbrDays: {
+				deDE: /^(mo\.|di\.|mi\.|do\.|fr\.|sa\.|so\.)$/gi,
+				en: /^(mon|tue|wed|thu|fri|sat|sun)$/gi,
+				esES: /^(lun\.|mar\.|mié\.|jue\.|vie\.|sáb\.|dom\.)$/gi,
+				frFR: /^(lun\.|mar\.|mer\.|jeu\.|ven\.|sam\.|dim\.)$/gi
+			},
+			abbrMonths: {
+				deDE: /^(jan\.|feb\.|märz\.|apr\.|mai\.|juni\.|juli\.|aug\.|sep\.|okt\.|nov\.|dez\.)$/gi,
+				en: /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)$/gi,
+				esES: /^(ene\.|feb\.|mar\.|abr\.|may\.|jun\.|jul\.|ago\.|sep\.|oct\.|nov\.|dic\.)$/gi,
+				frFR: /^(janv\.|févr\.|mars\.|avr\.|mai\.|juin\.|juil\.|août\.|sept\.|oct\.|nov\.|dec\.)$/gi
+			},
+			days: {
+				deDE: /(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)/gi,
+				en: /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi,
+				esES: /(lunes|martes|miércoles|jueves|viernes|sábado|domingo)/gi,
+				frFR: /(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)/gi
+			},
+			months: {
+				deDE: /^(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember)$/gi,
+				en: /^(january|february|march|april|may|june|july|august|september|october|november|december)$/gi,
+				esES: /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)$/gi,
+				frFR: /^(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)$/gi
+			},
+			postFixes: {
+				deDE: /^[0-9]+(st|nd|rd|th)$/gi,
+				en:   /^[0-9]+(st|nd|rd|th)$/gi,
+				esES: /^[0-9]+(st|nd|rd|th)$/gi,
+				frFR: /^[0-9]+(st|nd|rd|th)$/gi
+			}
 		};
 	}
 
@@ -136,6 +142,31 @@ export default class TypeDetect {
 		}
 
 		return details;
+	}
+
+	/**
+	 * Extends the language options that are available by default.
+	 *
+	 * @param langOpts The extra language options that are to be added to/override the existing language options
+	 * @returns self for chaining
+	 */
+	public i18n(langOpts: ILangOpts): TypeDetect {
+		if (langOpts.abbrDays) {
+			this.langOpts.abbrDays = {...this.langOpts.abbrDays, ...langOpts.abbrDays};
+		}
+		if (langOpts.abbrMonths) {
+			this.langOpts.abbrMonths = {...this.langOpts.abbrMonths, ...langOpts.abbrMonths};
+		}
+		if (langOpts.days) {
+			this.langOpts.days = {...this.langOpts.days, ...langOpts.days};
+		}
+		if (langOpts.months) {
+			this.langOpts.months = {...this.langOpts.months, ...langOpts.months};
+		}
+		if (langOpts.postFixes) {
+			this.langOpts.postFixes = {...this.langOpts.postFixes, ...langOpts.postFixes};
+		}
+		return this;
 	}
 
 	/**
@@ -354,6 +385,19 @@ export default class TypeDetect {
 			value: ''
 		};
 
+		let origEl = el;
+		// Get the possible locales
+		let locales = format.locales.length > 0 ?
+			format.locales :
+			Object.keys(this.langOpts.abbrDays);
+
+		for (let locale of locales) {
+			if(el.match(this.langOpts.days[locale]) !== null) {
+				el = el.replace(this.langOpts.days[locale], '{day}');
+				format.locales.push(locale);
+			}
+		}
+
 		let charSplit = el.split('');
 		let separators = ['-', '/', ':', ',', ' '];
 		let prev = '';
@@ -426,8 +470,11 @@ export default class TypeDetect {
 				continue;
 			}
 
+			if (spl === '{day}') {
+				this._setDateFormat(format, i, 'dddd', true, true);
+			}
 			// Some tokens are numbers
-			if (!isNaN(+spl)) {
+			else if (!isNaN(+spl)) {
 				// If the current separator is a colon then it must be immediately followed by an hour,
 				// minute or second token. This has to be in that order
 				if (format.separators[i] === ':') {
@@ -500,9 +547,9 @@ export default class TypeDetect {
 				// Check for other string tokens
 				else {
 					// Get the possible locales
-					let locales = format.locales.length > 0 ?
+					locales = format.locales.length > 0 ?
 						format.locales :
-						Object.keys(this.abbrDays);
+						Object.keys(this.langOpts.abbrDays);
 
 					let tokensThisRound = [];
 					let localesThisRound = [];
@@ -512,13 +559,13 @@ export default class TypeDetect {
 						format.latestLocale = null;
 						if (
 							(!format.tokensUsed.includes('Do') || tokensThisRound.includes('Do')) &&
-							spl.match(this.postFixes[locale])
+							spl.match(this.langOpts.postFixes[locale])
 						){
 							format = this._setDateFormat(format, i, 'Do', true, true, locale, 'hasDay');
 						}
 						else if (
 							(!format.tokensUsed.includes('MMMM') || tokensThisRound.includes('MMMM')) &&
-							spl.match(this.months[locale])
+							spl.match(this.langOpts.months[locale]) && this.langOpts.months[locale] !== undefined
 						) {
 							format = this._setDateFormat(
 								format,
@@ -530,7 +577,7 @@ export default class TypeDetect {
 						}
 						else if (
 							(!format.tokensUsed.includes('MMM') || tokensThisRound.includes('MMM')) &&
-							spl.match(this.abbrMonths[locale])
+							spl.match(this.langOpts.abbrMonths[locale])
 						) {
 							format = this._setDateFormat(
 								format,
@@ -542,13 +589,13 @@ export default class TypeDetect {
 						}
 						else if (
 							(!format.tokensUsed.includes('dddd') || tokensThisRound.includes('dddd')) &&
-							spl.match(this.days[locale])
+							spl.match(this.langOpts.days[locale])
 						) {
 							this._setDateFormat(format, i, 'dddd', true, true, locale);
 						}
 						else if (
 							(!format.tokensUsed.includes('ddd') || tokensThisRound.includes('ddd')) &&
-							spl.match(this.abbrDays[locale])
+							spl.match(this.langOpts.abbrDays[locale])
 						) {
 							this._setDateFormat(format, i, 'ddd', true, true, locale);
 						}
@@ -650,7 +697,7 @@ export default class TypeDetect {
 		if (
 			format.momentFormat.length > 0 &&
 			moment(
-				el,
+				origEl,
 				format.momentFormat,
 				format.locales.length > 0 ? format.locales[0].substring(0, 2) : 'en'
 			).isValid()

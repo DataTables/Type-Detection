@@ -7,14 +7,27 @@ interface IDetails {
     prefix: null | string;
     type: null | TReturnType;
 }
+interface ILangOpts {
+    abbrDays?: {
+        [key: string]: RegExp;
+    };
+    abbrMonths?: {
+        [key: string]: RegExp;
+    };
+    days?: {
+        [key: string]: RegExp;
+    };
+    months?: {
+        [key: string]: RegExp;
+    };
+    postFixes?: {
+        [key: string]: RegExp;
+    };
+}
 export default class TypeDetect {
     private decimalCharacter;
     private thousandsSeparator;
-    private months;
-    private abbrMonths;
-    private days;
-    private abbrDays;
-    private postFixes;
+    private langOpts;
     constructor(decimalCharacter?: string, thousandsSeparator?: string);
     /**
      * Detects the type and additional details from the overall data set.
@@ -23,6 +36,13 @@ export default class TypeDetect {
      * @returns string - the type that has been detected and any additional details for that type
      */
     typeDetect(data: any[]): IDetails;
+    /**
+     * Extends the language options that are available by default.
+     *
+     * @param langOpts The extra language options that are to be added to/override the existing language options
+     * @returns self for chaining
+     */
+    i18n(langOpts: ILangOpts): TypeDetect;
     /**
      * Gets the actual type of the data as a string
      *

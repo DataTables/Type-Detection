@@ -18,35 +18,37 @@ var TypeDetect = /** @class */ (function () {
         if (thousandsSeparator === void 0) { thousandsSeparator = ','; }
         this.decimalCharacter = decimalCharacter;
         this.thousandsSeparator = thousandsSeparator;
-        this.months = {
-            deDE: /^(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember)$/gi,
-            en: /^(january|february|march|april|may|june|july|august|september|october|november|december)$/gi,
-            esES: /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)$/gi,
-            frFR: /^(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)$/gi
-        };
-        this.abbrMonths = {
-            deDE: /^(jan\.|feb\.|märz\.|apr\.|mai\.|juni\.|juli\.|aug\.|sep\.|okt\.|nov\.|dez\.)$/gi,
-            en: /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)$/gi,
-            esES: /^(ene\.|feb\.|mar\.|abr\.|may\.|jun\.|jul\.|ago\.|sep\.|oct\.|nov\.|dic\.)$/gi,
-            frFR: /^(janv\.|févr\.|mars\.|avr\.|mai\.|juin\.|juil\.|août\.|sept\.|oct\.|nov\.|dec\.)$/gi
-        };
-        this.days = {
-            deDE: /^(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)$/gi,
-            en: /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/gi,
-            esES: /^(lunes|martes|miércoles|jueves|viernes|sábado|domingo)$/gi,
-            frFR: /^(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)$/gi
-        };
-        this.abbrDays = {
-            deDE: /^(mo\.|di\.|mi\.|do\.|fr\.|sa\.|so\.)$/gi,
-            en: /^(mon|tue|wed|thu|fri|sat|sun)$/gi,
-            esES: /^(lun\.|mar\.|mié\.|jue\.|vie\.|sáb\.|dom\.)$/gi,
-            frFR: /^(lun\.|mar\.|mer\.|jeu\.|ven\.|sam\.|dim\.)$/gi
-        };
-        this.postFixes = {
-            deDE: /^[0-9]+(st|nd|rd|th)$/gi,
-            en: /^[0-9]+(st|nd|rd|th)$/gi,
-            esES: /^[0-9]+(st|nd|rd|th)$/gi,
-            frFR: /^[0-9]+(st|nd|rd|th)$/gi
+        this.langOpts = {
+            abbrDays: {
+                deDE: /^(mo\.|di\.|mi\.|do\.|fr\.|sa\.|so\.)$/gi,
+                en: /^(mon|tue|wed|thu|fri|sat|sun)$/gi,
+                esES: /^(lun\.|mar\.|mié\.|jue\.|vie\.|sáb\.|dom\.)$/gi,
+                frFR: /^(lun\.|mar\.|mer\.|jeu\.|ven\.|sam\.|dim\.)$/gi
+            },
+            abbrMonths: {
+                deDE: /^(jan\.|feb\.|märz\.|apr\.|mai\.|juni\.|juli\.|aug\.|sep\.|okt\.|nov\.|dez\.)$/gi,
+                en: /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)$/gi,
+                esES: /^(ene\.|feb\.|mar\.|abr\.|may\.|jun\.|jul\.|ago\.|sep\.|oct\.|nov\.|dic\.)$/gi,
+                frFR: /^(janv\.|févr\.|mars\.|avr\.|mai\.|juin\.|juil\.|août\.|sept\.|oct\.|nov\.|dec\.)$/gi
+            },
+            days: {
+                deDE: /(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)/gi,
+                en: /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi,
+                esES: /(lunes|martes|miércoles|jueves|viernes|sábado|domingo)/gi,
+                frFR: /(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)/gi
+            },
+            months: {
+                deDE: /^(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember)$/gi,
+                en: /^(january|february|march|april|may|june|july|august|september|october|november|december)$/gi,
+                esES: /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)$/gi,
+                frFR: /^(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)$/gi
+            },
+            postFixes: {
+                deDE: /^[0-9]+(st|nd|rd|th)$/gi,
+                en: /^[0-9]+(st|nd|rd|th)$/gi,
+                esES: /^[0-9]+(st|nd|rd|th)$/gi,
+                frFR: /^[0-9]+(st|nd|rd|th)$/gi
+            }
         };
     }
     /**
@@ -101,6 +103,30 @@ var TypeDetect = /** @class */ (function () {
             details.type = potentialType;
         }
         return details;
+    };
+    /**
+     * Extends the language options that are available by default.
+     *
+     * @param langOpts The extra language options that are to be added to/override the existing language options
+     * @returns self for chaining
+     */
+    TypeDetect.prototype.i18n = function (langOpts) {
+        if (langOpts.abbrDays) {
+            this.langOpts.abbrDays = __assign(__assign({}, this.langOpts.abbrDays), langOpts.abbrDays);
+        }
+        if (langOpts.abbrMonths) {
+            this.langOpts.abbrMonths = __assign(__assign({}, this.langOpts.abbrMonths), langOpts.abbrMonths);
+        }
+        if (langOpts.days) {
+            this.langOpts.days = __assign(__assign({}, this.langOpts.days), langOpts.days);
+        }
+        if (langOpts.months) {
+            this.langOpts.months = __assign(__assign({}, this.langOpts.months), langOpts.months);
+        }
+        if (langOpts.postFixes) {
+            this.langOpts.postFixes = __assign(__assign({}, this.langOpts.postFixes), langOpts.postFixes);
+        }
+        return this;
     };
     /**
      * Gets the actual type of the data as a string
@@ -284,12 +310,24 @@ var TypeDetect = /** @class */ (function () {
             firm: false,
             value: ''
         };
+        var origEl = el;
+        // Get the possible locales
+        var locales = format.locales.length > 0 ?
+            format.locales :
+            Object.keys(this.langOpts.abbrDays);
+        for (var _i = 0, locales_1 = locales; _i < locales_1.length; _i++) {
+            var locale = locales_1[_i];
+            if (el.match(this.langOpts.days[locale]) !== null) {
+                el = el.replace(this.langOpts.days[locale], '{day}');
+                format.locales.push(locale);
+            }
+        }
         var charSplit = el.split('');
         var separators = ['-', '/', ':', ',', ' '];
         var prev = '';
         // Iterate over all of the characters
-        for (var _i = 0, charSplit_1 = charSplit; _i < charSplit_1.length; _i++) {
-            var char = charSplit_1[_i];
+        for (var _a = 0, charSplit_1 = charSplit; _a < charSplit_1.length; _a++) {
+            var char = charSplit_1[_a];
             // If the character is a separator
             if (separators.includes(char)) {
                 format.split.push(prev); // Add the characters that appeared since the last separator to the split array
@@ -345,8 +383,11 @@ var TypeDetect = /** @class */ (function () {
                 };
                 continue;
             }
+            if (spl === '{day}') {
+                this._setDateFormat(format, i, 'dddd', true, true);
+            }
             // Some tokens are numbers
-            if (!isNaN(+spl)) {
+            else if (!isNaN(+spl)) {
                 // If the current separator is a colon then it must be immediately followed by an hour,
                 // minute or second token. This has to be in that order
                 if (format.separators[i] === ':') {
@@ -415,33 +456,33 @@ var TypeDetect = /** @class */ (function () {
                 // Check for other string tokens
                 else {
                     // Get the possible locales
-                    var locales = format.locales.length > 0 ?
+                    locales = format.locales.length > 0 ?
                         format.locales :
-                        Object.keys(this.abbrDays);
+                        Object.keys(this.langOpts.abbrDays);
                     var tokensThisRound = [];
                     var localesThisRound = [];
-                    for (var _a = 0, locales_1 = locales; _a < locales_1.length; _a++) {
-                        var locale = locales_1[_a];
+                    for (var _b = 0, locales_2 = locales; _b < locales_2.length; _b++) {
+                        var locale = locales_2[_b];
                         format.latestToken = null;
                         format.latestLocale = null;
                         if ((!format.tokensUsed.includes('Do') || tokensThisRound.includes('Do')) &&
-                            spl.match(this.postFixes[locale])) {
+                            spl.match(this.langOpts.postFixes[locale])) {
                             format = this._setDateFormat(format, i, 'Do', true, true, locale, 'hasDay');
                         }
                         else if ((!format.tokensUsed.includes('MMMM') || tokensThisRound.includes('MMMM')) &&
-                            spl.match(this.months[locale])) {
+                            spl.match(this.langOpts.months[locale]) && this.langOpts.months[locale] !== undefined) {
                             format = this._setDateFormat(format, i, 'MMMM', true, spl === 'may' ? false : true, locale, 'hasMonth');
                         }
                         else if ((!format.tokensUsed.includes('MMM') || tokensThisRound.includes('MMM')) &&
-                            spl.match(this.abbrMonths[locale])) {
+                            spl.match(this.langOpts.abbrMonths[locale])) {
                             format = this._setDateFormat(format, i, 'MMM', true, spl === 'may' ? false : true, locale, 'hasMonth');
                         }
                         else if ((!format.tokensUsed.includes('dddd') || tokensThisRound.includes('dddd')) &&
-                            spl.match(this.days[locale])) {
+                            spl.match(this.langOpts.days[locale])) {
                             this._setDateFormat(format, i, 'dddd', true, true, locale);
                         }
                         else if ((!format.tokensUsed.includes('ddd') || tokensThisRound.includes('ddd')) &&
-                            spl.match(this.abbrDays[locale])) {
+                            spl.match(this.langOpts.abbrDays[locale])) {
                             this._setDateFormat(format, i, 'ddd', true, true, locale);
                         }
                         if (format.latestToken !== null) {
@@ -452,8 +493,8 @@ var TypeDetect = /** @class */ (function () {
                         }
                     }
                     var newLocales = [];
-                    for (var _b = 0, localesThisRound_1 = localesThisRound; _b < localesThisRound_1.length; _b++) {
-                        var locale = localesThisRound_1[_b];
+                    for (var _c = 0, localesThisRound_1 = localesThisRound; _c < localesThisRound_1.length; _c++) {
+                        var locale = localesThisRound_1[_c];
                         if (format.locales.includes(locale)) {
                             newLocales.push(locale);
                         }
@@ -475,8 +516,8 @@ var TypeDetect = /** @class */ (function () {
         if (!format.hasDay && !format.hasMonth && !format.hasYear) {
             var possMonth = [];
             // If a value is less than 12 then it could be a month
-            for (var _c = 0, empties_1 = empties; _c < empties_1.length; _c++) {
-                var empty = empties_1[_c];
+            for (var _d = 0, empties_1 = empties; _d < empties_1.length; _d++) {
+                var empty = empties_1[_d];
                 if (!isNaN(+format.split[empty]) && +format.split[empty] <= 12) {
                     possMonth.push(empty);
                 }
@@ -527,7 +568,7 @@ var TypeDetect = /** @class */ (function () {
         format.momentFormat += format.format[format.split.length - 1].value;
         // If there is a format and it is valid then return it
         if (format.momentFormat.length > 0 &&
-            moment(el, format.momentFormat, format.locales.length > 0 ? format.locales[0].substring(0, 2) : 'en').isValid()) {
+            moment(origEl, format.momentFormat, format.locales.length > 0 ? format.locales[0].substring(0, 2) : 'en').isValid()) {
             return format;
         }
         // Otherwise assume mixed

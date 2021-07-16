@@ -30,6 +30,7 @@
     "quickCheck": "npm run buildNoInstall && npm run test",
     "quickNumbers": "npm run buildNoInstall && node ./test/numbers.js",
     "quickDate": "npm run buildNoInstall && node ./test/date.js",
+    "quicki18n": "npm run buildNoInstall && node ./test/i18n.js",
     "quickExcel": "npm run buildNoInstall && node ./test/excel.js",
     "quickTime": "npm run buildNoInstall && node ./test/time.js",
     "quickHtml": "npm run buildNoInstall && node ./test/html.js",

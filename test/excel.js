@@ -772,7 +772,7 @@ checkDetails(
 		format: 'D MMM, YYYY HH:mm:ss',
 		postfix: null,
 		prefix: null,
-		type: 'date'
+		type: 'datetime'
 	}
 );
 

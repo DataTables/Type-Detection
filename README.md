@@ -33,6 +33,75 @@ The constructor takes 2 optional parameters as follows.
 |:---------:|:-------:|:-----------:|
 | `decimalCharacter` | `'.'` | This is used when determining the number of decimal places that a number has. |
 | `thousandsSeparator` | `','` | This is removed from strings when attempting to determine a number type. |
+
+### API
+There is a single API method `i18n()`.
+
+```ts
+detector.i18n(langOpts)
+```
+
+The `langOpts` parameter is an object that is used to add internationalisation options used to detect dates. The default value of the internal object is as follows.
+
+```json
+{
+	"abbrDays": {
+		"deDE": /^(mo\.|di\.|mi\.|do\.|fr\.|sa\.|so\.)$/gi,
+		"en": /^(mon|tue|wed|thu|fri|sat|sun)$/gi,
+		"esES": /^(lun\.|mar\.|mié\.|jue\.|vie\.|sáb\.|dom\.)$/gi,
+		"frFR": /^(lun\.|mar\.|mer\.|jeu\.|ven\.|sam\.|dim\.)$/gi
+	},
+	"abbrMonths": {
+		"deDE": /^(jan\.|feb\.|märz\.|apr\.|mai\.|juni\.|juli\.|aug\.|sep\.|okt\.|nov\.|dez\.)$/gi,
+		"en": /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)$/gi,
+		"esES": /^(ene\.|feb\.|mar\.|abr\.|may\.|jun\.|jul\.|ago\.|sep\.|oct\.|nov\.|dic\.)$/gi,
+		"frFR": /^(janv\.|févr\.|mars\.|avr\.|mai\.|juin\.|juil\.|août\.|sept\.|oct\.|nov\.|dec\.)$/gi
+	},
+	"days": {
+		"deDE": /(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)/gi,
+		"en": /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi,
+		"esES": /(lunes|martes|miércoles|jueves|viernes|sábado|domingo)/gi,
+		"frFR": /(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)/gi
+	},
+	"months": {
+		"deDE": /^(januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember)$/gi,
+		"en": /^(january|february|march|april|may|june|july|august|september|october|november|december)$/gi,
+		"esES": /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)$/gi,
+		"frFR": /^(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)$/gi
+	},
+	"postFixes": {
+		"deDE": /^[0-9]+(st|nd|rd|th)$/gi,
+		"en":   /^[0-9]+(st|nd|rd|th)$/gi,
+		"esES": /^[0-9]+(st|nd|rd|th)$/gi,
+		"frFR": /^[0-9]+(st|nd|rd|th)$/gi
+	}
+}
+```
+
+To add internationalisation options for a language(s)  an object of this form must be passed in. The values within the RegExps need to be parseable by moment otherwise dates will not be identified correctly. The key of the object value pairs should match the locale for the language that is being added. For example to add english as a language you would make the following call.
+
+```ts
+detector.i18n({
+	"abbrDays": {
+		"en": /^(mon|tue|wed|thu|fri|sat|sun)$/gi,
+	},
+	"abbrMonths": {
+		"en": /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)$/gi,
+	},
+	"days": {
+		"en": /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi,
+	},
+	"months": {
+		"en": /^(january|february|march|april|may|june|july|august|september|october|november|december)$/gi,
+	},
+	"postFixes": {
+		"en":   /^[0-9]+(st|nd|rd|th)$/gi,
+	}
+});
+```
+
+The method returns the detector instance so that chaining can occur.
+
 ## Return Format
 The following object is returned from the `detector.typeDetect(dataArray)` call mentioned above. If a given property is not relevant to the type that has been detected then it is set to null.
 ```
