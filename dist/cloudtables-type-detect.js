@@ -148,15 +148,15 @@ var TypeDetect = /** @class */ (function () {
             if (type === 'string') {
                 tempEl = tempEl.replace(thousandsRegExp, '');
             }
-            else if (typeof tempEl.value === 'string' && tempEl.value.indexOf(this.thousandsSeparator) !== -1) {
+            else if (typeof tempEl.value === 'string' && tempEl.value.includes(this.thousandsSeparator)) {
                 tempEl.value = tempEl.value.replace(thousandsRegExp, '');
             }
             // Replace any decimal characters in the temporary element
             if (this.decimalCharacter !== '.') {
-                if (type === 'string' && tempEl.indexOf(this.decimalCharacter) !== -1) {
+                if (type === 'string' && tempEl.includes(this.decimalCharacter)) {
                     tempEl = tempEl.split(this.decimalCharacter).join('.');
                 }
-                else if (typeof tempEl.value === 'string' && tempEl.value.indexOf(this.decimalCharacter) !== -1) {
+                else if (typeof tempEl.value === 'string' && tempEl.value.includes(this.decimalCharacter)) {
                     tempEl.value = tempEl.value.split(this.decimalCharacter).join('.');
                 }
             }
@@ -213,9 +213,9 @@ var TypeDetect = /** @class */ (function () {
                             }
                         }
                         var leadingtoken = 'date_';
-                        if (format.momentFormat.indexOf(':') !== -1) {
+                        if (format.momentFormat.includes(':')) {
                             var tempFormat = format.momentFormat.replace(' A', 'A').replace(' a', 'a');
-                            leadingtoken = (tempFormat.indexOf(' ') !== -1) ?
+                            leadingtoken = (tempFormat.includes(' ')) ?
                                 'datetime_' :
                                 'time_';
                         }
@@ -582,8 +582,16 @@ var TypeDetect = /** @class */ (function () {
         }
         return format;
     };
+    /**
+     * Identifies a common prefix amongst an array of data
+     *
+     * @param data The data that is to be parsed to determine a prefix
+     * @returns string, the prefix that has been identified
+     */
     TypeDetect.prototype._getPrefix = function (data) {
         var prefix = data[0]; // Initialise prefix to be the entire first value
+        // If the first item is an object, then we are parsing excel data so our
+        // interaction with it is slightly different.
         if (typeof prefix === 'object') {
             var idx = prefix.excel.indexOf('"');
             // Can check for a quotation mark before going any further
@@ -605,27 +613,28 @@ var TypeDetect = /** @class */ (function () {
             return '';
         }
         else {
-            var first = true;
-            for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
-                var el = data_1[_i];
-                if (first) {
-                    first = false;
-                    continue;
-                }
+            for (var i = 1; i < data.length; i++) {
+                var el = data[i];
                 // There can't be a prefix if the type isn't a string
                 if (typeof el !== 'string') {
                     return '';
                 }
+                // If the whole prefix is at the start of the value then it isn't going
+                // to be shortened further so we can proceed to the next value
                 if (el.indexOf(prefix) === 0) {
                     continue;
                 }
-                // Gradually increase the prefix to check that it matches
-                for (var i = 0; i < prefix.length; i++) {
+                // Gradually increase the prefix in length to check that it matches the start of the value
+                for (var j = 0; j < prefix.length; j++) {
                     // If this portion of prefix is at the beginning of the string then carry on
                     // Otherwise it isn't the same across all of the elements so slice it down
                     //  to what has passed so far and check again
-                    if (el.indexOf(prefix.slice(0, i)) !== 0) {
-                        prefix = prefix.slice(0, i - 1);
+                    if (el.indexOf(prefix.slice(0, j)) !== 0) {
+                        prefix = prefix.slice(0, j - 1);
+                        // If the length of the prefix is 0 then there has been no match between this value
+                        // and the previous value. There is therefore no need to iterate through the remaining
+                        // values as we can tell at this point that there isn't going to be a common prefix
+                        // across the entire dataset
                         if (prefix.length === 0) {
                             return '';
                         }
@@ -638,6 +647,12 @@ var TypeDetect = /** @class */ (function () {
             return matches !== null ? matches[0] : '';
         }
     };
+    /**
+     * Identifies a common postfix amongst an array of data
+     *
+     * @param data The data that is to be parsed to determine a postfix
+     * @returns string, the postfix that has been identified
+     */
     TypeDetect.prototype._getPostfix = function (data) {
         var type = typeof data[0];
         if (type === 'object') {
@@ -679,11 +694,8 @@ var TypeDetect = /** @class */ (function () {
                 if (el.indexOf(postfix) === 0) {
                     continue;
                 }
-                // Gradually increase the postfix to check that it matches
+                // See getPrefix for details on the algorithm
                 for (var j = 0; j < postfix.length; j++) {
-                    // If this portion of postfix is at the beginning of the string then carry on
-                    // Otherwise it isn't the same across all of the elements so slice it down to
-                    //  what has passed so far and check again
                     if (el.indexOf(postfix.slice(0, j)) !== 0) {
                         postfix = postfix.slice(0, j - 1);
                         if (postfix.length === 0) {
@@ -699,11 +711,18 @@ var TypeDetect = /** @class */ (function () {
         }
         return '';
     };
+    /**
+     * Identifies the highest number of decimal places within the dataset
+     *
+     * @param data The data that is to be parsed to determine the number of decimal places
+     * @param postfix The datas postfix that is stripped from the data to accurately determine number of decimal places
+     * @returns number, the highest number of decimal places in the entire dataset
+     */
     TypeDetect.prototype._getDP = function (data, postfix) {
         var highestDP = 0;
         var replaceRegex = new RegExp(postfix + '$');
-        for (var _i = 0, data_2 = data; _i < data_2.length; _i++) {
-            var el = data_2[_i];
+        for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
+            var el = data_1[_i];
             // Replace the postfix as it's characters do not count as decimal places
             var split = el.toString().replace(replaceRegex, '').split(this.decimalCharacter);
             // Check that there is a decimal place and also if there are
@@ -717,8 +736,8 @@ var TypeDetect = /** @class */ (function () {
     TypeDetect.prototype._getExcelDP = function (data, postfix) {
         var highestDP = 0;
         var replaceRegex = new RegExp(postfix + '$');
-        for (var _i = 0, data_3 = data; _i < data_3.length; _i++) {
-            var el = data_3[_i];
+        for (var _i = 0, data_2 = data; _i < data_2.length; _i++) {
+            var el = data_2[_i];
             // Replace the postfix as it's characters do not count as decimal places
             var split = el.value.toString().replace(replaceRegex, '').split(this.decimalCharacter);
             // Check that there is a decimal place and also if there are

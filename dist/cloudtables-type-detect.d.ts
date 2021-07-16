@@ -69,8 +69,27 @@ export default class TypeDetect {
      * @returns the updated format
      */
     private _setDateFormat;
+    /**
+     * Identifies a common prefix amongst an array of data
+     *
+     * @param data The data that is to be parsed to determine a prefix
+     * @returns string, the prefix that has been identified
+     */
     private _getPrefix;
+    /**
+     * Identifies a common postfix amongst an array of data
+     *
+     * @param data The data that is to be parsed to determine a postfix
+     * @returns string, the postfix that has been identified
+     */
     private _getPostfix;
+    /**
+     * Identifies the highest number of decimal places within the dataset
+     *
+     * @param data The data that is to be parsed to determine the number of decimal places
+     * @param postfix The datas postfix that is stripped from the data to accurately determine number of decimal places
+     * @returns number, the highest number of decimal places in the entire dataset
+     */
     private _getDP;
     private _getExcelDP;
 }
