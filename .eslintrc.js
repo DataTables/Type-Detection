@@ -116,11 +116,13 @@ module.exports = {
 		],
 		'@typescript-eslint/type-annotation-spacing': 'error',
 		'@typescript-eslint/unified-signatures': 'error',
+		'array-bracket-spacing': 'warn',
 		'arrow-body-style': 'error',
 		'arrow-parens': [
 			'off',
 			'always'
 		],
+		'block-scoped-var': 'error',
 		'brace-style': [
 			'error',
 			'stroustrup'
@@ -175,13 +177,22 @@ module.exports = {
 		'no-cond-assign': 'error',
 		'no-console': 'warn',
 		'no-debugger': 'error',
+		'no-dupe-else-if': 'error',
+		'no-dupe-keys': 'error',
 		'no-duplicate-case': 'error',
 		'no-duplicate-imports': 'error',
 		'no-empty': 'error',
 		'no-eval': 'error',
 		'no-extra-bind': 'error',
+		'no-extra-parens': 'warn',
+		'no-extra-semi': 'error',
 		'no-fallthrough': 'off',
 		'no-invalid-this': 'off',
+		'no-invalid-regexp': 'error',
+		'no-irregular-whitespace': 'warn',
+		'no-lone-blocks': 'error',
+		'no-lonely-if': 'warn',
+		'no-magic-numbers': 'off',
 		'no-multi-spaces': 'warn',
 		'no-multiple-empty-lines': 'warn',
 		'no-new-func': 'error',
@@ -201,6 +212,7 @@ module.exports = {
 		'no-trailing-spaces': 'warn',
 		'no-undef-init': 'error',
 		'no-underscore-dangle': 'off',
+		'no-unreachable': 'warn',
 		'no-unsafe-finally': 'error',
 		'no-unused-labels': 'error',
 		'no-var': 'error',
@@ -218,6 +230,7 @@ module.exports = {
 		],
 		'radix': 'error',
 		'sort-keys': 'error',
+		'space-before-blocks': 'warn',
 		'space-before-function-paren': [
 			'error',
 			{

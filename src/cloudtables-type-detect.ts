@@ -271,7 +271,7 @@ export default class TypeDetect {
 					let leadingtoken = 'date_';
 					if (format.momentFormat.includes(':')) {
 						let tempFormat = format.momentFormat.replace(' A', 'A').replace(' a', 'a');
-						leadingtoken = (tempFormat.includes(' ') || tempFormat.includes('T')) ?
+						leadingtoken = tempFormat.includes(' ') || tempFormat.includes('T') ?
 							'datetime_' :
 							'time_';
 					}
@@ -455,22 +455,16 @@ export default class TypeDetect {
 			else if (!isNaN(+spl)) {
 				// If the previous separator was a plus and offset has not been included yet
 				if (
-					(
-						format.separators[i-1] === '+' &&
-						!format.tokensUsed.includes('ZZ') &&
-						!format.tokensUsed.includes('Z')
-					) ||
+					format.separators[i-1] === '+' &&
+					!format.tokensUsed.includes('ZZ') &&
+					!format.tokensUsed.includes('Z') ||
 					// Or the previous separator was a minus, immediately preceeded by a ' '
-					(
-						format.separators[i-1] === '-' &&
-						format.separators[i-2] === ' ' &&
-						format.split[i-1] === ''
-					) ||
+					format.separators[i-1] === '-' &&
+					format.separators[i-2] === ' ' &&
+					format.split[i-1] === '' ||
 					// Or the previous separator was a minus and the one immediately before that was a ':'
-					(
-						format.separators[i-1] === '-' &&
-						format.separators[i-2] === ':'
-					)
+					format.separators[i-1] === '-' &&
+					format.separators[i-2] === ':'
 				) {
 					// The current token must be a time offset
 					format = this._determineTokenFormat(format, i, 'ZZ', 'Z');
@@ -517,26 +511,24 @@ export default class TypeDetect {
 				// Can't attempt to detect months or days at this point
 				// as values under 31 could be a day or a year, and under
 				// 12 could be month, day or year. These are determined later in the code.
-				else {
-					// Only year can be 4 characters long and a number
-					if (!format.tokensUsed.includes('YYYY') && spl.length === 4) {
-						format = this._setDateFormat(format, i, 'YYYY', true, true, undefined, 'hasYear');
-						continue;
-					}
-					// Alternatively could be 2 digits if greater than 31
-					// Only years can be greater than 31, months and days mean
-					//  that we cannot determine this below that value
-					else if (!format.tokensUsed.includes('YY') && +spl > 31) {
-						format = this._setDateFormat(format, i, 'YY', true, false, undefined, 'hasYear');
-					}
+				// Only year can be 4 characters long and a number
+				else if (!format.tokensUsed.includes('YYYY') && spl.length === 4) {
+					format = this._setDateFormat(format, i, 'YYYY', true, true, undefined, 'hasYear');
+					continue;
+				}
+				// Alternatively could be 2 digits if greater than 31
+				// Only years can be greater than 31, months and days mean
+				//  that we cannot determine this below that value
+				else if (!format.tokensUsed.includes('YY') && +spl > 31) {
+					format = this._setDateFormat(format, i, 'YY', true, false, undefined, 'hasYear');
 				}
 			}
 			// Some tokens are strings
 			else {
 				// Check for AM/PM
 				// Put conditions into variables to avoid evaluating them multiple times each.
-				let condUpper = (!format.tokensUsed.includes('A') && (spl === 'AM' || spl === 'PM'));
-				let condLower = (!format.tokensUsed.includes('a') && (spl === 'am' || spl === 'pm'));
+				let condUpper = !format.tokensUsed.includes('A') && (spl === 'AM' || spl === 'PM');
+				let condLower = !format.tokensUsed.includes('a') && (spl === 'am' || spl === 'pm');
 				if (condUpper || condLower) {
 					if (condUpper) {
 						format = this._setDateFormat(format, i, 'A', true, true);
@@ -570,7 +562,7 @@ export default class TypeDetect {
 						if (
 							(!format.tokensUsed.includes('Do') || tokensThisRound.includes('Do')) &&
 							spl.match(this.langOpts.postFixes[locale])
-						){
+						) {
 							format = this._setDateFormat(format, i, 'Do', true, true, locale, 'hasDay');
 						}
 						else if (
@@ -701,7 +693,7 @@ export default class TypeDetect {
 			// or the current token is a Z and the next separator is a : as this is included in the Z token
 			if (!(
 				format.format[i+1].value.includes('Z') ||
-				(format.format[i].value.includes('Z') && format.separators[i] === ':')
+				format.format[i].value.includes('Z') && format.separators[i] === ':'
 			)) {
 				format.momentFormat += format.separators[i];
 			}
@@ -764,7 +756,7 @@ export default class TypeDetect {
 		};
 		format.tokensUsed.push(value);
 		format.latestToken = value;
-		format.latestLocale = (locale !== undefined) ? locale : null;
+		format.latestLocale = locale !== undefined ? locale : null;
 
 		if (locale !== undefined && !format.locales.includes(locale)) {
 			format.locales.push(locale);
@@ -949,7 +941,7 @@ export default class TypeDetect {
 	private _escapeRegExp(val: string): string {
 		let escapeRegExp = new RegExp(
 			'(\\' +
-			[ '/', '.', '*', '+', '?', '|', '(', ')', '[', ']', '{', '}', '\\', '$', '^', '-' ].join('|\\') +
+			['/', '.', '*', '+', '?', '|', '(', ')', '[', ']', '{', '}', '\\', '$', '^', '-'].join('|\\') +
 			')',
 			'g'
 		);
