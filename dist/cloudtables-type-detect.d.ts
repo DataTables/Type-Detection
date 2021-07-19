@@ -96,6 +96,7 @@ export default class TypeDetect {
      * @returns string, the prefix that has been identified
      */
     private _getPrefix;
+    private _determinePrefix;
     /**
      * Identifies a common postfix amongst an array of data
      *

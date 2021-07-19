@@ -218,7 +218,7 @@ export default class TypeDetect {
 				tempEl = tempEl.split(this.decimalCharacter).join('.');
 			}
 
-			// At this point the remaining value within tempEl can be converted to a number then that is it's types
+			// At this point if the remaining value within tempEl can be converted to a number then it is a number
 			if (type === 'string' && (!isNaN(+el) || !isNaN(+tempEl))) {
 				type = 'number';
 			}
@@ -235,7 +235,7 @@ export default class TypeDetect {
 				if (dateSuggestion !== null && format === 'mixed') {
 					return format;
 				}
-				else if (format !== 'mixed') {
+				else if (typeof format !== 'string') {
 					// If there is a suggested format and it doesn't match this format then check all
 					//  of the previous data points against this new format as it could work for them
 					if (dateSuggestion !== null && format.momentFormat !== dateSuggestion.momentFormat) {
@@ -270,7 +270,7 @@ export default class TypeDetect {
 					let leadingtoken = 'date_';
 					if (format.momentFormat.includes(':')) {
 						let tempFormat = format.momentFormat.replace(' A', 'A').replace(' a', 'a');
-						leadingtoken = (tempFormat.includes(' ')) ?
+						leadingtoken = (tempFormat.includes(' ') || tempFormat.includes('T')) ?
 							'datetime_' :
 							'time_';
 					}
@@ -327,7 +327,7 @@ export default class TypeDetect {
 	 * @param suggestion The previously suggested format for other values in the same field
 	 * @returns the suggested format for the field
 	 */
-	private _getDateFormat(el: string, suggestion: IDateFormat): any {
+	private _getDateFormat(el: string, suggestion: IDateFormat): IDateFormat | 'mixed' {
 		// Current format object to store the details of this element
 		let format: IDateFormat = {
 			format: [],
@@ -370,7 +370,17 @@ export default class TypeDetect {
 		for (let char of charSplit) {
 			// If the character is a separator
 			if (separators.includes(char)) {
-				format.split.push(prev); // Add the characters that appeared since the last separator to the split array
+				if(prev.match(/[0-9]T[0-9]/g)) {
+					let prevSplit = prev.split('T');
+					format.split.push(prevSplit[0]);
+					format.separators.push('T');
+					format.format.push(defaultFormatFormat); // Add a part to identify
+					format.split.push(prevSplit[1]);
+				}
+				else {
+					// Add the characters that appeared since the last separator to the split array
+					format.split.push(prev);
+				}
 				format.format.push(defaultFormatFormat); // Add a part to identify
 				format.separators.push(char); // Note the Separator at this point
 				prev = ''; // Clear the previous characters
@@ -437,11 +447,16 @@ export default class TypeDetect {
 			if (spl === '{day}') {
 				this._setDateFormat(format, i, 'dddd', true, true);
 			}
+			else if (spl === 'T') {
+				this._setDateFormat(format, i, 'T', true, true);
+			}
 			// Some tokens are numbers
 			else if (!isNaN(+spl)) {
 				// If the current separator is a colon then it must be immediately followed by an hour,
-				// minute or second token. This has to be in that order
+				// minute or second token. This has to be in that order.
 				if (format.separators[i] === ':') {
+					// Have to check for all 4 tokens here to ensure not 2 hours even though we will only set HH or H
+					// These can be converted later to hh and h if AM/PM is detected later.
 					if (
 						!format.tokensUsed.includes('HH') &&
 						!format.tokensUsed.includes('H') &&
@@ -468,6 +483,9 @@ export default class TypeDetect {
 					}
 				}
 				// If it's not a colon then can attempt to detect year
+				// Can't attempt to detect months or days at this point
+				// as values under 31 could be a day or a year, and under
+				// 12 could be month, day or year. These are determined later in the code.
 				else {
 					// Only year can be 4 characters long and a number
 					if (!format.tokensUsed.includes('YYYY') && spl.length === 4) {
@@ -475,6 +493,8 @@ export default class TypeDetect {
 						continue;
 					}
 					// Alternatively could be 2 digits if greater than 31
+					// Only years can be greater than 31, months and days mean
+					//  that we cannot determine this below that value
 					else if (!format.tokensUsed.includes('YY') && +spl > 31) {
 						format = this._setDateFormat(format, i, 'YY', true, false, undefined, 'hasYear');
 					}
@@ -482,22 +502,17 @@ export default class TypeDetect {
 			}
 			// Some tokens are strings
 			else {
-				// Check for capitalised AM/PM
-				if (!format.tokensUsed.includes('A') && (spl === 'AM' || spl === 'PM')) {
-					format = this._setDateFormat(format, i, 'A', true, true);
-
-					// If this is found then need to make sure that any hours found are 12 hour
-					for (let j = 0; j < i; j++) {
-						let formatFormat = format.format[j];
-						if (formatFormat.firm === false && formatFormat.value.includes('H')) {
-							format = this._setDateFormat(format, j, formatFormat.value.toLocaleLowerCase(), true, true);
-							break;
-						}
+				// Check for AM/PM
+				// Put conditions into variables to avoid evaluating them multiple times each.
+				let condUpper = (!format.tokensUsed.includes('A') && (spl === 'AM' || spl === 'PM'));
+				let condLower = (!format.tokensUsed.includes('a') && (spl === 'am' || spl === 'pm'));
+				if (condUpper || condLower) {
+					if (condUpper) {
+						format = this._setDateFormat(format, i, 'A', true, true);
 					}
-				}
-				// Check for lower-case am/pm
-				else if (!format.tokensUsed.includes('a') && (spl === 'am' || spl === 'pm')) {
-					format = this._setDateFormat(format, i, 'a', true, true);
+					else {
+						format = this._setDateFormat(format, i, 'a', true, true);
+					}
 
 					// If this is found then need to make sure that any hours found are 12 hour
 					for (let j = 0; j < i; j++) {
@@ -762,44 +777,52 @@ export default class TypeDetect {
 			return '';
 		}
 		else {
-			for (let i = 1; i < data.length; i++) {
-				let el = data[i];
-
-				// There can't be a prefix if the type isn't a string
-				if (typeof el !== 'string') {
-					return '';
-				}
-
-				// If the whole prefix is at the start of the value then it isn't going
-				// to be shortened further so we can proceed to the next value
-				if (el.indexOf(prefix) === 0) {
-					continue;
-				}
-
-				// Gradually increase the prefix in length to check that it matches the start of the value
-				for (let j = 0; j < prefix.length; j++) {
-					// If this portion of prefix is at the beginning of the string then carry on
-					// Otherwise it isn't the same across all of the elements so slice it down
-					//  to what has passed so far and check again
-					if (el.indexOf(prefix.slice(0, j)) !== 0) {
-						prefix = prefix.slice(0, j - 1);
-
-						// If the length of the prefix is 0 then there has been no match between this value
-						// and the previous value. There is therefore no need to iterate through the remaining
-						// values as we can tell at this point that there isn't going to be a common prefix
-						// across the entire dataset
-						if (prefix.length === 0) {
-							return '';
-						}
-					}
-				}
-			}
+			prefix = this._determinePrefix(data);
 
 			// Anything left at this point is present at the start of every value
 			//  and _may_ be considered a prefix, but this will depend on the type
 			let matches = prefix.match(/^[^0-9]+/g);
 			return matches !== null ? matches[0] : '';
 		}
+	}
+
+	private _determinePrefix(data: string[], postfix = false): string {
+		let prefix = postfix ? data[0].split('').reverse().join('') : data[0];
+		for (let i = 1; i < data.length; i++) {
+
+			// There can't be a prefix if the type isn't a string
+			if (typeof data[i] !== 'string') {
+				return '';
+			}
+
+			let el = postfix ? data[i].split('').reverse().join('') : data[i];
+
+			// If the whole prefix is at the start of the value then it isn't going
+			// to be shortened further so we can proceed to the next value
+			if (el.indexOf(prefix) === 0) {
+				continue;
+			}
+
+			// Gradually increase the prefix in length to check that it matches the start of the value
+			for (let j = 0; j < prefix.length; j++) {
+				// If this portion of prefix is at the beginning of the string then carry on
+				// Otherwise it isn't the same across all of the elements so slice it down
+				//  to what has passed so far and check again
+				if (el.indexOf(prefix.slice(0, j)) !== 0) {
+					prefix = prefix.slice(0, j - 1);
+
+					// If the length of the prefix is 0 then there has been no match between this value
+					// and the previous value. There is therefore no need to iterate through the remaining
+					// values as we can tell at this point that there isn't going to be a common prefix
+					// across the entire dataset
+					if (prefix.length === 0) {
+						return '';
+					}
+				}
+			}
+		}
+
+		return prefix;
 	}
 
 	/**
@@ -845,33 +868,7 @@ export default class TypeDetect {
 		else if (type === 'string') {
 			// Reverse the string, a postfix is a prefix working from the other end of the string
 			// So, can use the same algorithm as above in `getPrefix()` to do this
-			let postfix = data[0].split('').reverse().join('');
-
-			for (let i = 1; i < data.length; i++) {
-				let el = data[i];
-				// There can't be a postfix if the type isn't a string
-				if (typeof el !== 'string') {
-					return '';
-				}
-
-				// Reverse the element to match the reversed postfix
-				el = el.split('').reverse().join('');
-
-				if (el.indexOf(postfix) === 0) {
-					continue;
-				}
-
-				// See getPrefix for details on the algorithm
-				for (let j = 0; j < postfix.length; j++) {
-					if (el.indexOf(postfix.slice(0, j)) !== 0) {
-						postfix = postfix.slice(0, j - 1);
-
-						if (postfix.length === 0) {
-							return '';
-						}
-					}
-				}
-			}
+			let postfix = this._determinePrefix(data, true);
 
 			// Anything left at this point is present at the end of every value, once it is
 			//  reversed and _may_ be considered a postfix, but this will depend on the type

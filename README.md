@@ -120,8 +120,8 @@ The following object is returned from the `detector.typeDetect(dataArray)` call 
 | `type`   | The type that has been determined for the data. |
 | `format` | If a date has been detected as the type then this property is set to the moment format of that date. |
 | `locale` | If a date has been detected then this property is set to store the locale of that date. |
-| `prefix` | If numeric data has been detected then any common prefix across the entire data set is stored on this property. |
-| `postfix`| If numeric data has been detected then any common postfix across the entire data set is stored on this property. |
+| `prefix` | If numeric data has been detected then any common prefix across the entire data set is stored on this property. This excludes any numbers that are at the end of the prefix. |
+| `postfix`| If numeric data has been detected then any common postfix across the entire data set is stored on this property. This excludes any numbers that are at the start of the postfix. |
 | `dp`     | If numeric data has been detected then the largest number of decimal places present within the data set is stored on this property. |
 ## Detectable Types
 

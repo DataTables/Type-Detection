@@ -502,4 +502,19 @@ checkDetails(
 	}
 );
 
+// Dates YYYY-MM-DD
+console.log('CHECK Strict ISO8601 format YYYY-MM-DDTHH:mm:ss...');
+checkDetails(
+	detector.typeDetect(
+		['2021-07-14T17:02:00','1974-02-21T01:11:45','2025-12-01T23:56:59']
+	),
+	{
+		dp: null,
+		format: 'YYYY-MM-DDTHH:mm:ss',
+		postfix: null,
+		prefix: null,
+		type: 'datetime',
+	}
+);
+
 console.log('Failed', failed, 'of', total, 'tests. See above for details');
