@@ -111,6 +111,6 @@ export default class TypeDetect {
      * @returns number, the highest number of decimal places in the entire dataset
      */
     private _getDP;
-    private _getExcelDP;
+    private _escapeRegExp;
 }
 export {};

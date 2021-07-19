@@ -95,9 +95,7 @@ var TypeDetect = /** @class */ (function () {
             details.prefix = possPrefix;
             details.postfix = possPostfix;
             // Also determine the number of decimal places
-            details.dp = potentialType === 'excel_number' ?
-                this._getExcelDP(data, possPostfix) :
-                this._getDP(data, possPostfix);
+            details.dp = this._getDP(data, possPostfix);
         }
         else {
             details.type = potentialType;
@@ -140,122 +138,93 @@ var TypeDetect = /** @class */ (function () {
     TypeDetect.prototype._getType = function (data, prefix, postfix) {
         var types = [];
         var dateSuggestion = null;
-        var postFixRegExp = new RegExp(postfix + '$');
-        var thousandsRegExp = new RegExp(this.thousandsSeparator, 'g');
+        var postFixRegExp = new RegExp(this._escapeRegExp(postfix) + '$');
+        var thousandsRegExp = new RegExp(this._escapeRegExp(this.thousandsSeparator), 'g');
         // A type can only be set if all of the data fits it
         for (var i = 0; i < data.length; i++) {
             var el = data[i];
-            if (el === null || el === undefined || el.length === 0) {
+            if (el === null || el === undefined || el === '') {
                 continue;
             }
             var type = typeof el;
-            var tempEl = type === 'object' ? __assign({}, el) :
-                el;
+            var tempEl = el;
+            if (type === 'object') {
+                type = typeof el.value;
+                tempEl = el.value;
+            }
             // If the prefix exists, replace it within the temporary el
-            if (prefix.length > 0) {
-                if (type === 'string' && el.indexOf(prefix) === 0) {
-                    tempEl = tempEl.replace(prefix, '');
-                }
-                else if (typeof tempEl.value === 'string' && el.value.indexOf(prefix) === 0) {
-                    tempEl.value = tempEl.value.replace(prefix, '');
-                }
+            if (prefix.length > 0 && tempEl.indexOf(prefix) === 0) {
+                tempEl = tempEl.replace(prefix, '');
             }
             // If the postfix exists replace it within the temporary el
-            if (postfix.length > 0) {
-                if (type === 'string' && el.indexOf(postfix) === el.length - postfix.length) {
-                    tempEl = tempEl.replace(postFixRegExp, '');
-                }
-                else if (typeof tempEl.value === 'string' &&
-                    el.value.indexOf(postfix) === el.value.length - postfix.length) {
-                    tempEl.value = tempEl.value.replace(postFixRegExp, '');
-                }
+            if (postfix.length > 0 && tempEl.indexOf(postfix) === tempEl.length - postfix.length) {
+                tempEl = tempEl.replace(postFixRegExp, '');
             }
             // Replace any thousands separators in the temporary element
             if (type === 'string') {
                 tempEl = tempEl.replace(thousandsRegExp, '');
             }
-            else if (typeof tempEl.value === 'string' && tempEl.value.includes(this.thousandsSeparator)) {
-                tempEl.value = tempEl.value.replace(thousandsRegExp, '');
-            }
             // Replace any decimal characters in the temporary element
-            if (this.decimalCharacter !== '.') {
-                if (type === 'string' && tempEl.includes(this.decimalCharacter)) {
-                    tempEl = tempEl.split(this.decimalCharacter).join('.');
-                }
-                else if (typeof tempEl.value === 'string' && tempEl.value.includes(this.decimalCharacter)) {
-                    tempEl.value = tempEl.value.split(this.decimalCharacter).join('.');
-                }
+            if (this.decimalCharacter !== '.' && tempEl.includes(this.decimalCharacter)) {
+                tempEl = tempEl.split(this.decimalCharacter).join('.');
             }
             // At this point the remaining value within tempEl can be converted to a number then that is it's types
             if (type === 'string' && (!isNaN(+el) || !isNaN(+tempEl))) {
                 type = 'number';
             }
-            else if (!isNaN(+el.value) || !isNaN(+tempEl.value)) {
-                type = 'excel_number';
-            }
             // Check if there are any html tags
-            else if (type === 'string' && el.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
+            else if (type === 'string' && tempEl.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
                 type = 'html';
             }
-            else {
-                var excel = null;
-                // This flag makes sure that the correct values are used to check for dates
-                if (type === 'object') {
-                    excel = true;
+            else if (type === 'string') {
+                // Get a format for the datapoint
+                var format = this._getDateFormat(typeof el === 'string' ? el : el.value, dateSuggestion);
+                // getDateFormat can tell if the data is mixed based on the
+                //  suggested format and if there is a definite order
+                if (dateSuggestion !== null && format === 'mixed') {
+                    return format;
                 }
-                else if (type === 'string') {
-                    excel = false;
-                }
-                if (excel !== null) {
-                    // Get a format for the datapoint
-                    var format = this._getDateFormat(!excel ? el : el.value, dateSuggestion);
-                    // getDateFormat can tell if the data is mixed based on the
-                    //  suggested format and if there is a definite order
-                    if (dateSuggestion !== null && format === 'mixed') {
-                        return format;
+                else if (format !== 'mixed') {
+                    // If there is a suggested format and it doesn't match this format then check all
+                    //  of the previous data points against this new format as it could work for them
+                    if (dateSuggestion !== null && format.momentFormat !== dateSuggestion.momentFormat) {
+                        for (var j = 0; j < i; j++) {
+                            if (!moment(!(typeof el === 'object') ? data[j] : data[j].value, format.momentFormat, format.locales.length > 0 ?
+                                format.locales[0].substring(0, 2) :
+                                'en').isValid()) {
+                                return 'mixed';
+                            }
+                        }
                     }
-                    else if (format !== 'mixed') {
-                        // If there is a suggested format and it doesn't match this format then check all
-                        //  of the previous data points against this new format as it could work for them
-                        if (dateSuggestion !== null && format.momentFormat !== dateSuggestion.momentFormat) {
-                            for (var j = 0; j < i; j++) {
-                                if (!moment(!excel ? data[j] : data[j].value, format.momentFormat, format.locales.length > 0 ?
-                                    format.locales[0].substring(0, 2) :
-                                    'en').isValid()) {
-                                    return 'mixed';
-                                }
-                            }
+                    // if there is a suggested format
+                    if (dateSuggestion !== null) {
+                        // if the suggested format is shorter than this then it has probably
+                        //  identified a short representation and so it should be used
+                        if (dateSuggestion.format.length < format.format.length) {
+                            format.format = dateSuggestion.format;
                         }
-                        // if there is a suggested format
-                        if (dateSuggestion !== null) {
-                            // if the suggested format is shorter than this then it has probably
-                            //  identified a short representation and so it should be used
-                            if (dateSuggestion.format.length < format.format.length) {
-                                format.format = dateSuggestion.format;
-                            }
-                            // Otherwise it must use the new format so remove the old one from potential types
-                            else {
-                                types.splice(types.indexOf('date-' + dateSuggestion), 1);
-                            }
+                        // Otherwise it must use the new format so remove the old one from potential types
+                        else {
+                            types.splice(types.indexOf('date-' + dateSuggestion), 1);
                         }
-                        var leadingtoken = 'date_';
-                        if (format.momentFormat.includes(':')) {
-                            var tempFormat = format.momentFormat.replace(' A', 'A').replace(' a', 'a');
-                            leadingtoken = (tempFormat.includes(' ')) ?
-                                'datetime_' :
-                                'time_';
-                        }
-                        // Set the type for this format and the suggestion for the next
-                        type = leadingtoken + format.momentFormat + '_' + format.locales.join('-');
-                        dateSuggestion = format;
                     }
+                    var leadingtoken = 'date_';
+                    if (format.momentFormat.includes(':')) {
+                        var tempFormat = format.momentFormat.replace(' A', 'A').replace(' a', 'a');
+                        leadingtoken = (tempFormat.includes(' ')) ?
+                            'datetime_' :
+                            'time_';
+                    }
+                    // Set the type for this format and the suggestion for the next
+                    type = leadingtoken + format.momentFormat + '_' + format.locales.join('-');
+                    dateSuggestion = format;
                 }
             }
             // If this type has not been identified yet then add it to the array
             if (!types.includes(type)) {
                 types.push(type);
             }
-            if (types.length > 1 &&
+            if (types.length === 2 &&
                 (!types.includes('string') ||
                     !types.includes('html'))) {
                 return 'mixed';
@@ -710,7 +679,7 @@ var TypeDetect = /** @class */ (function () {
                 lastIdx === postfix.excel.length - 1) {
                 var excelPostfix = postfix.excel.match(/"[^"]*"$/ig)[0];
                 for (var i = 1; i < data.length; i++) {
-                    if (data[i].excel.match(new RegExp(excelPostfix + '$')) === null) {
+                    if (data[i].excel.match(new RegExp(this._escapeRegExp(excelPostfix) + '$')) === null) {
                         return '';
                     }
                 }
@@ -761,11 +730,14 @@ var TypeDetect = /** @class */ (function () {
      */
     TypeDetect.prototype._getDP = function (data, postfix) {
         var highestDP = 0;
-        var replaceRegex = new RegExp(postfix + '$');
+        var replaceRegex = new RegExp(this._escapeRegExp(postfix) + '$');
         for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
             var el = data_1[_i];
             // Replace the postfix as it's characters do not count as decimal places
-            var split = el.toString().replace(replaceRegex, '').split(this.decimalCharacter);
+            var split = (typeof el === 'object' ? el.value : el)
+                .toString()
+                .replace(replaceRegex, '')
+                .split(this.decimalCharacter);
             // Check that there is a decimal place and also if there are
             // more than previously seen - the highest value should be used
             if (split.length > 1 && split[1].length > highestDP) {
@@ -774,20 +746,11 @@ var TypeDetect = /** @class */ (function () {
         }
         return highestDP;
     };
-    TypeDetect.prototype._getExcelDP = function (data, postfix) {
-        var highestDP = 0;
-        var replaceRegex = new RegExp(postfix + '$');
-        for (var _i = 0, data_2 = data; _i < data_2.length; _i++) {
-            var el = data_2[_i];
-            // Replace the postfix as it's characters do not count as decimal places
-            var split = el.value.toString().replace(replaceRegex, '').split(this.decimalCharacter);
-            // Check that there is a decimal place and also if there are
-            // more than previously seen - the highest value should be used
-            if (split.length > 1 && split[1].length > highestDP) {
-                highestDP = split[1].length;
-            }
-        }
-        return highestDP;
+    TypeDetect.prototype._escapeRegExp = function (val) {
+        var escapeRegExp = new RegExp('(\\' +
+            ['/', '.', '*', '+', '?', '|', '(', ')', '[', ']', '{', '}', '\\', '$', '^', '-'].join('|\\') +
+            ')', 'g');
+        return val.replace(escapeRegExp, '\\$1');
     };
     return TypeDetect;
 }());
