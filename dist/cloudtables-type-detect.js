@@ -291,7 +291,7 @@ var TypeDetect = /** @class */ (function () {
             }
         }
         var charSplit = el.split('');
-        var separators = ['-', '/', ':', ',', ' '];
+        var separators = ['-', '/', ':', ',', ' ', '+'];
         var prev = '';
         // Iterate over all of the characters
         for (var _a = 0, charSplit_1 = charSplit; _a < charSplit_1.length; _a++) {
@@ -369,9 +369,31 @@ var TypeDetect = /** @class */ (function () {
             }
             // Some tokens are numbers
             else if (!isNaN(+spl)) {
+                // If the previous separator was a plus and offset has not been included yet
+                if ((format.separators[i - 1] === '+' &&
+                    !format.tokensUsed.includes('ZZ') &&
+                    !format.tokensUsed.includes('Z')) ||
+                    // Or the previous separator was a minus, immediately preceeded by a ' '
+                    (format.separators[i - 1] === '-' &&
+                        format.separators[i - 2] === ' ' &&
+                        format.split[i - 1] === '') ||
+                    // Or the previous separator was a minus and the one immediately before that was a ':'
+                    (format.separators[i - 1] === '-' &&
+                        format.separators[i - 2] === ':')) {
+                    // The current token must be a time offset
+                    format = this._determineTokenFormat(format, i, 'ZZ', 'Z');
+                }
+                else if (i > 1 && format.format[i - 1].value.includes('Z')) {
+                    format.format[i] = {
+                        definite: true,
+                        firm: true,
+                        value: ''
+                    };
+                    continue;
+                }
                 // If the current separator is a colon then it must be immediately followed by an hour,
                 // minute or second token. This has to be in that order.
-                if (format.separators[i] === ':') {
+                else if (format.separators[i] === ':') {
                     // Have to check for all 4 tokens here to ensure not 2 hours even though we will only set HH or H
                     // These can be converted later to hh and h if AM/PM is detected later.
                     if (!format.tokensUsed.includes('HH') &&
@@ -546,7 +568,12 @@ var TypeDetect = /** @class */ (function () {
         // Construct momentFormat from parts and separator
         for (var i = 0; i < format.split.length - 1; i++) {
             format.momentFormat += format.format[i].value;
-            format.momentFormat += format.separators[i];
+            // We don't want to add the current separator if the next token is a Z
+            // or the current token is a Z and the next separator is a : as this is included in the Z token
+            if (!(format.format[i + 1].value.includes('Z') ||
+                (format.format[i].value.includes('Z') && format.separators[i] === ':'))) {
+                format.momentFormat += format.separators[i];
+            }
         }
         // Faster to do this here than add a check every loop
         format.momentFormat += format.format[format.split.length - 1].value;

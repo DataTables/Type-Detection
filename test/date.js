@@ -517,4 +517,109 @@ checkDetails(
 	}
 );
 
+// Dates YYYY-MM-DD
+console.log('CHECK for time offset Z just +...');
+checkDetails(
+	detector.typeDetect(
+		['2021-07-14T17:02:00+12:00','1974-02-21T01:11:45+12:00','2025-12-01T23:56:59+12:00']
+	),
+	{
+		dp: null,
+		format: 'YYYY-MM-DDTHH:mm:ssZ',
+		postfix: null,
+		prefix: null,
+		type: 'datetime',
+	}
+);
+
+// Dates YYYY-MM-DD
+console.log('CHECK for time offset ZZ just +...');
+checkDetails(
+	detector.typeDetect(
+		['2021-07-14T17:02:00+02:00','1974-02-21T01:11:45+12:00','2025-12-01T23:56:59+01:00']
+	),
+	{
+		dp: null,
+		format: 'YYYY-MM-DDTHH:mm:ssZZ',
+		postfix: null,
+		prefix: null,
+		type: 'datetime',
+	}
+);
+
+// Dates YYYY-MM-DD
+console.log('CHECK for time offset Z just -...');
+checkDetails(
+	detector.typeDetect(
+		['2021-07-14T17:02:00-12:00','1974-02-21T01:11:45-12:00','2025-12-01T23:56:59-12:00']
+	),
+	{
+		dp: null,
+		format: 'YYYY-MM-DDTHH:mm:ssZ',
+		postfix: null,
+		prefix: null,
+		type: 'datetime',
+	}
+);
+
+// Dates YYYY-MM-DD
+console.log('CHECK for time offset ZZ just -...');
+checkDetails(
+	detector.typeDetect(
+		['2021-07-14T17:02:00-02:00','1974-02-21T01:11:45-12:00','2025-12-01T23:56:59-01:00']
+	),
+	{
+		dp: null,
+		format: 'YYYY-MM-DDTHH:mm:ssZZ',
+		postfix: null,
+		prefix: null,
+		type: 'datetime',
+	}
+);
+
+// Dates YYYY-MM-DD
+console.log('CHECK for time offset Z just -...');
+checkDetails(
+	detector.typeDetect(
+		['2021-07-14T17:02:00-12:00','1974-02-21T01:11:45+12:00','2025-12-01T23:56:59-12:00']
+	),
+	{
+		dp: null,
+		format: 'YYYY-MM-DDTHH:mm:ssZ',
+		postfix: null,
+		prefix: null,
+		type: 'datetime',
+	}
+);
+
+// Dates YYYY-MM-DD
+console.log('CHECK for time offset ZZ just -...');
+checkDetails(
+	detector.typeDetect(
+		['2021-07-14T17:02:00+02:00','1974-02-21T01:11:45-12:00','2025-12-01T23:56:59+01:00']
+	),
+	{
+		dp: null,
+		format: 'YYYY-MM-DDTHH:mm:ssZZ',
+		postfix: null,
+		prefix: null,
+		type: 'datetime',
+	}
+);
+
+// Dates YYYY-MM-DD
+console.log('CHECK for time offset Z just -...');
+checkDetails(
+	detector.typeDetect(
+		['17:02:00 -12:00 2021-07-14','01:11:45 +12:00 1974-02-21','23:56:59 -12:00 2025-12-01']
+	),
+	{
+		dp: null,
+		format: 'HH:mm:ss Z YYYY-MM-DD',
+		postfix: null,
+		prefix: null,
+		type: 'datetime',
+	}
+);
+
 console.log('Failed', failed, 'of', total, 'tests. See above for details');
