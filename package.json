@@ -52,19 +52,19 @@
   },
   "homepage": "https://github.com/DataTables/cloudtables-type-detect/",
   "dependencies": {
-    "@typescript-eslint/eslint-plugin": "^4.28.3",
-    "@typescript-eslint/parser": "^4.28.3",
-    "eslint": "^7.30.0",
-    "eslint-plugin-import": "^2.23.4",
-    "eslint-plugin-jsdoc": "^35.4.3",
-    "eslint-plugin-typescript-sort-keys": "^1.7.0",
     "moment": "^2.29.1",
-    "rollup": "^1.18.0",
-    "tslint-eslint-rules": "^5.4.0"
+    "rollup": "^1.18.0"
   },
   "devDependencies": {
     "@types/node": "^12.0.10",
+    "@typescript-eslint/eslint-plugin": "^4.28.3",
+    "@typescript-eslint/parser": "^4.28.3",
+    "eslint": "^7.31.0",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-jsdoc": "^35.4.5",
+    "eslint-plugin-typescript-sort-keys": "^1.7.0",
     "tslint": "^5.20.1",
+    "tslint-eslint-rules": "^5.4.0",
     "typescript": "^3.9.9"
   },
   "types": "./dist/cloudtables-type-detect.d.ts"
