@@ -90,6 +90,7 @@ var TypeDetect = /** @class */ (function () {
             }
         }
         else if (potentialType.includes('number')) {
+            console.log(132);
             // If the type is a number then use the previously identified postfix and prefix
             details.type = 'number';
             details.prefix = possPrefix;
@@ -153,11 +154,13 @@ var TypeDetect = /** @class */ (function () {
                 tempEl = el.value;
             }
             // If the prefix exists, replace it within the temporary el
-            if (prefix.length > 0 && tempEl.indexOf(prefix) === 0) {
+            if (prefix.length > 0 && tempEl.indexOf(prefix) === 0 && tempEl.length !== prefix.length) {
                 tempEl = tempEl.replace(prefix, '');
             }
             // If the postfix exists replace it within the temporary el
-            if (postfix.length > 0 && tempEl.indexOf(postfix) === tempEl.length - postfix.length) {
+            if (postfix.length > 0 &&
+                tempEl.indexOf(postfix) === tempEl.length - postfix.length &&
+                tempEl.length !== prefix.length) {
                 tempEl = tempEl.replace(postFixRegExp, '');
             }
             // Replace any thousands separators in the temporary element
@@ -170,6 +173,7 @@ var TypeDetect = /** @class */ (function () {
             }
             // At this point if the remaining value within tempEl can be converted to a number then it is a number
             if (type === 'string' && (!isNaN(+el) || !isNaN(+tempEl))) {
+                console.log(224);
                 type = 'number';
             }
             // Check if there are any html tags
@@ -242,6 +246,7 @@ var TypeDetect = /** @class */ (function () {
             types[0].includes('date') ||
             types[0].includes('time') ||
             types[0].includes('html')) {
+            console.log(315);
             return types[0];
         }
         // If no other types are found then default to string

@@ -85,4 +85,16 @@ checkDetails(
 	}
 );
 
+console.log('CHECK PURE HTML');
+checkDetails(
+	detector.typeDetect(['<a href="/root">Root</a>']),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'html'
+	}
+);
+
 console.log('Failed', failed, 'of', total, 'tests. See above for details');
