@@ -129,7 +129,6 @@ export default class TypeDetect {
 			}
 		}
 		else if (potentialType.includes('number')) {
-			console.log(132)
 			// If the type is a number then use the previously identified postfix and prefix
 			details.type = 'number';
 			details.prefix = possPrefix;
@@ -200,38 +199,43 @@ export default class TypeDetect {
 				tempEl = el.value;
 			}
 
+			// Need a temp el to replace and one to track
+			let tempElReplaced = tempEl;
+
 			// If the prefix exists, replace it within the temporary el
 			if (prefix.length > 0 && tempEl.indexOf(prefix) === 0 && tempEl.length !== prefix.length) {
-				tempEl = tempEl.replace(prefix, '');
+				tempElReplaced = tempElReplaced.replace(prefix, '');
 			}
 
 			// If the postfix exists replace it within the temporary el
 			if (
 				postfix.length > 0 &&
-				tempEl.indexOf(postfix) === tempEl.length - postfix.length &&
-				tempEl.length !== prefix.length
+				tempElReplaced.indexOf(postfix) === tempElReplaced.length - postfix.length &&
+				tempElReplaced.length !== prefix.length
 			) {
-				tempEl = tempEl.replace(postFixRegExp, '');
+				tempElReplaced = tempElReplaced.replace(postFixRegExp, '');
 			}
 
 			// Replace any thousands separators in the temporary element
 			if (type === 'string') {
-				tempEl = tempEl.replace(thousandsRegExp, '');
+				tempElReplaced = tempElReplaced.replace(thousandsRegExp, '');
 			}
 
 			// Replace any decimal characters in the temporary element
-			if (this.decimalCharacter !== '.' && tempEl.includes(this.decimalCharacter)) {
-				tempEl = tempEl.split(this.decimalCharacter).join('.');
+			if (this.decimalCharacter !== '.' && tempElReplaced.includes(this.decimalCharacter)) {
+				tempElReplaced = tempElReplaced.split(this.decimalCharacter).join('.');
 			}
 
-			// At this point if the remaining value within tempEl can be converted to a number then it is a number
-			if (type === 'string' && (!isNaN(+el) || !isNaN(+tempEl))) {
-				console.log(224);
-				type = 'number';
-			}
 			// Check if there are any html tags
-			else if (type === 'string' && tempEl.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
+			if (type === 'string' && tempEl.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
 				type = 'html';
+			}
+			// At this point if the remaining value within tempEl can be converted to a number then it is a number
+			else if (
+				type === 'string' &&
+				(!isNaN(+el) && el.length > 0 || !isNaN(+tempElReplaced) && tempElReplaced.length > 0)
+			) {
+				type = 'number';
 			}
 			else if (type === 'string') {
 				// Get a format for the datapoint
@@ -317,7 +321,6 @@ export default class TypeDetect {
 			types[0].includes('time') ||
 			types[0].includes('html')
 		) {
-			console.log(315)
 			return types[0];
 		}
 		// If no other types are found then default to string
