@@ -227,4 +227,17 @@ checkDetails(
 	}
 );
 
+// Currency Numbers
+console.log('CHECK  Currency Numbers with empty string...');
+checkDetails(
+	detector.typeDetect(['$20.00','$22.10', '$11222.33', '']),
+	{
+		dp: 2,
+		format: null,
+		postfix: '',
+		prefix: '$',
+		type: 'number'
+	}
+);
+
 console.log('Failed', failed, 'of', total, 'tests. See above for details');

@@ -323,6 +323,7 @@ export default class TypeDetect {
 		) {
 			return types[0];
 		}
+
 		// If no other types are found then default to string
 		return 'string';
 	}
@@ -807,6 +808,9 @@ export default class TypeDetect {
 				let excelPrefix = prefix.excel.match(/^"[^"]*"/ig)[0];
 
 				for (let i = 1; i < data.length; i++) {
+					if(data[i] === '') {
+						continue;
+					}
 					if (data[i].excel.indexOf(excelPrefix) !== 0) {
 						return '';
 					}
@@ -830,6 +834,10 @@ export default class TypeDetect {
 	private _determinePrefix(data: string[], postfix = false): string {
 		let prefix = postfix ? data[0].split('').reverse().join('') : data[0];
 		for (let i = 1; i < data.length; i++) {
+
+			if(data[i] === '') {
+				continue;
+			}
 
 			// There can't be a prefix if the type isn't a string
 			if (typeof data[i] !== 'string') {
@@ -894,6 +902,9 @@ export default class TypeDetect {
 				let excelPostfix = postfix.excel.match(/"[^"]*"$/ig)[0];
 
 				for (let i = 1; i < data.length; i++) {
+					if(data[i] === '') {
+						continue;
+					}
 					if (data[i].excel.match(new RegExp(this._escapeRegExp(excelPostfix) + '$')) === null) {
 						return '';
 					}

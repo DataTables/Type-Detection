@@ -152,6 +152,7 @@ var TypeDetect = /** @class */ (function () {
                 type = typeof el.value;
                 tempEl = el.value;
             }
+            // Need a temp el to replace and one to track
             var tempElReplaced = tempEl;
             // If the prefix exists, replace it within the temporary el
             if (prefix.length > 0 && tempEl.indexOf(prefix) === 0 && tempEl.length !== prefix.length) {
@@ -171,6 +172,7 @@ var TypeDetect = /** @class */ (function () {
             if (this.decimalCharacter !== '.' && tempElReplaced.includes(this.decimalCharacter)) {
                 tempElReplaced = tempElReplaced.split(this.decimalCharacter).join('.');
             }
+            console.log(tempElReplaced, prefix, postfix);
             // Check if there are any html tags
             if (type === 'string' && tempEl.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
                 type = 'html';
@@ -248,6 +250,7 @@ var TypeDetect = /** @class */ (function () {
             types[0].includes('html')) {
             return types[0];
         }
+        console.log(types);
         // If no other types are found then default to string
         return 'string';
     };
@@ -658,6 +661,9 @@ var TypeDetect = /** @class */ (function () {
             if (idx !== lastIdx) {
                 var excelPrefix = prefix.excel.match(/^"[^"]*"/ig)[0];
                 for (var i = 1; i < data.length; i++) {
+                    if (data[i] === '') {
+                        continue;
+                    }
                     if (data[i].excel.indexOf(excelPrefix) !== 0) {
                         return '';
                     }
@@ -678,6 +684,9 @@ var TypeDetect = /** @class */ (function () {
         if (postfix === void 0) { postfix = false; }
         var prefix = postfix ? data[0].split('').reverse().join('') : data[0];
         for (var i = 1; i < data.length; i++) {
+            if (data[i] === '') {
+                continue;
+            }
             // There can't be a prefix if the type isn't a string
             if (typeof data[i] !== 'string') {
                 return '';
@@ -729,6 +738,9 @@ var TypeDetect = /** @class */ (function () {
                 lastIdx === postfix.excel.length - 1) {
                 var excelPostfix = postfix.excel.match(/"[^"]*"$/ig)[0];
                 for (var i = 1; i < data.length; i++) {
+                    if (data[i] === '') {
+                        continue;
+                    }
                     if (data[i].excel.match(new RegExp(this._escapeRegExp(excelPostfix) + '$')) === null) {
                         return '';
                     }
