@@ -149,6 +149,13 @@ The Type-Detection library is capable of identifying a variety of formats of num
 
 There is no limit to the size of prefixes or postfixes.
 
+### Numbers
+The Type-Detection library is capable of identifying sequences of numbers. To do this all of the numbers in the data must be integer values. The must also not include and prefixes or postfixes, but they can include thousands separators.
+
+* JS numbers (`1`, `2`, `3`)
+* Numeric Strings (`'1'`, `'2'`, `'3'`)
+* Numeric Strings (`'1,000'`, `'2,000'`, `'3,000'`)
+
 ### HTML
 To determine HTML the string inputs are checked against the following Regular Expression...
 
