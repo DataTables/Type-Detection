@@ -771,7 +771,7 @@ export default class TypeDetect {
 	}
 
 	private _isSequence(data) {
-		let thousandsRegExp = new RegExp(this.thousandsSeparator, 'g')
+		let thousandsRegExp = new RegExp(this.thousandsSeparator, 'g');
 		data = data
 			.map(a => typeof a === 'string' ? a.replace(thousandsRegExp, '') : a)
 			.sort((a, b) => {
