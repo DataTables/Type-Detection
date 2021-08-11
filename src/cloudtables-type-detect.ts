@@ -260,7 +260,22 @@ export default class TypeDetect {
 										'en'
 								).isValid()
 							) {
-								return 'mixed';
+								// This didn't work for the previous data,
+								// but did the previous suggestion work for this point?
+								if(
+									!moment(
+										!(typeof el === 'object') ? data[i] : data[i].value,
+										dateSuggestion.momentFormat,
+										dateSuggestion.locales.length > 0 ?
+											dateSuggestion.locales[0].substring(0, 2) :
+											'en'
+									).isValid()
+								) {
+									return 'mixed';
+								}
+								else {
+									format = dateSuggestion;
+								}
 							}
 						}
 					}

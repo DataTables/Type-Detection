@@ -622,4 +622,19 @@ checkDetails(
 	}
 );
 
+// Dates YYYY-MM-DD
+console.log('CHECK for D/MM/Y...');
+checkDetails(
+	detector.typeDetect(
+		['18/09/20', '11/05/20', '15/09/20']
+	),
+	{
+		dp: null,
+		format: 'D/MM/Y',
+		postfix: null,
+		prefix: null,
+		type: 'date',
+	}
+);
+
 console.log('Failed', failed, 'of', total, 'tests. See above for details');

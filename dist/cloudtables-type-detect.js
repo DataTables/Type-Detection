@@ -172,7 +172,6 @@ var TypeDetect = /** @class */ (function () {
             if (this.decimalCharacter !== '.' && tempElReplaced.includes(this.decimalCharacter)) {
                 tempElReplaced = tempElReplaced.split(this.decimalCharacter).join('.');
             }
-            console.log(tempElReplaced, prefix, postfix);
             // Check if there are any html tags
             if (type === 'string' && tempEl.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
                 type = 'html';
@@ -198,7 +197,16 @@ var TypeDetect = /** @class */ (function () {
                             if (!moment(!(typeof el === 'object') ? data[j] : data[j].value, format.momentFormat, format.locales.length > 0 ?
                                 format.locales[0].substring(0, 2) :
                                 'en').isValid()) {
-                                return 'mixed';
+                                // This didn't work for the previous data,
+                                // but did the previous suggestion work for this point?
+                                if (!moment(!(typeof el === 'object') ? data[i] : data[i].value, dateSuggestion.momentFormat, dateSuggestion.locales.length > 0 ?
+                                    dateSuggestion.locales[0].substring(0, 2) :
+                                    'en').isValid()) {
+                                    return 'mixed';
+                                }
+                                else {
+                                    format = dateSuggestion;
+                                }
                             }
                         }
                     }
@@ -250,7 +258,6 @@ var TypeDetect = /** @class */ (function () {
             types[0].includes('html')) {
             return types[0];
         }
-        console.log(types);
         // If no other types are found then default to string
         return 'string';
     };
