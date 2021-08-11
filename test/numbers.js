@@ -74,7 +74,7 @@ let detector = new typeDetect['default']();
 // Simple Numbers
 console.log('CHECK  Simple Numbers...');
 checkDetails(
-	detector.typeDetect([1,2,3]),
+	detector.typeDetect([1,2,4]),
 	{
 		dp: 0,
 		format: null,

@@ -21,7 +21,7 @@
   ],
   "scripts": {
     "test": "node ./test/numbers.js && node ./test/date.js && node ./test/time.js && node ./test/html.js && node ./test/string.js && node ./test/empty.js",
-    "quickTest": "npm run buildNoInstall && node ./test/numbers.js && node ./test/date.js && node ./test/time.js && node ./test/html.js && node ./test/string.js && node ./test/empty.js && node ./test/excel.js",
+    "quickTest": "npm run buildNoInstall && node ./test/numbers.js && node ./test/date.js && node ./test/time.js && node ./test/html.js && node ./test/string.js && node ./test/empty.js && node ./test/excel.js && node ./test/sequence.js",
     "speedTest": "node ./test/speedtest.js",
     "build": "npm install && tsc -d ./src/*.ts --outDir ./dist/",
     "buildNoInstall": "tsc -d ./src/*.ts --outDir ./dist/",
@@ -36,6 +36,7 @@
     "quickHtml": "npm run buildNoInstall && node ./test/html.js",
     "quickStrings": "npm run buildNoInstall && node ./test/string.js",
     "quickEmpty": "npm run buildNoInstall && node ./test/empty.js",
+    "quickSequence": "npm run buildNoInstall && node ./test/sequence.js",
     "quickSpeedCheck": "npm run buildNoInstall && npm run speedTest"
   },
   "repository": {

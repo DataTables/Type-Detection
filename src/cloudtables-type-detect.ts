@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import * as moment from '../node_modules/moment/moment';
 
-type TReturnType = 'date' | 'datetime' | 'time' | 'mixed' | 'string' | 'number' | 'html';
+type TReturnType = 'date' | 'datetime' | 'time' | 'mixed' | 'string' | 'number' | 'html' | 'sequence';
 
 interface IDetails {
 	dp: null | number;
@@ -135,6 +135,19 @@ export default class TypeDetect {
 			details.postfix = possPostfix;
 			// Also determine the number of decimal places
 			details.dp = this._getDP(data, possPostfix);
+		}
+		else if (potentialType.includes('sequence')) {
+			// If the type is a number then use the previously identified postfix and prefix
+			details.type = 'sequence';
+			details.prefix = '';
+			details.postfix = '';
+			// Also determine the number of decimal places
+			details.dp = this._getDP(data, '');
+
+			// Sequences cannot have decimal places
+			if(details.dp > 0) {
+				details.type = 'number';
+			}
 		}
 		else {
 			details.type = potentialType as TReturnType;
@@ -329,9 +342,11 @@ export default class TypeDetect {
 		else if (types.length > 1) {
 			return 'mixed';
 		}
+		else if(types[0] === 'number') {
+			return this._isSequence(data) ? 'sequence' : types[0];
+		}
 		// Otherwise if only numbers have been found then that is the type
 		else if (
-			types[0] === 'number' ||
 			types[0].includes('date') ||
 			types[0].includes('time') ||
 			types[0].includes('html')
@@ -744,6 +759,35 @@ export default class TypeDetect {
 		else {
 			return 'mixed';
 		}
+	}
+
+	private _isSequence(data) {
+		let thousandsRegExp = new RegExp(this.thousandsSeparator, 'g')
+		data = data
+			.map(a => typeof a === 'string' ? a.replace(thousandsRegExp, '') : a)
+			.sort((a, b) => {
+				if(+a > +b) {
+					return 1;
+				}
+				else if(+b > +a) {
+					return -1;
+				}
+				else return 0;
+			});
+
+
+		if(data.length < 3 || isNaN(+data[1]) || isNaN(+data[0])) {
+			return false;
+		}
+
+		let initGap = +data[1] - +data[0];
+		for(let i = 2; i < data.length; i++) {
+			if(isNaN(data[i]) || +data[i] !== +data[i-1] + initGap) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

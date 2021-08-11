@@ -1,4 +1,4 @@
-declare type TReturnType = 'date' | 'datetime' | 'time' | 'mixed' | 'string' | 'number' | 'html';
+declare type TReturnType = 'date' | 'datetime' | 'time' | 'mixed' | 'string' | 'number' | 'html' | 'sequence';
 interface IDetails {
     dp: null | number;
     format: null | string;
@@ -65,6 +65,7 @@ export default class TypeDetect {
      * @returns the suggested format for the field
      */
     private _getDateFormat;
+    private _isSequence;
     /**
      * Determine whether to use a double or single token if there is a leading 0
      *

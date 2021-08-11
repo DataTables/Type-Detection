@@ -97,6 +97,18 @@ var TypeDetect = /** @class */ (function () {
             // Also determine the number of decimal places
             details.dp = this._getDP(data, possPostfix);
         }
+        else if (potentialType.includes('sequence')) {
+            // If the type is a number then use the previously identified postfix and prefix
+            details.type = 'sequence';
+            details.prefix = '';
+            details.postfix = '';
+            // Also determine the number of decimal places
+            details.dp = this._getDP(data, '');
+            // Sequences cannot have decimal places
+            if (details.dp > 0) {
+                details.type = 'number';
+            }
+        }
         else {
             details.type = potentialType;
         }
@@ -251,9 +263,11 @@ var TypeDetect = /** @class */ (function () {
         else if (types.length > 1) {
             return 'mixed';
         }
+        else if (types[0] === 'number') {
+            return this._isSequence(data) ? 'sequence' : types[0];
+        }
         // Otherwise if only numbers have been found then that is the type
-        else if (types[0] === 'number' ||
-            types[0].includes('date') ||
+        else if (types[0].includes('date') ||
             types[0].includes('time') ||
             types[0].includes('html')) {
             return types[0];
@@ -598,6 +612,31 @@ var TypeDetect = /** @class */ (function () {
         else {
             return 'mixed';
         }
+    };
+    TypeDetect.prototype._isSequence = function (data) {
+        var thousandsRegExp = new RegExp(this.thousandsSeparator, 'g');
+        data = data
+            .map(function (a) { return typeof a === 'string' ? a.replace(thousandsRegExp, '') : a; })
+            .sort(function (a, b) {
+            if (+a > +b) {
+                return 1;
+            }
+            else if (+b > +a) {
+                return -1;
+            }
+            else
+                return 0;
+        });
+        if (data.length < 3 || isNaN(+data[1]) || isNaN(+data[0])) {
+            return false;
+        }
+        var initGap = +data[1] - +data[0];
+        for (var i = 2; i < data.length; i++) {
+            if (isNaN(data[i]) || +data[i] !== +data[i - 1] + initGap) {
+                return false;
+            }
+        }
+        return true;
     };
     /**
      * Determine whether to use a double or single token if there is a leading 0
