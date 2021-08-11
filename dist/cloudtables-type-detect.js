@@ -188,10 +188,19 @@ var TypeDetect = /** @class */ (function () {
             if (type === 'string' && tempEl.match(/<(“[^”]*”|'[^’]*’|[^'”>])*>/g) !== null) {
                 type = 'html';
             }
+            // Check if it is a url
+            else if (type === 'string' && el.match(/:\/\//g) !== null) {
+                type = 'string';
+            }
             // At this point if the remaining value within tempEl can be converted to a number then it is a number
             else if (type === 'string' &&
                 (!isNaN(+el) && el.length > 0 || !isNaN(+tempElReplaced) && tempElReplaced.length > 0)) {
-                type = 'number';
+                if (data.length === 1 && prefix.length + postfix.length > 3 * tempElReplaced.length) {
+                    type = 'string';
+                }
+                else {
+                    type = 'number';
+                }
             }
             else if (type === 'string') {
                 // Get a format for the datapoint

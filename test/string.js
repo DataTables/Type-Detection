@@ -85,4 +85,36 @@ checkDetails(
 	}
 );
 
+// Strings
+console.log('CHECK  Strings...');
+checkDetails(
+	detector.typeDetect([
+		'http://live.datatables.net/gipugure/1/edit',
+		'http://live.datatables.net/gipugure/1/edit',
+		'http://live.datatables.net/gipugure/1/edit'
+	]),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'string'
+	}
+);
+
+// Strings
+console.log('CHECK  Strings...');
+checkDetails(
+	detector.typeDetect([
+		'http://live.datatables.net/gipugure/1/edit',
+	]),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'string'
+	}
+);
+
 console.log('Failed', failed, 'of', total, 'tests. See above for details');
