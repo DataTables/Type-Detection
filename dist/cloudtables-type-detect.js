@@ -163,7 +163,7 @@ var TypeDetect = /** @class */ (function () {
             if (Array.isArray(tempEl)) {
                 return 'array';
             }
-            else if (type === 'object' && !tempEl.excel) {
+            else if (type === 'object' && tempEl.excel === undefined) {
                 return 'object';
             }
             if (type === 'object') {
@@ -195,7 +195,7 @@ var TypeDetect = /** @class */ (function () {
                 type = 'html';
             }
             // Check if it is a url
-            else if (type === 'string' && el.match(/:\/\//g) !== null) {
+            else if (type === 'string' && tempEl.match(/:\/\//g) !== null) {
                 type = 'string';
             }
             // At this point if the remaining value within tempEl can be converted to a number then it is a number
@@ -213,7 +213,7 @@ var TypeDetect = /** @class */ (function () {
                 var format = this._getDateFormat(typeof el === 'string' ? el : el.value, dateSuggestion);
                 // getDateFormat can tell if the data is mixed based on the
                 //  suggested format and if there is a definite order
-                if (dateSuggestion !== null && format === 'mixed') {
+                if (dateSuggestion !== null && (format === 'mixed' || format === 'string')) {
                     return format;
                 }
                 else if (typeof format !== 'string') {
@@ -608,6 +608,9 @@ var TypeDetect = /** @class */ (function () {
         }
         // Construct momentFormat from parts and separator
         for (var i = 0; i < format.split.length - 1; i++) {
+            if (!format.format[i].definite) {
+                return 'string';
+            }
             format.momentFormat += format.format[i].value;
             // We don't want to add the current separator if the next token is a Z
             // or the current token is a Z and the next separator is a : as this is included in the Z token
@@ -820,10 +823,10 @@ var TypeDetect = /** @class */ (function () {
         else if (typeof postfix === 'string') {
             // Reverse the string, a postfix is a prefix working from the other end of the string
             // So, can use the same algorithm as above in `getPrefix()` to do this
-            var postfix_1 = this._determinePrefix(data, true);
+            var possPost = this._determinePrefix(data, true);
             // Anything left at this point is present at the end of every value, once it is
             //  reversed and _may_ be considered a postfix, but this will depend on the type
-            var matches = postfix_1.split('').reverse().join('').match(/[^0-9]+$/g);
+            var matches = possPost.split('').reverse().join('').match(/[^0-9]+$/g);
             return matches !== null ? matches[matches.length - 1] : '';
         }
         return '';

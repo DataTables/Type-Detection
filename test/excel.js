@@ -730,7 +730,7 @@ checkDetails(
 	detector.typeDetect([
 		{
 			excel: 'd mmm, yyyy' ,
-			value: '1O Oct, 2020'
+			value: '10 Oct, 2020'
 		},
 		{
 			excel: 'd mmm, yyyy' ,
@@ -756,7 +756,7 @@ checkDetails(
 	detector.typeDetect([
 		{
 			excel: 'd mmmm, yyyy hh:mm:ss' ,
-			value: '1O Oct, 2020 17:12:47'
+			value: '10 Oct, 2020 17:12:47'
 		},
 		{
 			excel: 'd mmmm, yyyy hh:mm:ss' ,

@@ -210,7 +210,7 @@ export default class TypeDetect {
 			if (Array.isArray(tempEl)) {
 				return 'array';
 			}
-			else if (type === 'object' && ! tempEl.excel) {
+			else if (type === 'object' && tempEl.excel === undefined) {
 				return 'object';
 			}
 
@@ -251,7 +251,7 @@ export default class TypeDetect {
 				type = 'html';
 			}
 			// Check if it is a url
-			else if(type === 'string' && el.match(/:\/\//g) !== null) {
+			else if(type === 'string' && tempEl.match(/:\/\//g) !== null) {
 				type = 'string';
 			}
 			// At this point if the remaining value within tempEl can be converted to a number then it is a number
@@ -272,7 +272,7 @@ export default class TypeDetect {
 
 				// getDateFormat can tell if the data is mixed based on the
 				//  suggested format and if there is a definite order
-				if (dateSuggestion !== null && format === 'mixed') {
+				if (dateSuggestion !== null && (format === 'mixed' || format === 'string')) {
 					return format;
 				}
 				else if (typeof format !== 'string') {
@@ -387,7 +387,7 @@ export default class TypeDetect {
 	 * @param suggestion The previously suggested format for other values in the same field
 	 * @returns the suggested format for the field
 	 */
-	private _getDateFormat(el: string, suggestion: IDateFormat): IDateFormat | 'mixed' {
+	private _getDateFormat(el: string, suggestion: IDateFormat): IDateFormat | 'mixed' | 'string' {
 		// Current format object to store the details of this element
 		let format: IDateFormat = {
 			format: [],
@@ -747,6 +747,9 @@ export default class TypeDetect {
 
 		// Construct momentFormat from parts and separator
 		for (let i = 0; i < format.split.length - 1; i++) {
+			if(!format.format[i].definite) {
+				return 'string';
+			}
 			format.momentFormat += format.format[i].value;
 			// We don't want to add the current separator if the next token is a Z
 			// or the current token is a Z and the next separator is a : as this is included in the Z token
@@ -760,7 +763,6 @@ export default class TypeDetect {
 
 		// Faster to do this here than add a check every loop
 		format.momentFormat += format.format[format.split.length - 1].value;
-
 
 		// If there is a format and it is valid then return it
 		if (
@@ -963,7 +965,7 @@ export default class TypeDetect {
 	 */
 	private _getPostfix(data: any[]): string {
 		let postfix = data[0];
-	
+
 		if (typeof postfix === 'object') {
 			if (! postfix.excel) {
 				return '';

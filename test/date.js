@@ -637,4 +637,32 @@ checkDetails(
 	}
 );
 
+// Dates YYYY-MM-DD
+console.log('CHECK for D/MM/Y with leading space is ok...');
+checkDetails(
+	detector.typeDetect(
+		[' 18/09/20', ' 11/05/20', ' 15/09/20']
+	),
+	{
+		dp: null,
+		format: ' D/MM/Y',
+		postfix: null,
+		prefix: null,
+		type: 'date',
+	}
+);
+
+// Dates YYYY-MM-DD
+console.log('CHECK  Dates with other words should be string...');
+checkDetails(
+	detector.typeDetect(['The 1st of Oct, 2020','The 17th of Oct, 1999','The 2nd of Jan, 2025']),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'string',
+	}
+);
+
 console.log('Failed', failed, 'of', total, 'tests. See above for details');
