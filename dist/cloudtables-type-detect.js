@@ -160,6 +160,12 @@ var TypeDetect = /** @class */ (function () {
             }
             var type = typeof el;
             var tempEl = el;
+            if (Array.isArray(tempEl)) {
+                return 'array';
+            }
+            else if (type === 'object' && !tempEl.excel) {
+                return 'object';
+            }
             if (type === 'object') {
                 type = typeof el.value;
                 tempEl = el.value;
@@ -705,6 +711,9 @@ var TypeDetect = /** @class */ (function () {
         // If the first item is an object, then we are parsing excel data so our
         // interaction with it is slightly different.
         if (typeof prefix === 'object') {
+            if (!prefix.excel) {
+                return '';
+            }
             var idx = prefix.excel.indexOf('"');
             // Can check for a quotation mark before going any further
             // If there is not one at the start then no prefix
@@ -778,9 +787,11 @@ var TypeDetect = /** @class */ (function () {
      * @returns string, the postfix that has been identified
      */
     TypeDetect.prototype._getPostfix = function (data) {
-        var type = typeof data[0];
-        if (type === 'object') {
-            var postfix = data[0];
+        var postfix = data[0];
+        if (typeof postfix === 'object') {
+            if (!postfix.excel) {
+                return '';
+            }
             var idx = postfix.excel.indexOf('"');
             // Can check for a quotation mark before going any further
             // If there is not one then there is no postfix with excel
@@ -806,13 +817,13 @@ var TypeDetect = /** @class */ (function () {
         }
         // If the type of the first element is not a string then there cannot be a postfix
         // Need to check this now before the string operations
-        else if (type === 'string') {
+        else if (typeof postfix === 'string') {
             // Reverse the string, a postfix is a prefix working from the other end of the string
             // So, can use the same algorithm as above in `getPrefix()` to do this
-            var postfix = this._determinePrefix(data, true);
+            var postfix_1 = this._determinePrefix(data, true);
             // Anything left at this point is present at the end of every value, once it is
             //  reversed and _may_ be considered a postfix, but this will depend on the type
-            var matches = postfix.split('').reverse().join('').match(/[^0-9]+$/g);
+            var matches = postfix_1.split('').reverse().join('').match(/[^0-9]+$/g);
             return matches !== null ? matches[matches.length - 1] : '';
         }
         return '';

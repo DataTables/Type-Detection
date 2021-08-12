@@ -207,6 +207,13 @@ export default class TypeDetect {
 			let type: string = typeof el;
 			let tempEl = el;
 
+			if (Array.isArray(tempEl)) {
+				return 'array';
+			}
+			else if (type === 'object' && ! tempEl.excel) {
+				return 'object';
+			}
+
 			if (type === 'object') {
 				type = typeof el.value;
 				tempEl = el.value;
@@ -861,6 +868,10 @@ export default class TypeDetect {
 		// If the first item is an object, then we are parsing excel data so our
 		// interaction with it is slightly different.
 		if (typeof prefix === 'object') {
+			if (! prefix.excel) {
+				return '';
+			}
+
 			let idx = prefix.excel.indexOf('"');
 
 			// Can check for a quotation mark before going any further
@@ -949,9 +960,14 @@ export default class TypeDetect {
 	 * @returns string, the postfix that has been identified
 	 */
 	private _getPostfix(data: any[]): string {
-		let type = typeof data[0];
-		if (type === 'object') {
-			let postfix = data[0];
+		let postfix = data[0];
+	
+		if (typeof postfix === 'object') {
+
+			if (! postfix.excel) {
+				return '';
+			}
+
 			let idx = postfix.excel.indexOf('"');
 
 			// Can check for a quotation mark before going any further
@@ -985,7 +1001,7 @@ export default class TypeDetect {
 		}
 		// If the type of the first element is not a string then there cannot be a postfix
 		// Need to check this now before the string operations
-		else if (type === 'string') {
+		else if (typeof postfix === 'string') {
 			// Reverse the string, a postfix is a prefix working from the other end of the string
 			// So, can use the same algorithm as above in `getPrefix()` to do this
 			let postfix = this._determinePrefix(data, true);

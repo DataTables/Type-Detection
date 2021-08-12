@@ -117,4 +117,33 @@ checkDetails(
 	}
 );
 
+console.log('CHECK  A passed in object');
+checkDetails(
+	detector.typeDetect([
+		{a: 1},
+	]),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'object'
+	}
+);
+
+
+console.log('CHECK  A passed in array');
+checkDetails(
+	detector.typeDetect([
+		[1,2,3],
+	]),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'array'
+	}
+);
+
 console.log('Failed', failed, 'of', total, 'tests. See above for details');
