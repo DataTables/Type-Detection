@@ -363,9 +363,11 @@ export default class TypeDetect {
 		}
 		// Otherwise if only numbers have been found then that is the type
 		else if (
-			types.includes('date') ||
-			types.includes('time') ||
-			types.includes('html')
+			types.length && (
+				types[0].includes('date') ||
+				types[0].includes('time') ||
+				types[0].includes('html')
+			)
 		) {
 			return types[0];
 		}
@@ -963,7 +965,6 @@ export default class TypeDetect {
 		let postfix = data[0];
 	
 		if (typeof postfix === 'object') {
-
 			if (! postfix.excel) {
 				return '';
 			}
@@ -1004,11 +1005,11 @@ export default class TypeDetect {
 		else if (typeof postfix === 'string') {
 			// Reverse the string, a postfix is a prefix working from the other end of the string
 			// So, can use the same algorithm as above in `getPrefix()` to do this
-			let postfix = this._determinePrefix(data, true);
+			let possPost = this._determinePrefix(data, true);
 
 			// Anything left at this point is present at the end of every value, once it is
 			//  reversed and _may_ be considered a postfix, but this will depend on the type
-			let matches = postfix.split('').reverse().join('').match(/[^0-9]+$/g);
+			let matches = possPost.split('').reverse().join('').match(/[^0-9]+$/g);
 			return matches !== null ? matches[matches.length - 1] : '';
 		}
 
