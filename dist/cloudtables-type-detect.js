@@ -276,9 +276,9 @@ var TypeDetect = /** @class */ (function () {
             return this._isSequence(data) ? 'sequence' : types[0];
         }
         // Otherwise if only numbers have been found then that is the type
-        else if (types[0].includes('date') ||
-            types[0].includes('time') ||
-            types[0].includes('html')) {
+        else if (types.includes('date') ||
+            types.includes('time') ||
+            types.includes('html')) {
             return types[0];
         }
         // If no other types are found then default to string

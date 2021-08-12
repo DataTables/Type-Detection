@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath } from 'url';
 import * as moment from '../node_modules/moment/moment';
 
 type TReturnType = 'date' | 'datetime' | 'time' | 'mixed' | 'string' | 'number' | 'html' | 'sequence';
@@ -356,9 +356,9 @@ export default class TypeDetect {
 		}
 		// Otherwise if only numbers have been found then that is the type
 		else if (
-			types[0].includes('date') ||
-			types[0].includes('time') ||
-			types[0].includes('html')
+			types.includes('date') ||
+			types.includes('time') ||
+			types.includes('html')
 		) {
 			return types[0];
 		}
