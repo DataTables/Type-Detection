@@ -776,4 +776,31 @@ checkDetails(
 	}
 );
 
+// Dates YYYY-MM-DD
+console.log('CHECK  Dates with Do comma and MMM and long time...');
+checkDetails(
+	detector.typeDetect([
+		{
+			excel: 'D/MM/YYYY' ,
+			value: '18/09/2020'
+		},
+		{
+			excel: 'D/MM/YYYY' ,
+			value: '11/05/2020'
+		},
+		{
+			excel: 'D/MM/YYYY',
+			value: '15/09/2020'
+		}
+	]),
+	{
+		dp: null,
+		format: 'D/MM/YYYY',
+		postfix: null,
+		prefix: null,
+		type: 'date'
+	}
+);
+
+
 console.log('Failed', failed, 'of', total, 'tests. See above for details');

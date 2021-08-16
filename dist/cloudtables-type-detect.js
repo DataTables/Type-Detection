@@ -576,33 +576,43 @@ var TypeDetect = /** @class */ (function () {
                     this._setDateFormat(format, possMonth[0], 'M', true, false, undefined, 'hasMonth');
             }
         }
-        for (var i = 0; i < format.format.length; i++) {
-            if (format.format[i].value.length === 0 && format.format[i].definite === false &&
-                !isNaN(+format.split[i]) &&
-                (!format.hasDay || !format.hasYear || !format.hasMonth)) {
-                // Year and Day - must be month
-                if (format.hasYear && format.hasDay) {
-                    format = this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth');
-                }
-                // Day and Month - must be year
-                else if (format.hasDay && format.hasMonth) {
-                    format = this._determineTokenFormat(format, i, 'YY', 'Y', undefined, 'hasYear');
-                }
-                // Month and Year - must be day
-                else if (format.hasMonth && format.hasYear) {
-                    format = this._determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay');
-                }
-                // Year or Day - must be month
-                else if (format.hasYear || format.hasDay) {
-                    format = this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth');
-                }
-                // Month then assume day next
-                else if (format.hasMonth) {
-                    format = this._determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay');
-                }
-                // Last resort assume Month
-                else {
-                    format = this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth');
+        var changeMade = true;
+        while (changeMade) {
+            changeMade = false;
+            for (var i = 0; i < format.format.length; i++) {
+                if (format.format[i].value.length === 0 && format.format[i].definite === false &&
+                    !isNaN(+format.split[i]) &&
+                    (!format.hasDay || !format.hasYear || !format.hasMonth)) {
+                    // Year and Day - must be month
+                    if (format.hasYear && format.hasDay && +format.split[i] <= 12) {
+                        format = this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth');
+                        changeMade = true;
+                    }
+                    // Day and Month - must be year
+                    else if (format.hasDay && format.hasMonth) {
+                        format = this._determineTokenFormat(format, i, 'YY', 'Y', undefined, 'hasYear');
+                        changeMade = true;
+                    }
+                    // Month and Year - must be day
+                    else if (format.hasMonth && format.hasYear) {
+                        format = this._determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay');
+                        changeMade = true;
+                    }
+                    // Year or Day - must be month
+                    else if ((format.hasYear || format.hasDay) && +format.split[i] <= 12) {
+                        format = this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth');
+                        changeMade = true;
+                    }
+                    // Month then assume day next
+                    else if (format.hasMonth && +format.split[i] <= 31) {
+                        format = this._determineTokenFormat(format, i, 'DD', 'D', undefined, 'hasDay');
+                        changeMade = true;
+                    }
+                    // Last resort assume Month
+                    else if (+format.split[i] <= 12) {
+                        format = this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth');
+                        changeMade = true;
+                    }
                 }
             }
         }
