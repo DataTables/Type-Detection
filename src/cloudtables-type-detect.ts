@@ -713,8 +713,10 @@ export default class TypeDetect {
 		}
 
 		let changeMade = true;
-		while(changeMade) {
+		let allIdentified = false;
+		while(changeMade && !allIdentified) {
 			changeMade = false;
+			allIdentified = true;
 			for (let i = 0; i < format.format.length; i++) {
 				if (
 					format.format[i].value.length === 0 && format.format[i].definite === false &&
@@ -750,6 +752,9 @@ export default class TypeDetect {
 					else if(+format.split[i] <= 12) {
 						format = this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth');
 						changeMade = true;
+					}
+					else {
+						allIdentified = false;
 					}
 				}
 			}

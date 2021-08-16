@@ -577,8 +577,10 @@ var TypeDetect = /** @class */ (function () {
             }
         }
         var changeMade = true;
-        while (changeMade) {
+        var allIdentified = false;
+        while (changeMade && !allIdentified) {
             changeMade = false;
+            allIdentified = true;
             for (var i = 0; i < format.format.length; i++) {
                 if (format.format[i].value.length === 0 && format.format[i].definite === false &&
                     !isNaN(+format.split[i]) &&
@@ -612,6 +614,9 @@ var TypeDetect = /** @class */ (function () {
                     else if (+format.split[i] <= 12) {
                         format = this._determineTokenFormat(format, i, 'MM', 'M', undefined, 'hasMonth');
                         changeMade = true;
+                    }
+                    else {
+                        allIdentified = false;
                     }
                 }
             }
