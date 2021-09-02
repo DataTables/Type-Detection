@@ -138,6 +138,9 @@ var TypeDetect = /** @class */ (function () {
         }
         return this;
     };
+    TypeDetect.prototype._isEmpty = function (d) {
+        return d === undefined || d === null || d === '';
+    };
     /**
      * Gets the actual type of the data as a string
      *
@@ -155,7 +158,7 @@ var TypeDetect = /** @class */ (function () {
         // A type can only be set if all of the data fits it
         for (var i = 0; i < data.length; i++) {
             var el = data[i];
-            if (el === null || el === undefined || el === '') {
+            if (this._isEmpty(el)) {
                 continue;
             }
             var type = typeof el;
@@ -766,7 +769,7 @@ var TypeDetect = /** @class */ (function () {
         if (postfix === void 0) { postfix = false; }
         var prefix = postfix ? data[0].split('').reverse().join('') : data[0];
         for (var i = 1; i < data.length; i++) {
-            if (data[i] === '') {
+            if (this._isEmpty(data[i])) {
                 continue;
             }
             // There can't be a prefix if the type isn't a string
@@ -858,6 +861,9 @@ var TypeDetect = /** @class */ (function () {
         var replaceRegex = new RegExp(this._escapeRegExp(postfix) + '$');
         for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
             var el = data_1[_i];
+            if (this._isEmpty(el)) {
+                continue;
+            }
             // Replace the postfix as it's characters do not count as decimal places
             var split = (typeof el === 'object' ? el.value : el)
                 .toString()

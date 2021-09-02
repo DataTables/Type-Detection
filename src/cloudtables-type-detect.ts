@@ -181,6 +181,10 @@ export default class TypeDetect {
 		return this;
 	}
 
+	private _isEmpty(d) {
+		return d === undefined || d === null || d === '';
+	}
+
 	/**
 	 * Gets the actual type of the data as a string
 	 *
@@ -200,7 +204,7 @@ export default class TypeDetect {
 		for (let i = 0; i < data.length; i ++) {
 			let el = data[i];
 
-			if (el === null || el === undefined || el === '') {
+			if (this._isEmpty(el)) {
 				continue;
 			}
 
@@ -932,8 +936,7 @@ export default class TypeDetect {
 	private _determinePrefix(data: string[], postfix = false): string {
 		let prefix = postfix ? data[0].split('').reverse().join('') : data[0];
 		for (let i = 1; i < data.length; i++) {
-
-			if(data[i] === '') {
+			if(this._isEmpty(data[i])) {
 				continue;
 			}
 
@@ -1045,6 +1048,10 @@ export default class TypeDetect {
 		let replaceRegex = new RegExp(this._escapeRegExp(postfix) + '$');
 
 		for (let el of data) {
+			if (this._isEmpty(el)) {
+				continue;
+			}
+
 			// Replace the postfix as it's characters do not count as decimal places
 			let split = (typeof el === 'object' ? el.value : el)
 				.toString()
