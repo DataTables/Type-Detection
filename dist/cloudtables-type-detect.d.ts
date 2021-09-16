@@ -100,6 +100,12 @@ export default class TypeDetect {
     private _getPrefix;
     private _determinePrefix;
     /**
+     * Find the first non-empty value in an array
+     * @param d Array to find
+     * @returns undefined if nothing found, otherwise the value found
+     */
+    private _firstNonNull;
+    /**
      * Identifies a common postfix amongst an array of data
      *
      * @param data The data that is to be parsed to determine a postfix

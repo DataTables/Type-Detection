@@ -886,7 +886,12 @@ export default class TypeDetect {
 	 * @returns string, the prefix that has been identified
 	 */
 	private _getPrefix(data: any[]): string {
-		let prefix = data[0]; // Initialise prefix to be the entire first value
+		// Find the first not-null value
+		let prefix = this._firstNonNull(data);
+
+		if (prefix === undefined) {
+			return '';
+		}
 
 		// If the first item is an object, then we are parsing excel data so our
 		// interaction with it is slightly different.
@@ -934,8 +939,12 @@ export default class TypeDetect {
 	}
 
 	private _determinePrefix(data: string[], postfix = false): string {
-		let prefix = postfix ? data[0].split('').reverse().join('') : data[0];
-		for (let i = 1; i < data.length; i++) {
+		let first = this._firstNonNull(data);
+		let prefix = postfix
+			? first.split('').reverse().join('')
+			: first;
+
+		for (let i = 0; i < data.length; i++) {
 			if(this._isEmpty(data[i])) {
 				continue;
 			}
@@ -976,15 +985,29 @@ export default class TypeDetect {
 	}
 
 	/**
+	 * Find the first non-empty value in an array
+	 * @param d Array to find
+	 * @returns undefined if nothing found, otherwise the value found
+	 */
+	private _firstNonNull(d: any[]) {
+		return d.find(d => ! this._isEmpty(d));
+	}
+
+	/**
 	 * Identifies a common postfix amongst an array of data
 	 *
 	 * @param data The data that is to be parsed to determine a postfix
 	 * @returns string, the postfix that has been identified
 	 */
 	private _getPostfix(data: any[]): string {
-		let postfix = data[0];
+		// Find the first not-null value
+		let postfix = data.find(d => ! this._isEmpty(d));
 
-		if (typeof postfix === 'object') {
+		if (postfix === undefined) {
+			return '';
+		}
+
+		if (postfix && typeof postfix === 'object') {
 			if (! postfix.excel) {
 				return '';
 			}

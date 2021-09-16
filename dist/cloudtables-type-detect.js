@@ -728,7 +728,11 @@ var TypeDetect = /** @class */ (function () {
      * @returns string, the prefix that has been identified
      */
     TypeDetect.prototype._getPrefix = function (data) {
-        var prefix = data[0]; // Initialise prefix to be the entire first value
+        // Find the first not-null value
+        var prefix = this._firstNonNull(data);
+        if (prefix === undefined) {
+            return '';
+        }
         // If the first item is an object, then we are parsing excel data so our
         // interaction with it is slightly different.
         if (typeof prefix === 'object') {
@@ -767,8 +771,11 @@ var TypeDetect = /** @class */ (function () {
     };
     TypeDetect.prototype._determinePrefix = function (data, postfix) {
         if (postfix === void 0) { postfix = false; }
-        var prefix = postfix ? data[0].split('').reverse().join('') : data[0];
-        for (var i = 1; i < data.length; i++) {
+        var first = this._firstNonNull(data);
+        var prefix = postfix
+            ? first.split('').reverse().join('')
+            : first;
+        for (var i = 0; i < data.length; i++) {
             if (this._isEmpty(data[i])) {
                 continue;
             }
@@ -802,14 +809,28 @@ var TypeDetect = /** @class */ (function () {
         return prefix;
     };
     /**
+     * Find the first non-empty value in an array
+     * @param d Array to find
+     * @returns undefined if nothing found, otherwise the value found
+     */
+    TypeDetect.prototype._firstNonNull = function (d) {
+        var _this = this;
+        return d.find(function (d) { return !_this._isEmpty(d); });
+    };
+    /**
      * Identifies a common postfix amongst an array of data
      *
      * @param data The data that is to be parsed to determine a postfix
      * @returns string, the postfix that has been identified
      */
     TypeDetect.prototype._getPostfix = function (data) {
-        var postfix = data[0];
-        if (typeof postfix === 'object') {
+        var _this = this;
+        // Find the first not-null value
+        var postfix = data.find(function (d) { return !_this._isEmpty(d); });
+        if (postfix === undefined) {
+            return '';
+        }
+        if (postfix && typeof postfix === 'object') {
             if (!postfix.excel) {
                 return '';
             }

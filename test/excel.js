@@ -802,5 +802,46 @@ checkDetails(
 	}
 );
 
+console.log('CHECK  Strings with null data...');
+checkDetails(
+	detector.typeDetect([
+		null,
+		{
+			excel: '',
+			value: 'Sandy'
+		},
+		{
+			excel: '',
+			value: 'Janitor'
+		}
+	]),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'string'
+	}
+);
+
+console.log('CHECK  Strings with multi null data...');
+checkDetails(
+	detector.typeDetect([
+		null,
+		{
+			excel: '',
+			value: 'Sandy'
+		},
+		null
+	]),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'string'
+	}
+);
+
 
 console.log('Failed', failed, 'of', total, 'tests. See above for details');

@@ -146,4 +146,38 @@ checkDetails(
 	}
 );
 
+
+console.log('CHECK  Leading null');
+checkDetails(
+	detector.typeDetect([
+		null,
+		'a',
+		'b'
+	]),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'string'
+	}
+);
+
+
+console.log('CHECK  Multi nulls');
+checkDetails(
+	detector.typeDetect([
+		null,
+		'a',
+		null
+	]),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'string'
+	}
+);
+
 console.log('Failed', failed, 'of', total, 'tests. See above for details');
