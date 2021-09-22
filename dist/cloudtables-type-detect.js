@@ -147,12 +147,14 @@ var TypeDetect = /** @class */ (function () {
         // Remove all non "boolean" values
         var filtered = unqiue.filter(function (v) {
             return v === false || v === true ||
+                v === 'false' || v === 'true' ||
                 v === 0 || v === 1 ||
                 v === '0' || v === '1' ||
                 v === 'f' || v === 't' ||
                 v === 'no' || v === 'yes' ||
                 v === 'off' || v === 'on' ||
-                v === '';
+                v === '×' || v === '✓' ||
+                v === '' || v === 'X' || v === 'x';
         });
         // Must still be 1 or 2 entries after the filtering
         return filtered.length === 1 || filtered.length === 2;
@@ -293,7 +295,6 @@ var TypeDetect = /** @class */ (function () {
                 return 'mixed';
             }
         }
-        console.log(types);
         // If more than one type has been identified then it must be mixed
         if (types.length === 2 && types.includes('string') && types.includes('html')) {
             return 'html';

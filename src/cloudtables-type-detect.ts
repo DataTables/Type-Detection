@@ -190,13 +190,15 @@ export default class TypeDetect {
 
 		// Remove all non "boolean" values
 		let filtered = unqiue.filter(v => 
-			v === false || v === true ||
-			v === 0     || v === 1 ||
-			v === '0'   || v === '1' ||
-			v === 'f'   || v === 't' ||
-			v === 'no'  || v === 'yes' ||
-			v === 'off' || v === 'on' ||
-			v === ''
+			v === false   || v === true ||
+			v === 'false' || v === 'true' ||
+			v === 0       || v === 1 ||
+			v === '0'     || v === '1' ||
+			v === 'f'     || v === 't' ||
+			v === 'no'    || v === 'yes' ||
+			v === 'off'   || v === 'on' ||
+			v === '×'     || v === '✓' ||
+			v === ''      || v === 'X' || v === 'x'
 		);
 
 		// Must still be 1 or 2 entries after the filtering
