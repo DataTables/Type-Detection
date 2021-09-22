@@ -20,8 +20,8 @@
     "moment"
   ],
   "scripts": {
-    "test": "node ./test/numbers.js && node ./test/date.js && node ./test/time.js && node ./test/html.js && node ./test/string.js && node ./test/empty.js && node ./test/excel.js",
-    "quickTest": "npm run buildNoInstall && node ./test/numbers.js && node ./test/date.js && node ./test/time.js && node ./test/html.js && node ./test/string.js && node ./test/empty.js && node ./test/excel.js && node ./test/sequence.js",
+    "test": "node ./test/numbers.js && node ./test/date.js && node ./test/time.js && node ./test/html.js && node ./test/string.js && node ./test/empty.js && node ./test/excel.js && node ./test/boolean.js",
+    "quickTest": "npm run buildNoInstall && node ./test/numbers.js && node ./test/date.js && node ./test/time.js && node ./test/html.js && node ./test/string.js && node ./test/empty.js && node ./test/excel.js && node ./test/sequence.js && node ./test/boolean.js",
     "speedTest": "node ./test/speedtest.js",
     "build": "npm install && tsc -d ./src/*.ts --outDir ./dist/",
     "buildNoInstall": "tsc -d ./src/*.ts --outDir ./dist/",
@@ -29,6 +29,7 @@
     "excelSpeed": "npm run build && node ./test/excelSpeed.js",
     "quickCheck": "npm run buildNoInstall && npm run test",
     "quickNumbers": "npm run buildNoInstall && node ./test/numbers.js",
+    "quickBoolean": "npm run buildNoInstall && node ./test/boolean.js",
     "quickDate": "npm run buildNoInstall && node ./test/date.js",
     "quicki18n": "npm run buildNoInstall && node ./test/i18n.js",
     "quickExcel": "npm run buildNoInstall && node ./test/excel.js",

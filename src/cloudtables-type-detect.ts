@@ -180,6 +180,28 @@ export default class TypeDetect {
 		}
 		return this;
 	}
+	private _isBoolean(d: any[]) {
+		let unqiue = Array.from(new Set(d));
+
+		// Can only be boolean if we have 1 or 2 entries
+		if (unqiue.length < 1 || unqiue.length > 2) {
+			return false;
+		}
+
+		// Remove all non "boolean" values
+		let filtered = unqiue.filter(v => 
+			v === false || v === true ||
+			v === 0     || v === 1 ||
+			v === '0'   || v === '1' ||
+			v === 'f'   || v === 't' ||
+			v === 'no'  || v === 'yes' ||
+			v === 'off' || v === 'on' ||
+			v === ''
+		);
+
+		// Must still be 1 or 2 entries after the filtering
+		return filtered.length === 1 || filtered.length === 2;
+	}
 
 	private _isEmpty(d) {
 		return d === undefined || d === null || d === '';
@@ -361,6 +383,9 @@ export default class TypeDetect {
 		}
 		else if (types.length > 1) {
 			return 'mixed';
+		}
+		else if(this._isBoolean(data)) {
+			return 'boolean';
 		}
 		else if(types[0] === 'number') {
 			return this._isSequence(data) ? 'sequence' : types[0];

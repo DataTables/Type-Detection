@@ -43,6 +43,7 @@ export default class TypeDetect {
      * @returns self for chaining
      */
     i18n(langOpts: ILangOpts): TypeDetect;
+    private _isBoolean;
     private _isEmpty;
     /**
      * Gets the actual type of the data as a string
