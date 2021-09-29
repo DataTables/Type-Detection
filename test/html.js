@@ -66,4 +66,16 @@ checkDetails(
 	}
 );
 
+console.log('Just gt signs is not picked as HTML');
+checkDetails(
+	detector.typeDetect(['3 > 2 > 1', 'a', '5 > 2']),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'string'
+	}
+);
+
 result();
