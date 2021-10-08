@@ -146,6 +146,9 @@ var TypeDetect = /** @class */ (function () {
         }
         // Remove all non "boolean" values
         var filtered = unqiue.filter(function (v) {
+            if (typeof v === 'string') {
+                v = v.toLocaleLowerCase();
+            }
             return v === false || v === true ||
                 v === 'false' || v === 'true' ||
                 v === 0 || v === 1 ||

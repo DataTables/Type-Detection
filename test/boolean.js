@@ -89,5 +89,29 @@ checkDetails(
 	}
 );
 
+console.log('Upper case');
+checkDetails(
+	detector.typeDetect(['TRUE', 'FALSE', 'FALSE']),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'boolean'
+	}
+);
+
+console.log('Mixed case');
+checkDetails(
+	detector.typeDetect(['True', 'False', 'False']),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'boolean'
+	}
+);
+
 result();
 
