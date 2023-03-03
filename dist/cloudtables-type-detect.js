@@ -440,6 +440,10 @@ var TypeDetect = /** @class */ (function () {
             else if (spl === 'T') {
                 this._setDateFormat(format, i, 'T', true, true);
             }
+            else if (format.separators[i - 1] === ':' && spl.match(/^\d\d\.\d\d\dZ?$/)) {
+                // Seconds with milliseconds
+                this._setDateFormat(format, i, 'ss.SSS', true, true);
+            }
             // Some tokens are numbers
             else if (!isNaN(+spl)) {
                 // If the previous separator was a plus and offset has not been included yet

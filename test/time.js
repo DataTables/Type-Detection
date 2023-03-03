@@ -84,6 +84,18 @@ checkDetails(
 	}
 );
 
+console.log('CHECK  Times HH:mm:ss...');
+checkDetails(
+	detector.typeDetect(['13:03:09.000Z','09:14:43.000Z','08:46:23.000Z']),
+	{
+		dp: null,
+		format: 'HH:mm:ss.SSS',
+		postfix: null,
+		prefix: null,
+		type: 'time'
+	}
+);
+
 // Dates YYYY-MM-DD
 console.log('CHECK  Times h:mm:ss a...');
 checkDetails(
