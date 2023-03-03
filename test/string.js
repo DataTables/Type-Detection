@@ -180,4 +180,16 @@ checkDetails(
 	}
 );
 
+console.log('CHECK  Strings with a month name');
+checkDetails(
+	detector.typeDetect(['Alpha','September','Beta']),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'string'
+	}
+);
+
 console.log('Failed', failed, 'of', total, 'tests. See above for details');
