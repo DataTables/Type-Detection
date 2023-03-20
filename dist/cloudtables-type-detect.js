@@ -160,7 +160,7 @@ var TypeDetect = /** @class */ (function () {
                 v === '' || v === 'X' || v === 'x';
         });
         // Must still be 1 or 2 entries after the filtering
-        return filtered.length === 1 || filtered.length === 2;
+        return unqiue.length === filtered.length && (filtered.length === 1 || filtered.length === 2);
     };
     TypeDetect.prototype._isEmpty = function (d) {
         return d === undefined || d === null || d === '';

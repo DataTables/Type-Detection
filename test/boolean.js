@@ -113,5 +113,17 @@ checkDetails(
 	}
 );
 
+console.log('String with a one boolean and one not');
+checkDetails(
+	detector.typeDetect(['f', 'g']),
+	{
+		dp: null,
+		format: null,
+		postfix: null,
+		prefix: null,
+		type: 'string'
+	}
+);
+
 result();
 
