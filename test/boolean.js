@@ -1,129 +1,116 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable no-console */
-let TypeDetect = require('../dist/cloudtables-type-detect');
-let checkDetails = require('./shared').checkDetails;
-let result = require('./shared').result;
-let detector = new TypeDetect['default']();
 
-console.log('True only');
-checkDetails(
-	detector.typeDetect([true, true, true]),
-	{
-		dp: null,
-		format: null,
-		postfix: null,
-		prefix: null,
-		type: 'boolean'
-	}
-);
-
-console.log('False only');
-checkDetails(
-	detector.typeDetect([false, false, false]),
-	{
-		dp: null,
-		format: null,
-		postfix: null,
-		prefix: null,
-		type: 'boolean'
-	}
-);
-
-console.log('Mixed boolean');
-checkDetails(
-	detector.typeDetect([true, false, true]),
-	{
-		dp: null,
-		format: null,
-		postfix: null,
-		prefix: null,
-		type: 'boolean'
-	}
-);
-
-console.log('With a string');
-checkDetails(
-	detector.typeDetect([true, false, 'test']),
-	{
-		dp: null,
-		format: null,
-		postfix: null,
-		prefix: null,
-		type: 'mixed'
-	}
-);
-
-console.log('Number booleans');
-checkDetails(
-	detector.typeDetect([0, 1, 0]),
-	{
-		dp: null,
-		format: null,
-		postfix: null,
-		prefix: null,
-		type: 'boolean'
-	}
-);
-
-console.log('String booleans');
-checkDetails(
-	detector.typeDetect(['t', 'f', 't']),
-	{
-		dp: null,
-		format: null,
-		postfix: null,
-		prefix: null,
-		type: 'boolean'
-	}
-);
-
-console.log('String with a non-boolean');
-checkDetails(
-	detector.typeDetect(['t', 'f', 'g']),
-	{
-		dp: null,
-		format: null,
-		postfix: null,
-		prefix: null,
-		type: 'string'
-	}
-);
-
-console.log('Upper case');
-checkDetails(
-	detector.typeDetect(['TRUE', 'FALSE', 'FALSE']),
-	{
-		dp: null,
-		format: null,
-		postfix: null,
-		prefix: null,
-		type: 'boolean'
-	}
-);
-
-console.log('Mixed case');
-checkDetails(
-	detector.typeDetect(['True', 'False', 'False']),
-	{
-		dp: null,
-		format: null,
-		postfix: null,
-		prefix: null,
-		type: 'boolean'
-	}
-);
-
-console.log('String with a one boolean and one not');
-checkDetails(
-	detector.typeDetect(['f', 'g']),
-	{
-		dp: null,
-		format: null,
-		postfix: null,
-		prefix: null,
-		type: 'string'
-	}
-);
-
-result();
-
+module.exports = {
+	name: 'Boolean',
+	tests: [
+		{
+			expected: {
+				dp: null,
+				format: null,
+				postfix: null,
+				prefix: null,
+				type: 'boolean'
+			},
+			input: [true, true, true],
+			name: 'True only',
+		},
+		{
+			expected: {
+				dp: null,
+				format: null,
+				postfix: null,
+				prefix: null,
+				type: 'boolean'
+			},
+			input: [false, false, false],
+			name: 'False only',
+		},
+		{
+			expected: {
+				dp: null,
+				format: null,
+				postfix: null,
+				prefix: null,
+				type: 'boolean'
+			},
+			input: [true, false, true],
+			name: 'Mixed boolean',
+		},
+		{
+			expected: {
+				dp: null,
+				format: null,
+				postfix: null,
+				prefix: null,
+				type: 'mixed'
+			},
+			input: [true, false, 'test'],
+			name: 'With a string',
+		},
+		{
+			expected: {
+				dp: null,
+				format: null,
+				postfix: null,
+				prefix: null,
+				type: 'boolean'
+			},
+			input: [0, 1, 0],
+			name: 'Number booleans',
+		},
+		{
+			expected: {
+				dp: null,
+				format: null,
+				postfix: null,
+				prefix: null,
+				type: 'boolean'
+			},
+			input: ['t', 'f', 't'],
+			name: 'String booleans',
+		},
+		{
+			expected: {
+				dp: null,
+				format: null,
+				postfix: null,
+				prefix: null,
+				type: 'string'
+			},
+			input: ['t', 'f', 'g'],
+			name: 'String with a non-boolean',
+		},
+		{
+			expected: {
+				dp: null,
+				format: null,
+				postfix: null,
+				prefix: null,
+				type: 'boolean'
+			},
+			input: ['TRUE', 'FALSE', 'FALSE'],
+			name: 'Upper case',
+		},
+		{
+			expected: {
+				dp: null,
+				format: null,
+				postfix: null,
+				prefix: null,
+				type: 'boolean'
+			},
+			input: ['True', 'False', 'False'],
+			name: 'Mixed case',
+		},
+		{
+			expected: {
+				dp: null,
+				format: null,
+				postfix: null,
+				prefix: null,
+				type: 'string'
+			},
+			input: ['f', 'g'],
+			name: 'String with a one boolean and one not',
+		}
+	]
+};
