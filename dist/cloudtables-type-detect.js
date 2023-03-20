@@ -235,12 +235,15 @@ var TypeDetect = /** @class */ (function () {
                     type = 'number';
                 }
             }
-            else if (type === 'string') {
-                // Get a format for the datapoint
+            else if (type === 'string' && !types.includes('string')) {
+                // Data/time format detection
+                // Note that if there is already a data point which doesn't match, then the column as a whole
+                // can't be a date time, hence the second condition above.
                 var format = this._getDateFormat(typeof el === 'string' ? el : el.value, dateSuggestion);
-                // getDateFormat can tell if the data is mixed based on the
-                //  suggested format and if there is a definite order
-                if (dateSuggestion !== null && (format === 'mixed' || format === 'string')) {
+                if (!format) {
+                    type = 'string';
+                }
+                else if (dateSuggestion !== null && (format === 'mixed' || format === 'string')) {
                     return format;
                 }
                 else if (typeof format !== 'string') {
@@ -675,10 +678,7 @@ var TypeDetect = /** @class */ (function () {
             moment(origEl, format.momentFormat, format.locales.length > 0 ? format.locales[0].substring(0, 2) : 'en').isValid()) {
             return format;
         }
-        // Otherwise assume mixed
-        else {
-            return 'mixed';
-        }
+        return null;
     };
     TypeDetect.prototype._isSequence = function (data) {
         var thousandsRegExp = new RegExp(this.thousandsSeparator, 'g');

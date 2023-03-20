@@ -298,13 +298,16 @@ export default class TypeDetect {
 					type = 'number';
 				}
 			}
-			else if (type === 'string') {
-				// Get a format for the datapoint
+			else if (type === 'string' && ! types.includes('string')) {
+				// Data/time format detection
+				// Note that if there is already a data point which doesn't match, then the column as a whole
+				// can't be a date time, hence the second condition above.
 				let format = this._getDateFormat(typeof el === 'string' ? el : el.value, dateSuggestion);
 
-				// getDateFormat can tell if the data is mixed based on the
-				//  suggested format and if there is a definite order
-				if (dateSuggestion !== null && (format === 'mixed' || format === 'string')) {
+				if (! format) {
+					type = 'string';
+				}
+				else if (dateSuggestion !== null && (format === 'mixed' || format === 'string')) {
 					return format;
 				}
 				else if (typeof format !== 'string') {
@@ -829,10 +832,8 @@ export default class TypeDetect {
 		) {
 			return format;
 		}
-		// Otherwise assume mixed
-		else {
-			return 'mixed';
-		}
+
+		return null;
 	}
 
 	private _isSequence(data) {
