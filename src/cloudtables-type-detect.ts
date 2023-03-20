@@ -194,15 +194,15 @@ export default class TypeDetect {
 				v = v.toLocaleLowerCase();
 			}
 
-			return v === false   || v === true ||
+			return v === false || v === true ||
 				v === 'false' || v === 'true' ||
-				v === 0       || v === 1 ||
-				v === '0'     || v === '1' ||
-				v === 'f'     || v === 't' ||
-				v === 'no'    || v === 'yes' ||
-				v === 'off'   || v === 'on' ||
-				v === '×'     || v === '✓' ||
-				v === ''      || v === 'X' || v === 'x'
+				v === 0 || v === 1 ||
+				v === '0' || v === '1' ||
+				v === 'f' || v === 't' ||
+				v === 'no' || v === 'yes' ||
+				v === 'off' || v === 'on' ||
+				v === '×' || v === '✓' ||
+				v === '' || v === 'X' || v === 'x';
 		});
 
 		// Must still be 1 or 2 entries after the filtering
@@ -979,17 +979,17 @@ export default class TypeDetect {
 			? first.split('').reverse().join('')
 			: first;
 
-		for (let i = 0; i < data.length; i++) {
-			if(this._isEmpty(data[i])) {
+		for (let d of data) {
+			if(this._isEmpty(d)) {
 				continue;
 			}
 
 			// There can't be a prefix if the type isn't a string
-			if (typeof data[i] !== 'string') {
+			if (typeof d !== 'string') {
 				return '';
 			}
 
-			let el = postfix ? data[i].split('').reverse().join('') : data[i];
+			let el = postfix ? d.split('').reverse().join('') : d;
 
 			// If the whole prefix is at the start of the value then it isn't going
 			// to be shortened further so we can proceed to the next value
@@ -1021,11 +1021,12 @@ export default class TypeDetect {
 
 	/**
 	 * Find the first non-empty value in an array
+	 *
 	 * @param d Array to find
 	 * @returns undefined if nothing found, otherwise the value found
 	 */
 	private _firstNonNull(d: any[]) {
-		return d.find(d => ! this._isEmpty(d));
+		return d.find(a => ! this._isEmpty(a));
 	}
 
 	/**

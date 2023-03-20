@@ -102,6 +102,7 @@ export default class TypeDetect {
     private _determinePrefix;
     /**
      * Find the first non-empty value in an array
+     *
      * @param d Array to find
      * @returns undefined if nothing found, otherwise the value found
      */

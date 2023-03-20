@@ -806,15 +806,16 @@ var TypeDetect = /** @class */ (function () {
         var prefix = postfix
             ? first.split('').reverse().join('')
             : first;
-        for (var i = 0; i < data.length; i++) {
-            if (this._isEmpty(data[i])) {
+        for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
+            var d = data_1[_i];
+            if (this._isEmpty(d)) {
                 continue;
             }
             // There can't be a prefix if the type isn't a string
-            if (typeof data[i] !== 'string') {
+            if (typeof d !== 'string') {
                 return '';
             }
-            var el = postfix ? data[i].split('').reverse().join('') : data[i];
+            var el = postfix ? d.split('').reverse().join('') : d;
             // If the whole prefix is at the start of the value then it isn't going
             // to be shortened further so we can proceed to the next value
             if (el.indexOf(prefix) === 0) {
@@ -841,12 +842,13 @@ var TypeDetect = /** @class */ (function () {
     };
     /**
      * Find the first non-empty value in an array
+     *
      * @param d Array to find
      * @returns undefined if nothing found, otherwise the value found
      */
     TypeDetect.prototype._firstNonNull = function (d) {
         var _this = this;
-        return d.find(function (d) { return !_this._isEmpty(d); });
+        return d.find(function (a) { return !_this._isEmpty(a); });
     };
     /**
      * Identifies a common postfix amongst an array of data
@@ -911,8 +913,8 @@ var TypeDetect = /** @class */ (function () {
     TypeDetect.prototype._getDP = function (data, postfix) {
         var highestDP = 0;
         var replaceRegex = new RegExp(this._escapeRegExp(postfix) + '$');
-        for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
-            var el = data_1[_i];
+        for (var _i = 0, data_2 = data; _i < data_2.length; _i++) {
+            var el = data_2[_i];
             if (this._isEmpty(el)) {
                 continue;
             }
