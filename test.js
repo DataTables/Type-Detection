@@ -9,7 +9,6 @@ const files = process.argv.slice(2);
 
 let totalFailed = 0;
 let totalPassed = 0;
-let detector = new typeDetect['default']();
 
 for (let file of files) {
 	let testSet = require('./test/' + file);
@@ -17,6 +16,12 @@ for (let file of files) {
 	let passed = 0;
 
 	console.log('Test set: ' + testSet.name);
+
+	let detector = new typeDetect['default']();
+
+	if (testSet.setup) {
+		testSet.setup(detector);
+	}
 
 	for (let test of testSet.tests) {
 		let format = detector.typeDetect(test.input);
