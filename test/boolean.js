@@ -111,6 +111,28 @@ module.exports = {
 			},
 			input: ['f', 'g'],
 			name: 'String with a one boolean and one not',
-		}
+		},
+		{
+			expected: {
+				dp: null,
+				format: null,
+				postfix: null,
+				prefix: null,
+				type: 'boolean'
+			},
+			input: [1, undefined, undefined, 1],
+			name: 'Mixed undefined',
+		},
+		{
+			expected: {
+				dp: null,
+				format: null,
+				postfix: null,
+				prefix: null,
+				type: 'boolean'
+			},
+			input: [1, null, null, 0],
+			name: 'Mixed undefined',
+		},
 	]
 };

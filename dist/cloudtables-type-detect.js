@@ -140,6 +140,8 @@ var TypeDetect = /** @class */ (function () {
     };
     TypeDetect.prototype._isBoolean = function (d) {
         var unqiue = Array.from(new Set(d));
+        // Remove null and undefined values
+        unqiue = unqiue.filter(function (u) { return u !== undefined && u !== null; });
         // Can only be boolean if we have 1 or 2 entries
         if (unqiue.length < 1 || unqiue.length > 2) {
             return false;

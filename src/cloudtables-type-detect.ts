@@ -183,6 +183,9 @@ export default class TypeDetect {
 	private _isBoolean(d: any[]) {
 		let unqiue = Array.from(new Set(d));
 
+		// Remove null and undefined values
+		unqiue = unqiue.filter(u => u !== undefined && u !== null);
+
 		// Can only be boolean if we have 1 or 2 entries
 		if (unqiue.length < 1 || unqiue.length > 2) {
 			return false;
