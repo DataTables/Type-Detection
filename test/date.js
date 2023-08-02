@@ -505,6 +505,40 @@ module.exports = {
 				prefix: null,
 				type: 'string',
 			}
+		}, {
+
+			name: 'CHECK  Dates and times American style...',
+			input: ['3/7/2022 11:14am', '3/7/2022 7:36am', '3/11/2022 8:01pm'],
+			expected: {
+				dp: null,
+				format: 'M/D/YYYY h:mma',
+				postfix: null,
+				prefix: null,
+				type: 'datetime',
+			}
+		}, {
+
+			name: 'CHECK  Dates and times American style caps...',
+			input: ['3/7/2022 11:14AM', '3/7/2022 7:36AM', '3/11/2022 8:01PM'],
+			expected: {
+				dp: null,
+				format: 'M/D/YYYY h:mmA',
+				postfix: null,
+				prefix: null,
+				type: 'datetime',
+			}
+		}, {
+
+			name: 'CHECK  Dates and times American style with a space...',
+			input: ['3/7/2022 11:14 am', '3/7/2022 7:36 am', '3/11/2022 8:01 pm'],
+			expected: {
+				dp: null,
+				format: 'M/D/YYYY h:mm a',
+				postfix: null,
+				prefix: null,
+				type: 'datetime',
+			}
 		}
 	]
 };
+

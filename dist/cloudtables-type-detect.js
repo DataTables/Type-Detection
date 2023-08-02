@@ -374,8 +374,8 @@ var TypeDetect = /** @class */ (function () {
         // Iterate over all of the characters
         for (var _a = 0, charSplit_1 = charSplit; _a < charSplit_1.length; _a++) {
             var char = charSplit_1[_a];
-            // If the character is a separator
             if (separators.includes(char)) {
+                // If the character is a separator
                 if (prev.match(/[0-9]T[0-9]/g)) {
                     var prevSplit = prev.split('T');
                     format.split.push(prevSplit[0]);
@@ -520,15 +520,23 @@ var TypeDetect = /** @class */ (function () {
             // Some tokens are strings
             else {
                 // Check for AM/PM
+                var addMinutes = '';
+                if (spl.match(/\d\d(am|pm)/i)) {
+                    // Minutes then am/pm
+                    // TODO this should go into the tokeniser above. It would require a rewrite
+                    // of this whole date/time parser.
+                    addMinutes = 'mm';
+                    spl = spl.replace(/\d\d/, '');
+                }
                 // Put conditions into variables to avoid evaluating them multiple times each.
                 var condUpper = !format.tokensUsed.includes('A') && (spl === 'AM' || spl === 'PM');
                 var condLower = !format.tokensUsed.includes('a') && (spl === 'am' || spl === 'pm');
                 if (condUpper || condLower) {
                     if (condUpper) {
-                        format = this._setDateFormat(format, i, 'A', true, true);
+                        format = this._setDateFormat(format, i, addMinutes + 'A', true, true);
                     }
                     else {
-                        format = this._setDateFormat(format, i, 'a', true, true);
+                        format = this._setDateFormat(format, i, addMinutes + 'a', true, true);
                     }
                     // If this is found then need to make sure that any hours found are 12 hour
                     for (var j = 0; j < i; j++) {

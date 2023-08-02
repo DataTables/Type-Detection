@@ -469,9 +469,9 @@ export default class TypeDetect {
 
 		// Iterate over all of the characters
 		for (let char of charSplit) {
-			// If the character is a separator
 			if (separators.includes(char)) {
-				if(prev.match(/[0-9]T[0-9]/g)) {
+				// If the character is a separator
+				if (prev.match(/[0-9]T[0-9]/g)) {
 					let prevSplit = prev.split('T');
 					format.split.push(prevSplit[0]);
 					format.separators.push('T');
@@ -630,15 +630,26 @@ export default class TypeDetect {
 			// Some tokens are strings
 			else {
 				// Check for AM/PM
+				let addMinutes = '';
+
+				if (spl.match(/\d\d(am|pm)/i)) {
+					// Minutes then am/pm
+					// TODO this should go into the tokeniser above. It would require a rewrite
+					// of this whole date/time parser.
+					addMinutes = 'mm';
+					spl = spl.replace(/\d\d/, '');
+				}
+
 				// Put conditions into variables to avoid evaluating them multiple times each.
 				let condUpper = !format.tokensUsed.includes('A') && (spl === 'AM' || spl === 'PM');
 				let condLower = !format.tokensUsed.includes('a') && (spl === 'am' || spl === 'pm');
+
 				if (condUpper || condLower) {
 					if (condUpper) {
-						format = this._setDateFormat(format, i, 'A', true, true);
+						format = this._setDateFormat(format, i, addMinutes + 'A', true, true);
 					}
 					else {
-						format = this._setDateFormat(format, i, 'a', true, true);
+						format = this._setDateFormat(format, i, addMinutes + 'a', true, true);
 					}
 
 					// If this is found then need to make sure that any hours found are 12 hour
